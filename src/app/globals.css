@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  /* Light Mode Tokens */
+  --bg-main: #F8F5F2;
+  /* Warm cream */
+  --surface: #FFFFFF;
+  /* Cards / focus */
+  --text-primary: #3C3A36;
+  /* English UI */
+  --text-muted: #7A6F66;
+  /* Metadata */
+  --accent-primary: #6B4C3B;
+  /* Buttons, icons */
+  --accent-secondary: #A57C5B;
+  /* Pills, highlights */
+  --arabic-text: #422B1E;
+  /* Arabic */
+  --border-light: #E4DDD4;
+  /* subtle dividers */
+
+  /* Semantic Mapping for Tailwind */
+  --background: var(--bg-main);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--accent-secondary);
+  --secondary-foreground: #FFFFFF;
+  --muted: var(--text-muted);
+  --muted-foreground: var(--text-muted);
+  --border: var(--border-light);
+  --accent: var(--accent-primary);
+  /* Mapping generic accent to primary accent for utility */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark Mode Tokens */
+    --bg-main: #1F1C19;
+    --surface: #2A2724;
+    --text-primary: #CFC7BF;
+    --text-muted: #8F8373;
+    --accent-primary: #A57C5B;
+    --accent-secondary: #C1A17D;
+    --arabic-text: #E8DCCF;
+    --border-light: #3C372F;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+
+  --color-accent: var(--accent);
+  --color-arabic: var(--arabic-text);
+
+  --font-sans: var(--font-inter), 'Inter', sans-serif;
+  --font-arabic: var(--font-arabic), 'Noto Naskh Arabic', serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+.font-english {
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbar hiding */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
