@@ -2,8 +2,33 @@
 
 import { motion } from "framer-motion";
 import { Mic, Square } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function RecordingView({ onCancel }: { onCancel: () => void }) {
+interface RecordingViewProps {
+    onCancel: () => void;
+    onStop: () => void;
+}
+
+export default function RecordingView({ onCancel, onStop }: RecordingViewProps) {
+    const [seconds, setSeconds] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSeconds(s => {
+                if (s >= 59) { // Max 60 seconds
+                    clearInterval(interval);
+                    onStop();
+                    return s;
+                }
+                return s + 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [onStop]);
+
+    // Format MM:SS
+    const formattedTime = `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 100 }}
@@ -17,7 +42,7 @@ export default function RecordingView({ onCancel }: { onCancel: () => void }) {
                 <div className="flex items-center gap-2 mb-12">
                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                     <span className="text-sm font-bold tracking-widest text-primary uppercase">Recording</span>
-                    <span className="font-mono text-muted w-10 text-left">0:04</span>
+                    <span className="font-mono text-muted w-12 text-left">{formattedTime}</span>
                 </div>
 
                 {/* 2. Waveform Visualization (CSS Animation) */}
@@ -42,14 +67,14 @@ export default function RecordingView({ onCancel }: { onCancel: () => void }) {
                     Recite the verse...
                 </h2>
 
-                {/* 4. Stop Action (Replacing Release instruction) */}
+                {/* 4. Stop Action */}
                 <button
-                    onClick={onCancel} // In logic, this would be onStop -> processing
+                    onClick={onStop}
                     className="mt-8 w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors border-2 border-red-500/20"
                 >
                     <Square className="w-6 h-6 fill-current" />
                 </button>
-                <p className="mt-4 text-sm text-muted">Tap to stops</p>
+                <p className="mt-4 text-sm text-muted">Tap to stop</p>
 
             </div>
 

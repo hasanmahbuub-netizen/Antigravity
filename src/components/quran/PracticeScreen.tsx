@@ -40,6 +40,10 @@ export default function PracticeScreen() {
         setViewMode("recording");
     };
 
+    const handleStopRecording = () => {
+        setViewMode("processing");
+    };
+
     const handleMarkComplete = () => {
         setShowCompletionModal(true);
     };
@@ -147,7 +151,11 @@ export default function PracticeScreen() {
                 {/* 3. OVERLAYS */}
                 <AnimatePresence>
                     {viewMode === "recording" && (
-                        <RecordingView key="rec" onCancel={() => setViewMode("tabs")} />
+                        <RecordingView
+                            key="rec"
+                            onCancel={() => setViewMode("tabs")}
+                            onStop={handleStopRecording}
+                        />
                     )}
                     {showSurahSelector && (
                         <SurahSelectorModal
