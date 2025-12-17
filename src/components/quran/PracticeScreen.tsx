@@ -38,11 +38,16 @@ export default function PracticeScreen() {
     };
 
     const handleStopRecording = () => {
-        setViewMode("processing");
+        setViewMode("processing"); // In real app, `RecordingView` calls this on release
     };
 
     const handleMarkComplete = () => {
         setShowCompletionModal(true);
+    };
+
+    const handleRetry = () => {
+        setViewMode("tabs");
+        setActiveTab("practice");
     };
 
     const handleContinueNextVerse = () => {
@@ -56,7 +61,7 @@ export default function PracticeScreen() {
         <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden relative">
 
             {/* Top Header (Only visible in 'tabs' or 'feedback' mode, hidden in immersive) */}
-            {viewMode !== "recording" && viewMode !== "processing" && (
+            {viewMode !== "recording" && viewMode !== "processing" && viewMode !== "feedback" && (
                 <header className="h-[60px] flex items-center justify-between px-6 border-b border-border/50 shrink-0">
                     <Link href="/dashboard" className="p-2 -ml-2 text-muted hover:text-foreground">
                         <X className="w-6 h-6" />
@@ -122,8 +127,9 @@ export default function PracticeScreen() {
                 {/* 2. FEEDBACK MODE (Replaces Tabs) */}
                 {viewMode === "feedback" && (
                     <FeedbackView
-                        onRetry={() => setViewMode("tabs")}
+                        onRetry={handleRetry}
                         onComplete={handleMarkComplete}
+                        onNextVerse={handleContinueNextVerse}
                     />
                 )}
 

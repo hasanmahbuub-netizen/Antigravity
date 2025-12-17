@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Info } from "lucide-react";
 
-type Step = "arabic" | "goal" | "time";
+type Step = "arabic" | "goal" | "madhab" | "time";
 
-const STEPS: Step[] = ["arabic", "goal", "time"];
+const STEPS: Step[] = ["arabic", "goal", "madhab", "time"];
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -19,6 +20,12 @@ export default function OnboardingPage() {
         } else {
             router.push("/dashboard");
         }
+    };
+
+    const handleMadhabSelection = (selection: string) => {
+        // In a real app, save this preference to User Profile
+        console.log("Selected Madhab:", selection);
+        handleNext();
     };
 
     const step = STEPS[currentStepIndex];
@@ -50,6 +57,27 @@ export default function OnboardingPage() {
                         onSelect={handleNext}
                     />
                 )}
+                {step === "madhab" && (
+                    <OnboardingStep
+                        key="madhab"
+                        question="Which School of Thought (Madhab) do you follow?"
+                        options={[
+                            "Hanafi",
+                            "Shafi'i",
+                            "Maliki",
+                            "Hanbali",
+                            "I don't know (Auto-select)"
+                        ]}
+                        onSelect={(opt) => {
+                            if (opt.includes("Auto-select")) {
+                                // Logic: Default to Hanafi
+                                handleMadhabSelection("Hanafi");
+                            } else {
+                                handleMadhabSelection(opt);
+                            }
+                        }}
+                    />
+                )}
                 {step === "time" && (
                     <OnboardingStep
                         key="time"
@@ -67,7 +95,7 @@ export default function OnboardingPage() {
     );
 }
 
-function OnboardingStep({ question, options, onSelect }: { question: string, options: string[], onSelect: () => void }) {
+function OnboardingStep({ question, options, onSelect }: { question: string, options: string[], onSelect: (opt: string) => void }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -80,15 +108,21 @@ function OnboardingStep({ question, options, onSelect }: { question: string, opt
                 {question}
             </h1>
 
-            <div className="flex flex-col gap-4 px-2">
+            <div className="flex flex-col gap-4 px-4 max-w-sm mx-auto w-full">
                 {options.map((opt) => (
                     <motion.button
                         key={opt}
                         whileTap={{ scale: 0.96 }}
-                        onClick={onSelect}
-                        className="bg-card p-6 rounded-[24px] text-left text-foreground text-lg font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] dark:shadow-none border border-transparent hover:border-border transition-colors font-sans"
+                        onClick={() => onSelect(opt)}
+                        className={cn(
+                            "bg-card p-6 rounded-[24px] text-left text-foreground text-lg font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] dark:shadow-none border border-transparent hover:border-border transition-colors font-sans w-full",
+                            opt.includes("Auto-select") && "bg-primary/5 border-primary/20 text-primary"
+                        )}
                     >
                         {opt}
+                        {opt.includes("Auto-select") && (
+                            <span className="block text-xs font-normal opacity-70 mt-1">We'll set it to Hanafi (most common) for now.</span>
+                        )}
                     </motion.button>
                 ))}
             </div>
