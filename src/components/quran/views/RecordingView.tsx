@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mic } from "lucide-react";
+import { Mic, Square } from "lucide-react";
 
 export default function RecordingView({ onCancel }: { onCancel: () => void }) {
     return (
@@ -41,19 +41,25 @@ export default function RecordingView({ onCancel }: { onCancel: () => void }) {
                 <h2 className="font-english text-xl font-medium text-foreground mb-4">
                     Recite the verse...
                 </h2>
-                <p className="text-sm text-muted">
-                    Release the button to stop
-                </p>
+
+                {/* 4. Stop Action (Replacing Release instruction) */}
+                <button
+                    onClick={onCancel} // In logic, this would be onStop -> processing
+                    className="mt-8 w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors border-2 border-red-500/20"
+                >
+                    <Square className="w-6 h-6 fill-current" />
+                </button>
+                <p className="mt-4 text-sm text-muted">Tap to stops</p>
 
             </div>
 
-            {/* 4. Footer / Cancel */}
+            {/* 5. Footer / Cancel */}
             <div className="pb-10">
                 <button
                     onClick={onCancel}
                     className="text-sm text-muted hover:text-red-500 font-medium transition-colors"
                 >
-                    Cancel Recording
+                    Cancel
                 </button>
             </div>
         </motion.div>

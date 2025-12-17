@@ -23,14 +23,14 @@ export default function PracticeTab({ onStartRecording }: PracticeTabProps) {
             {/* Mic Button Interaction */}
             <motion.button
                 whileTap={{ scale: 0.95 }}
-                onPointerDown={onStartRecording}
-                className="w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all duration-300 shadow-xl bg-card border-border shadow-black/5 hover:border-accent hover:bg-accent/5"
+                onClick={onStartRecording}
+                className="w-32 h-32 rounded-full border-4 flex items-center justify-center transition-all duration-300 shadow-xl bg-card border-border shadow-black/5 hover:border-accent hover:bg-accent/5 group cursor-pointer"
             >
-                <Mic className="w-10 h-10 text-muted transition-colors hover:text-accent" />
+                <Mic className="w-10 h-10 text-muted transition-colors group-hover:text-accent" />
             </motion.button>
 
-            <p className="mt-8 text-sm text-muted font-medium">
-                Tap to start recording
+            <p className="mt-8 text-sm text-muted font-medium animate-pulse">
+                Tap mic to START recording
             </p>
 
         </div>
