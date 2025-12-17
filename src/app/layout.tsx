@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Naskh_Arabic } from "next/font/google";
+import { Inter, Noto_Naskh_Arabic, Amiri } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,12 @@ const inter = Inter({
 
 const notoNaskhArabic = Noto_Naskh_Arabic({
   variable: "--font-arabic",
+  subsets: ["arabic"],
+});
+
+const amiri = Amiri({
+  weight: ["400", "700"],
+  variable: "--font-amiri",
   subsets: ["arabic"],
 });
 
@@ -41,6 +47,7 @@ export default function RootLayout({
         className={cn(
           inter.variable,
           notoNaskhArabic.variable,
+          amiri.variable,
           "antialiased bg-background min-h-screen font-sans text-foreground"
         )}
       >
