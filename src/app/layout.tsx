@@ -20,8 +20,13 @@ const amiri = Amiri({
 });
 
 export const metadata: Metadata = {
-  title: "IMANOS",
-  description: "A quiet companion for daily Quran and practical guidance.",
+  title: {
+    template: "%s | IMANOS",
+    default: "IMANOS - Learn Quran & Fiqh",
+  },
+  description: "Your quiet companion for daily Quran practice and Islamic guidance. Learn to recite with AI feedback and get clear Fiqh answers.",
+  keywords: ["Quran", "Tajweed", "Islam", "Fiqh", "Prayer", "Hanafi", "Learn Quran"],
+  authors: [{ name: "IMANOS Team" }],
 };
 
 export const viewport: Viewport = {

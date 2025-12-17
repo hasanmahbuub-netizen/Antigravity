@@ -1,45 +1,56 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, Mic } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
-const SUGGESTED_QUESTIONS = [
-    "How to pray",
-    "Zakat rules",
-    "Halal food",
-    "Morning Adhkar"
+const TOPICS = [
+    "Prayer",
+    "Fasting",
+    "Work",
+    "Family"
 ];
 
 export default function ZoneB_Fiqh() {
     return (
-        <section className="flex flex-col space-y-4">
+        <section className="h-full flex flex-col gap-4">
             {/* Heading */}
-            <h2 className="text-lg font-medium text-foreground font-sans pl-1">
-                Seek Clarity
+            <h2 className="text-sm font-bold tracking-widest text-muted uppercase pl-1 font-sans">
+                Ask a Question
             </h2>
 
-            {/* Search Input */}
-            <Link href="/fiqh" className="block relative">
-                <div className="h-14 w-full px-4 rounded-[16px] border border-border bg-background flex items-center shadow-sm transition-transform active:scale-[0.99]">
-                    <span className="text-lg text-muted truncate font-sans">
-                        Ask about prayer, fasting...
-                    </span>
-                    <div className="absolute right-4 top-4 text-primary">
-                        <Search className="w-6 h-6" strokeWidth={1.5} />
+            {/* Main Card (Input) */}
+            <Link href="/fiqh" className="block relative flex-1 min-h-0 group">
+                <div className="h-full w-full p-6 rounded-[24px] border border-border bg-card shadow-sm group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] transition-all flex flex-col justify-between">
+
+                    {/* Prompt Text */}
+                    <div className="space-y-2">
+                        <p className="text-lg text-muted font-english leading-relaxed">
+                            About prayer, fasting, <br />
+                            daily life & relationships...
+                        </p>
+                    </div>
+
+                    {/* Fake Input UI */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 h-12 bg-background rounded-full border border-border flex items-center px-4 text-muted text-sm group-hover:border-primary/30 transition-colors">
+                            Tap to ask...
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <Mic className="w-5 h-5" />
+                        </div>
                     </div>
                 </div>
             </Link>
 
-            {/* Suggested Chips */}
-            <div className="flex space-x-3 overflow-x-auto pb-2 no-scrollbar pl-1">
-                {SUGGESTED_QUESTIONS.map((q) => (
+            {/* Suggested Topic Chips */}
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {TOPICS.map((topic) => (
                     <Link
-                        key={q}
-                        href={`/fiqh?q=${encodeURIComponent(q)}`}
-                        className="bg-card border border-border rounded-full px-5 py-2.5 text-sm font-medium text-muted whitespace-nowrap active:bg-muted/5 transition-colors font-sans"
+                        key={topic}
+                        href={`/fiqh?q=${encodeURIComponent(topic)}`}
+                        className="px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-muted hover:text-foreground hover:border-primary/30 active:scale-95 transition-all whitespace-nowrap"
                     >
-                        {q}
+                        {topic}
                     </Link>
                 ))}
             </div>

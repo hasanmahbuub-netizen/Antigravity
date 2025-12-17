@@ -1,15 +1,15 @@
 "use client";
 
-import { Play, BookOpen, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from 'next/link';
 import { motion } from "framer-motion";
+import { Play } from "lucide-react";
 
 export default function ZoneA_Quran() {
     return (
-        <section className="min-h-[420px] flex flex-col gap-4 mb-8">
+        <section className="h-full flex flex-col gap-4">
             {/* Header (Orientation) */}
-            <header className="flex justify-between items-center mb-2 px-1">
+            <header className="flex justify-between items-center px-1">
                 <div className="flex flex-col text-left">
                     <span className="text-xs uppercase tracking-widest text-muted font-sans font-medium">
                         DHUL QADAH 14
@@ -34,42 +34,54 @@ export default function ZoneA_Quran() {
             </header>
 
             {/* Today Super-Card (The Soul) */}
-            <Link href="/quran" className="block w-full">
+            <Link href="/quran" className="block w-full flex-1 min-h-0">
                 <motion.div
                     whileTap={{ scale: 0.99 }}
                     transition={{ duration: 0.1 }}
-                    className="w-full h-[420px] bg-card rounded-[24px] relative overflow-hidden p-8 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] flex flex-col items-center text-center group border border-transparent dark:border-border"
+                    className="w-full h-full bg-card rounded-[32px] relative overflow-hidden p-6 md:p-8 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] flex flex-col items-center justify-between text-center group border border-transparent dark:border-border"
                 >
-                    {/* Context Badge */}
-                    <div className="px-3 py-1 rounded-full bg-muted/10 text-xs text-muted mb-8 inline-block font-sans font-medium">
-                        DAILY VERSE
+                    {/* Top Stats */}
+                    <div className="w-full flex justify-between items-start">
+                        <div className="text-left">
+                            <h3 className="text-lg font-english font-bold text-foreground">Al-Fatiha</h3>
+                            <p className="text-xs text-muted font-medium">Verse 1 of 7</p>
+                        </div>
+                        <div className="px-3 py-1 rounded-full bg-muted/10 text-[10px] tracking-widest font-bold text-muted uppercase">
+                            DAILY PRACTICE
+                        </div>
                     </div>
 
-                    {/* Arabic Verse (Centerpiece) */}
-                    <h1 className="font-arabic text-3xl leading-loose text-arabic mt-2 mb-4">
-                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                    </h1>
+                    {/* Middle Content */}
+                    <div className="flex flex-col items-center justify-center gap-4 flex-1">
+                        {/* Progress Dots */}
+                        <div className="flex gap-1.5 mb-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <div className="w-2 h-2 rounded-full bg-border" />
+                            <div className="w-2 h-2 rounded-full bg-border" />
+                            <div className="w-2 h-2 rounded-full bg-border" />
+                            <div className="w-2 h-2 rounded-full bg-border" />
+                            <div className="w-2 h-2 rounded-full bg-border" />
+                        </div>
 
-                    {/* English Translation */}
-                    <p className="text-base text-muted mt-2 max-w-[280px] leading-relaxed font-sans">
-                        In the name of Allah, the Entirely Merciful, the Especially Merciful.
-                    </p>
+                        {/* Verse */}
+                        <h1 className="font-arabic text-3xl md:text-4xl leading-loose text-arabic">
+                            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                        </h1>
 
-                    {/* Bottom Action Bar */}
-                    <div className="absolute bottom-0 left-0 w-full h-[80px] border-t border-border bg-card/80 backdrop-blur-sm flex justify-around items-center">
-                        <button className="flex items-center gap-2 text-primary text-sm font-medium active:scale-95 transition-transform duration-200">
-                            <Play className="w-4 h-4" />
-                            <span>Play</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-primary text-sm font-medium active:scale-95 transition-transform duration-200">
-                            <BookOpen className="w-4 h-4" />
-                            <span>Read</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-primary text-sm font-medium active:scale-95 transition-transform duration-200">
-                            <Sparkles className="w-4 h-4" />
-                            <span>Reflect</span>
+                        <p className="text-sm md:text-base text-muted max-w-[280px] leading-relaxed font-sans line-clamp-2">
+                            In the name of Allah, the Entirely Merciful, the Especially Merciful.
+                        </p>
+                    </div>
+
+                    {/* Bottom CTA */}
+                    <div className="w-full">
+                        <button className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">
+                            <Play className="w-4 h-4 fill-current" />
+                            <span>Continue Practice</span>
                         </button>
                     </div>
+
                 </motion.div>
             </Link>
         </section>
