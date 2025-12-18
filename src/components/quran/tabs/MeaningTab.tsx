@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 
-export default function MeaningTab() {
+interface MeaningTabProps {
+    translation: string;
+}
+
+export default function MeaningTab({ translation }: MeaningTabProps) {
     return (
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
@@ -10,7 +14,7 @@ export default function MeaningTab() {
             <div className="p-6 bg-card rounded-[24px] border border-border shadow-sm">
                 <h3 className="text-xs font-bold tracking-widest text-muted uppercase mb-4">Translation</h3>
                 <p className="font-english text-lg leading-relaxed text-foreground font-medium">
-                    "In the name of Allah, the Entirely Merciful, the Especially Merciful."
+                    "{translation}"
                 </p>
             </div>
 

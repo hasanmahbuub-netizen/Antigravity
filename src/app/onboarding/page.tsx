@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import { Info } from "lucide-react";
 
 type Step = "arabic" | "goal" | "madhab" | "time";
@@ -14,18 +15,40 @@ export default function OnboardingPage() {
     const router = useRouter();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-    const handleNext = () => {
+    const [preferences, setPreferences] = useState({
+        arabic_level: "",
+        primary_goal: "",
+        madhab: "",
+        daily_goal_minutes: 0
+    });
+
+    const handleNext = (selection: string, key: keyof typeof preferences) => {
+        const updated = { ...preferences, [key]: selection };
+        setPreferences(updated);
+
         if (currentStepIndex < STEPS.length - 1) {
             setCurrentStepIndex(currentStepIndex + 1);
         } else {
-            router.push("/dashboard");
+            saveAndRedirect(updated);
         }
     };
 
-    const handleMadhabSelection = (selection: string) => {
-        // In a real app, save this preference to User Profile
-        console.log("Selected Madhab:", selection);
-        handleNext();
+    const saveAndRedirect = async (data: typeof preferences) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            // Update profile with onboarding data
+            await supabase
+                .from('profiles')
+                .update({
+                    full_name: user.user_metadata?.full_name,
+                    arabic_level: data.arabic_level,
+                    primary_goal: data.primary_goal,
+                    madhab: data.madhab.toLowerCase(),
+                    daily_goal_minutes: parseInt(data.daily_goal_minutes.toString().split(' ')[0]) || 10
+                })
+                .eq('id', user.id);
+        }
+        router.push("/dashboard");
     };
 
     const step = STEPS[currentStepIndex];
@@ -42,7 +65,7 @@ export default function OnboardingPage() {
                             "I can read slowly",
                             "I can read comfortably",
                         ]}
-                        onSelect={handleNext}
+                        onSelect={(opt) => handleNext(opt, "arabic_level")}
                     />
                 )}
                 {step === "goal" && (
@@ -54,7 +77,7 @@ export default function OnboardingPage() {
                             "Improving recitation",
                             "Understanding daily practice",
                         ]}
-                        onSelect={handleNext}
+                        onSelect={(opt) => handleNext(opt, "primary_goal")}
                     />
                 )}
                 {step === "madhab" && (
@@ -70,10 +93,9 @@ export default function OnboardingPage() {
                         ]}
                         onSelect={(opt) => {
                             if (opt.includes("Auto-select")) {
-                                // Logic: Default to Hanafi
-                                handleMadhabSelection("Hanafi");
+                                handleNext("Hanafi", "madhab");
                             } else {
-                                handleMadhabSelection(opt);
+                                handleNext(opt, "madhab");
                             }
                         }}
                     />
@@ -87,7 +109,7 @@ export default function OnboardingPage() {
                             "5 minutes",
                             "10 minutes",
                         ]}
-                        onSelect={handleNext}
+                        onSelect={(opt) => handleNext(opt, "daily_goal_minutes")}
                     />
                 )}
             </AnimatePresence>

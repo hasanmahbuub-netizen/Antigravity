@@ -6,18 +6,17 @@ import { motion } from "framer-motion";
 
 interface PracticeTabProps {
     onStartRecording: () => void;
+    arabic: string;
 }
 
-export default function PracticeTab({ onStartRecording }: PracticeTabProps) {
+export default function PracticeTab({ onStartRecording, arabic }: PracticeTabProps) {
     return (
         <div className="flex-1 flex flex-col h-full items-center justify-center p-6 text-center">
-
             <div className="mb-12 space-y-4">
                 <p className="font-english text-xs tracking-widest text-muted uppercase font-bold">READY TO RECITE?</p>
                 <h1 className="font-arabic text-3xl md:text-5xl leading-loose text-arabic">
-                    بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                    {arabic}
                 </h1>
-                <p className="font-english text-sm text-muted/60">Bis-mil-lah hir-Rahman ir-Raheem</p>
             </div>
 
             {/* Mic Button Interaction */}

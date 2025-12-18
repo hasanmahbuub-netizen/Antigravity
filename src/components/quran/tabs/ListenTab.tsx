@@ -2,26 +2,39 @@
 
 import { Play, Volume2, ChevronRight, ChevronLeft } from "lucide-react";
 
-export default function ListenTab() {
+interface ListenTabProps {
+    arabic: string;
+    translation: string;
+    audioUrl: string;
+}
+
+export default function ListenTab({ arabic, translation, audioUrl }: ListenTabProps) {
+    const playAudio = () => {
+        const audio = new Audio(audioUrl);
+        audio.play();
+    };
+
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Main Verse Display */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6">
                 <h1 className="font-arabic text-3xl md:text-5xl leading-loose text-arabic">
-                    بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                    {arabic}
                 </h1>
 
                 <div className="space-y-1">
-                    <p className="font-english text-sm text-muted/60">Bis-mil-lah hir-Rahman ir-Raheem</p>
                     <p className="font-english text-base text-muted font-medium">
-                        "In the name of Allah, the Entirely Merciful, the Especially Merciful"
+                        "{translation}"
                     </p>
                 </div>
 
                 {/* Audio Player CTA */}
-                <button className="w-full py-4 rounded-xl bg-card border border-border flex items-center justify-center gap-3 text-primary font-medium shadow-sm hover:bg-muted/5 active:scale-[0.98] transition-all">
+                <button
+                    onClick={playAudio}
+                    className="w-full py-4 rounded-xl bg-card border border-border flex items-center justify-center gap-3 text-primary font-medium shadow-sm hover:bg-muted/5 active:scale-[0.98] transition-all"
+                >
                     <Play className="w-5 h-5 fill-current" />
-                    <span>Play Sheikh (0:03)</span>
+                    <span>Play Sheikh</span>
                 </button>
             </div>
 

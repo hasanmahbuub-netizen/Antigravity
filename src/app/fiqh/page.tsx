@@ -2,9 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Mic, ChevronLeft, Loader2 } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, Info, HelpCircle, Loader2, Mic } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { aiService } from "@/lib/ai-service";
 import AnswerView from "@/components/fiqh/AnswerView";
 
 const COMMON_QUESTIONS = [
@@ -27,14 +29,43 @@ function FiqhContent() {
 
     // Auto-search effect
     useEffect(() => {
+        const fetchAnswer = async (q: string) => {
+            setViewState("loading");
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                // 1. Get user madhab preference
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('madhab')
+                    .eq('id', user.id)
+                    .single();
+
+                const madhab = profile?.madhab || 'hanafi';
+
+                // 2. Consult AI Mufti (Gemini 2.0 Flash)
+                const result = await aiService.consultFiqh(q, madhab);
+
+                // 3. Save to Supabase History
+                await supabase.from('fiqh_questions').insert({
+                    user_id: user.id,
+                    question: q,
+                    madhab: madhab,
+                    answer: result
+                });
+
+                setViewState("result");
+            } catch (err) {
+                console.error("Fiqh AI failed:", err);
+                setViewState("input");
+            }
+        };
+
         const q = searchParams.get("q");
         if (q) {
             setQuery(q);
-            setViewState("loading");
-            // Simulate AI Delay
-            setTimeout(() => {
-                setViewState("result");
-            }, 1500);
+            fetchAnswer(q);
         } else {
             setViewState("input");
             setQuery("");

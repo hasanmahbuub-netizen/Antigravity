@@ -4,9 +4,13 @@ import { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import ListenTab from "./tabs/ListenTab";
 import MeaningTab from "./tabs/MeaningTab";
 import PracticeTab from "./tabs/PracticeTab";
+
+import { quranApi } from "@/lib/quran-api";
+import { aiService, TajweedFeedback } from "@/lib/ai-service";
 
 // New Views
 import RecordingView from "./views/RecordingView";
@@ -19,33 +23,87 @@ import { AnimatePresence } from "framer-motion";
 type Tab = "listen" | "meaning" | "practice";
 type ViewMode = "tabs" | "recording" | "processing" | "feedback";
 
+const SURAHS = [
+    { id: 1, name: "Al-Fatiha", ayahs: 7 },
+    { id: 112, name: "Al-Ikhlas", ayahs: 4 },
+    { id: 113, name: "Al-Falaq", ayahs: 5 },
+    { id: 114, name: "An-Nas", ayahs: 6 }
+];
+
 export default function PracticeScreen() {
     const [activeTab, setActiveTab] = useState<Tab>("listen");
     const [viewMode, setViewMode] = useState<ViewMode>("tabs");
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [showSurahSelector, setShowSurahSelector] = useState(false);
-    const [currentSurah, setCurrentSurah] = useState("Surah Al-Fatiha");
+    const [currentSurah, setCurrentSurah] = useState("Al-Fatiha");
 
-    // Transition: Processing -> Feedback (Simulate AI)
+    const [currentSurahId, setCurrentSurahId] = useState(1);
+    const [currentVerseId, setCurrentVerseId] = useState(1);
+    const [totalAyahs, setTotalAyahs] = useState(7);
+    const [verseData, setVerseData] = useState<{ arabic: string, translation: string, audio_url: string } | null>(null);
+    const [loadingVerse, setLoadingVerse] = useState(true);
+    const [feedback, setFeedback] = useState<TajweedFeedback | null>(null);
+
+    // Fetch Verse Data
     useEffect(() => {
-        if (viewMode === "processing") {
-            const timer = setTimeout(() => {
-                setViewMode("feedback");
-            }, 2500);
-            return () => clearTimeout(timer);
-        }
-    }, [viewMode]);
+        const fetchData = async () => {
+            setLoadingVerse(true);
+            try {
+                const [textData, audioData] = await Promise.all([
+                    quranApi.getVerseData(currentSurahId, currentVerseId),
+                    quranApi.getTeacherRecitation(currentSurahId, currentVerseId)
+                ]);
+                setVerseData({
+                    arabic: textData.arabic,
+                    translation: textData.translation,
+                    audio_url: audioData.audio_url
+                });
+            } catch (err) {
+                console.error("Failed to fetch verse data:", err);
+            } finally {
+                setLoadingVerse(false);
+            }
+        };
+        fetchData();
+    }, [currentSurahId, currentVerseId]);
 
     const handleStartRecording = () => {
         setViewMode("recording");
     };
 
-    const handleStopRecording = () => {
+    const handleStopRecording = async () => {
         setViewMode("processing");
+        setFeedback(null);
+
+        // Analyze recitation (using mock for now - passing null Blob just to satisfy interface)
+        const result = await aiService.analyzeRecitation(null as any, currentSurahId, currentVerseId);
+        setFeedback(result);
+        setViewMode("feedback");
+
+        // Sync attempt to Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('recitation_attempts').insert({
+                user_id: user.id,
+                surah: currentSurahId,
+                ayah: currentVerseId,
+                feedback: result
+            });
+        }
     };
 
-    const handleMarkComplete = () => {
+    const handleMarkComplete = async () => {
         setShowCompletionModal(true);
+
+        // Sync progress to Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('quran_verse_progress').insert({
+                user_id: user.id,
+                surah: currentSurahId,
+                ayah: currentVerseId
+            });
+        }
     };
 
     const handleRetry = () => {
@@ -57,14 +115,34 @@ export default function PracticeScreen() {
         setShowCompletionModal(false);
         setViewMode("tabs");
         setActiveTab("listen");
-        // In a real app, increment verse ID here
+        if (currentVerseId < totalAyahs) {
+            setCurrentVerseId(prev => prev + 1);
+        }
+    };
+
+    const handlePrevVerse = () => {
+        if (currentVerseId > 1) {
+            setCurrentVerseId(prev => prev - 1);
+            setActiveTab("listen");
+        }
+    };
+
+    const handleNextVerse = () => {
+        if (currentVerseId < totalAyahs) {
+            setCurrentVerseId(prev => prev + 1);
+            setActiveTab("listen");
+        }
     };
 
     const handleSurahSelect = (surahName: string) => {
-        setCurrentSurah(`Surah ${surahName}`);
+        const surah = SURAHS.find(s => s.name === surahName) || SURAHS[0];
+        setCurrentSurahId(surah.id);
+        setTotalAyahs(surah.ayahs);
+        setCurrentSurah(surah.name);
         setShowSurahSelector(false);
         setActiveTab("listen");
         setViewMode("tabs");
+        setCurrentVerseId(1);
     };
 
     return (
@@ -129,12 +207,31 @@ export default function PracticeScreen() {
                 {/* 1. TABS MODE */}
                 {viewMode === "tabs" && (
                     <>
-                        {activeTab === "listen" && <ListenTab />}
-                        {activeTab === "meaning" && <MeaningTab />}
-                        {activeTab === "practice" && (
-                            <PracticeTab
-                                onStartRecording={handleStartRecording}
-                            />
+                        {loadingVerse ? (
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                            </div>
+                        ) : verseData && (
+                            <>
+                                {activeTab === "listen" && (
+                                    <ListenTab
+                                        arabic={verseData.arabic}
+                                        translation={verseData.translation}
+                                        audioUrl={verseData.audio_url}
+                                    />
+                                )}
+                                {activeTab === "meaning" && (
+                                    <MeaningTab
+                                        translation={verseData.translation}
+                                    />
+                                )}
+                                {activeTab === "practice" && (
+                                    <PracticeTab
+                                        onStartRecording={handleStartRecording}
+                                        arabic={verseData.arabic}
+                                    />
+                                )}
+                            </>
                         )}
                     </>
                 )}
@@ -145,6 +242,10 @@ export default function PracticeScreen() {
                         onRetry={handleRetry}
                         onComplete={handleMarkComplete}
                         onNextVerse={handleContinueNextVerse}
+                        feedback={feedback}
+                        surahName={currentSurah}
+                        verseNumber={currentVerseId}
+                        teacherAudioUrl={verseData?.audio_url || ""}
                     />
                 )}
 
@@ -173,12 +274,19 @@ export default function PracticeScreen() {
             {/* Bottom Navigation */}
             {viewMode === "tabs" && (
                 <footer className="h-[80px] border-t border-border bg-background px-6 flex items-center justify-between shrink-0">
-                    <button className="flex items-center gap-2 text-muted hover:text-foreground text-sm font-medium disabled:opacity-50">
+                    <button
+                        onClick={handlePrevVerse}
+                        disabled={currentVerseId === 1}
+                        className="flex items-center gap-2 text-muted hover:text-foreground text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
                         <ChevronLeft className="w-5 h-5" />
                         Prev Verse
                     </button>
-                    <span className="text-xs text-muted/40 font-mono">Verse 1 of 7</span>
-                    <button className="flex items-center gap-2 text-primary text-sm font-medium hover:opacity-80">
+                    <span className="text-xs text-muted/40 font-mono">Verse {currentVerseId}</span>
+                    <button
+                        onClick={handleNextVerse}
+                        className="flex items-center gap-2 text-primary text-sm font-medium hover:opacity-80"
+                    >
                         Next Verse
                         <ChevronRight className="w-5 h-5" />
                     </button>
