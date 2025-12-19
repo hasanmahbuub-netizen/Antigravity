@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -14,31 +14,53 @@ export default function LoginPage() {
     const [error, setError] = useState("")
     const router = useRouter()
 
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
+
+        console.log("🚀 [LOGIN] Starting login attempt")
+        console.log("📧 [LOGIN] Email:", email)
+
         setLoading(true)
         setError("")
 
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password: password,
-        })
+        try {
+            console.log("📡 [LOGIN] Calling Supabase signInWithPassword...")
+            const startTime = Date.now()
 
-        if (signInError) {
-            setError(signInError.message)
-            setLoading(false)
-            return
-        }
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password,
+            })
 
-        if (data.session) {
-            window.location.href = "/dashboard"
-        } else {
-            setError("Login failed")
+            const duration = Date.now() - startTime
+            console.log(`⏱️ [LOGIN] API call took ${duration}ms`)
+            console.log("📥 [LOGIN] Response received:", {
+                hasSession: !!data?.session,
+                hasError: !!signInError,
+                errorMessage: signInError?.message
+            })
+
+            if (signInError) {
+                console.error("❌ [LOGIN] Error:", signInError.message)
+                setError(signInError.message)
+                setLoading(false)
+                return
+            }
+
+            if (data?.session) {
+                console.log("✅ [LOGIN] Success! Redirecting to dashboard...")
+                console.log("👤 [LOGIN] User ID:", data.session.user.id)
+
+                // Force hard redirect to avoid any routing issues
+                window.location.href = "/dashboard"
+            } else {
+                console.error("⚠️ [LOGIN] No session returned despite no error")
+                setError("Login failed - no session created")
+                setLoading(false)
+            }
+        } catch (err) {
+            console.error("💥 [LOGIN] Unexpected error:", err)
+            setError("An unexpected error occurred. Please try again.")
             setLoading(false)
         }
     }
@@ -74,6 +96,7 @@ export default function LoginPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -91,6 +114,7 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -98,7 +122,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
+                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium transition-opacity"
                         >
                             {loading ? (
                                 <>
