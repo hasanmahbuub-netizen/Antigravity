@@ -34,21 +34,39 @@ export default function OnboardingPage() {
     };
 
     const saveAndRedirect = async (data: typeof preferences) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            // Update profile with onboarding data
-            await supabase
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.error('No user found during onboarding');
+                router.push('/login');
+                return;
+            }
+
+            console.log('Saving onboarding data for user:', user.id);
+
+            const { error } = await supabase
                 .from('profiles')
                 .update({
-                    full_name: user.user_metadata?.full_name,
+                    full_name: user.user_metadata?.full_name || 'User',
                     arabic_level: data.arabic_level,
                     primary_goal: data.primary_goal,
                     madhab: data.madhab.toLowerCase(),
                     daily_goal_minutes: parseInt(data.daily_goal_minutes.toString().split(' ')[0]) || 10
                 })
                 .eq('id', user.id);
+
+            if (error) {
+                console.error('Error saving onboarding data:', error);
+            } else {
+                console.log('Onboarding data saved successfully');
+            }
+
+            router.push("/dashboard");
+            router.refresh();
+        } catch (err) {
+            console.error('Unexpected error during onboarding:', err);
+            router.push("/dashboard");
         }
-        router.push("/dashboard");
     };
 
     const step = STEPS[currentStepIndex];

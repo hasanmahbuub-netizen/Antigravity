@@ -20,22 +20,40 @@ export default function SignupPage() {
         setLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: fullName,
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                    },
+                    emailRedirectTo: `${window.location.origin}/onboarding`,
                 },
-            },
-        });
+            });
 
-        if (error) {
-            setError(error.message);
+            if (error) {
+                console.error('Signup error:', error);
+                setError(error.message);
+                setLoading(false);
+                return;
+            }
+
+            if (data?.user) {
+                // Successfully created user
+                console.log('User created:', data.user.id);
+
+                // Redirect to onboarding
+                router.push("/onboarding");
+                router.refresh();
+            } else {
+                setError('Failed to create account. Please try again.');
+                setLoading(false);
+            }
+        } catch (err) {
+            console.error('Unexpected signup error:', err);
+            setError('An unexpected error occurred. Please try again.');
             setLoading(false);
-        } else {
-            // Note: Users might need email verification, but for dev we redirect
-            router.push("/onboarding");
         }
     };
 
