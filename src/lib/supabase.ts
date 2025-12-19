@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/types/database';
 
 // Validate environment variables
@@ -10,17 +10,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration error');
 }
 
-// Create client with cookie persistence
-// Using standard client for browser - cookies are handled automatically
-export const supabase = createClient<Database>(
+console.log('Initializing Supabase client with URL:', supabaseUrl);
+
+// Create browser client - @supabase/ssr handles cookies automatically
+export const supabase = createBrowserClient<Database>(
     supabaseUrl,
-    supabaseAnonKey,
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-            flowType: 'pkce'
-        }
-    }
+    supabaseAnonKey
 );
