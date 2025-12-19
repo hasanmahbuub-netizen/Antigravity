@@ -9,5 +9,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables');
 }
 
+console.log('🏗️ INITIALIZING SUPABASE CLIENT');
+console.log('🔗 URL:', supabaseUrl);
+console.log('🔑 Key present:', !!supabaseAnonKey);
+
 // Simple client with default settings
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+console.log('✅ SUPABASE CLIENT CREATED');

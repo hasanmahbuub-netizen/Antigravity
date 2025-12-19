@@ -20,12 +20,17 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            console.log('Attempting login for:', email);
+            console.log('🚀 Login attempt started...');
+            console.log('📧 Email:', email);
+            console.log('📡 Calling supabase.auth.signInWithPassword...');
+
+            const start = Date.now();
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
-            console.log('Login response received:', { hasData: !!data, hasError: !!error });
+            console.log(`⏱️ API Call took ${Date.now() - start}ms`);
+            console.log('📥 Auth result received:', { hasData: !!data, hasError: !!error });
 
             if (error) {
                 console.error('Login error:', error);
