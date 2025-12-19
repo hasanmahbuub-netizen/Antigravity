@@ -44,8 +44,15 @@ export default function LoginPage() {
                 setError('Login failed - no session created');
                 setLoading(false);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Unexpected login error:', err);
+            // Ignore browser extension errors
+            if (err?.message?.includes('Receiving end does not exist')) {
+                console.warn('Browser extension interference detected, retrying...');
+                // Retry login
+                setTimeout(() => handleLogin(e), 1000);
+                return;
+            }
             setError('An unexpected error occurred');
             setLoading(false);
         }
