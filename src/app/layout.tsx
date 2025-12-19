@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Naskh_Arabic, Amiri } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,12 +56,10 @@ export default function RootLayout({
           "antialiased bg-background min-h-screen font-sans text-foreground"
         )}
       >
-        <AuthProvider>
-          {/* Global App Shell */}
-          <div className="max-w-[430px] mx-auto min-h-screen bg-background px-5 pt-6 pb-8 flex flex-col relative shadow-xl shadow-black/5">
-            {children}
-          </div>
-        </AuthProvider>
+        {/* Global App Shell */}
+        <div className="max-w-[430px] mx-auto min-h-screen bg-background px-5 pt-6 pb-8 flex flex-col relative shadow-xl shadow-black/5">
+          {children}
+        </div>
       </body>
     </html>
   );

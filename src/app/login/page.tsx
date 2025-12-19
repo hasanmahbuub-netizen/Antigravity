@@ -1,49 +1,66 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/context/AuthContext"
+import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
 
-export default function SignInPage() {
+// Direct Supabase initialization - NO CONTEXT
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+export default function LoginPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-
-    const { signIn } = useAuth()
     const router = useRouter()
 
-    console.log('🎨 [SIGNIN PAGE] Rendering...')
-
-    async function handleSubmit(e: React.FormEvent) {
-        console.log('\n═══════════════════════════════════════')
-        console.log('🎯 [FORM] Submit triggered')
+    async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
-        console.log('🎯 [FORM] Default prevented')
-
+        setLoading(true)
         setError("")
-        setIsLoading(true)
-        console.log('🎯 [FORM] Loading state set')
-        console.log('🎯 [FORM] Email:', email)
+
+        console.log("🔐 LOGIN STARTED")
+        console.log("📧 Email:", email)
 
         try {
-            console.log('🎯 [FORM] Calling signIn...')
-            await signIn(email, password)
-            console.log('🎯 [FORM] signIn completed successfully!')
+            console.log("📡 Calling Supabase...")
 
-            console.log('🎯 [FORM] Redirecting to /dashboard...')
-            router.push('/dashboard')
-            console.log('🎯 [FORM] Router.push called')
-            console.log('═══════════════════════════════════════\n')
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password
+            })
+
+            console.log("📦 Response:", { user: !!data?.user, session: !!data?.session, error: !!authError })
+
+            if (authError) {
+                console.error("❌ Error:", authError.message)
+                setError(authError.message)
+                setLoading(false)
+                return
+            }
+
+            if (!data.session) {
+                console.error("❌ No session")
+                setError("Login failed - no session")
+                setLoading(false)
+                return
+            }
+
+            console.log("✅ SUCCESS! Redirecting...")
+            console.log("👤 User:", data.user.email)
+
+            // Redirect
+            window.location.href = "/dashboard"
 
         } catch (err: any) {
-            console.error('🎯 [FORM] Error:', err.message)
-            setError(err.message || 'Failed to sign in')
-            setIsLoading(false)
-            console.log('═══════════════════════════════════════\n')
+            console.error("💥 Unexpected error:", err)
+            setError(err.message || "Login failed")
+            setLoading(false)
         }
     }
 
@@ -64,7 +81,7 @@ export default function SignInPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-xs font-bold tracking-widest text-muted uppercase mb-2">
                                 Email
@@ -73,14 +90,12 @@ export default function SignInPage() {
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="email"
-                                    name="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={isLoading}
-                                    autoComplete="email"
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -93,24 +108,22 @@ export default function SignInPage() {
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="password"
-                                    name="password"
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={isLoading}
-                                    autoComplete="current-password"
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium transition-opacity"
+                            disabled={loading}
+                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                         >
-                            {isLoading ? (
+                            {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     Signing In...

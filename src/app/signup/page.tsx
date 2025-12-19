@@ -1,39 +1,64 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/context/AuthContext"
+import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock, User } from "lucide-react"
 
+// Direct Supabase initialization
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
+
 export default function SignupPage() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [localLoading, setLocalLoading] = useState(false)
-    const [localError, setLocalError] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
-
-    const { signUp } = useAuth()
     const router = useRouter()
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSignup(e: React.FormEvent) {
         e.preventDefault()
-        setLocalError("")
-        setLocalLoading(true)
+        setLoading(true)
+        setError("")
+
+        console.log("📝 SIGNUP STARTED")
+        console.log("👤 Name:", name)
+        console.log("📧 Email:", email)
 
         try {
-            console.log('🎯 [SIGNUP PAGE] Form submitted')
-            await signUp(email, password, name)
+            console.log("📡 Calling Supabase signUp...")
 
-            console.log('🎯 [SIGNUP PAGE] Signup successful')
+            const { data, error: authError } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password,
+                options: {
+                    data: {
+                        full_name: name
+                    }
+                }
+            })
+
+            console.log("📦 Response:", { user: !!data?.user, error: !!authError })
+
+            if (authError) {
+                console.error("❌ Error:", authError.message)
+                setError(authError.message)
+                setLoading(false)
+                return
+            }
+
+            console.log("✅ SUCCESS!")
             setSuccess(true)
 
         } catch (err: any) {
-            console.error('🎯 [SIGNUP PAGE] Signup failed:', err.message)
-            setLocalError(err.message || 'Signup failed')
-            setLocalLoading(false)
+            console.error("💥 Unexpected error:", err)
+            setError(err.message || "Signup failed")
+            setLoading(false)
         }
     }
 
@@ -78,13 +103,13 @@ export default function SignupPage() {
                     <h1 className="text-3xl font-bold text-center gradient-text mb-2">Create Account</h1>
                     <p className="text-center text-muted mb-8">Join IMANOS today</p>
 
-                    {localError && (
+                    {error && (
                         <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-                            {localError}
+                            {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSignup} className="space-y-4">
                         <div>
                             <label htmlFor="name" className="block text-xs font-bold tracking-widest text-muted uppercase mb-2">
                                 Full Name
@@ -98,7 +123,7 @@ export default function SignupPage() {
                                     onChange={(e) => setName(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={localLoading}
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -116,7 +141,7 @@ export default function SignupPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={localLoading}
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -134,7 +159,7 @@ export default function SignupPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={localLoading}
+                                    disabled={loading}
                                     minLength={6}
                                 />
                             </div>
@@ -142,10 +167,10 @@ export default function SignupPage() {
 
                         <button
                             type="submit"
-                            disabled={localLoading}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium transition-opacity"
+                            disabled={loading}
+                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                         >
-                            {localLoading ? (
+                            {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     Creating Account...
