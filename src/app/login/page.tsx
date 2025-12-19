@@ -20,22 +20,32 @@ export default function LoginPage() {
         setError(null);
 
         try {
+            console.log('Attempting login for:', email);
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
+            console.log('Login response received:', { hasData: !!data, hasError: !!error });
 
             if (error) {
+                console.error('Login error:', error);
                 setError(error.message);
                 setLoading(false);
                 return;
             }
 
             if (data?.session) {
+                console.log('Login successful! Redirecting to dashboard...');
                 router.push("/dashboard");
                 router.refresh();
+                // Keep loading true during redirect
+            } else {
+                console.error('No session in response');
+                setError('Login failed - no session created');
+                setLoading(false);
             }
         } catch (err) {
+            console.error('Unexpected login error:', err);
             setError('An unexpected error occurred');
             setLoading(false);
         }
