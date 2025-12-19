@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Preserve console logs in production for debugging
+  compiler: {
+    removeConsole: false,
+  },
 };
 
 export default nextConfig;
