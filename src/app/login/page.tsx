@@ -65,31 +65,37 @@ export default function LoginPage() {
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Email</label>
+                        <label htmlFor="email" className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Email</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                             <input
+                                id="email"
+                                name="email"
                                 type="email"
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
                                 required
+                                autoComplete="email"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Password</label>
+                        <label htmlFor="password" className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                             <input
+                                id="password"
+                                name="password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
                                 required
+                                autoComplete="current-password"
                             />
                         </div>
                     </div>
