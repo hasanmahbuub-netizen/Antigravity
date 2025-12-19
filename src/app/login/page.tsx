@@ -1,50 +1,47 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { useState } from "react"
+import { createClient } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { motion } from "framer-motion"
+import { Loader2, Mail, Lock } from "lucide-react"
 
 export default function LoginPage() {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState("")
+    const router = useRouter()
 
-    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get('email') as string;
-        const password = formData.get('password') as string;
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        setLoading(true)
+        setError("")
 
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password,
+        })
 
-            if (error) {
-                setError(error.message);
-                setLoading(false);
-                return;
-            }
-
-            if (data?.session) {
-                router.push("/dashboard");
-                router.refresh();
-            } else {
-                setError('Login failed - no session created');
-                setLoading(false);
-            }
-        } catch (err: any) {
-            setError('An unexpected error occurred');
-            setLoading(false);
+        if (signInError) {
+            setError(signInError.message)
+            setLoading(false)
+            return
         }
-    };
+
+        if (data.session) {
+            window.location.href = "/dashboard"
+        } else {
+            setError("Login failed")
+            setLoading(false)
+        }
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
@@ -54,46 +51,46 @@ export default function LoginPage() {
                 className="w-full max-w-md"
             >
                 <div className="glass-panel p-8 rounded-2xl">
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
-                        <p className="text-muted mt-2">Sign in to continue your journey</p>
-                    </div>
+                    <h1 className="text-3xl font-bold text-center gradient-text mb-2">Welcome Back</h1>
+                    <p className="text-center text-muted mb-8">Sign in to continue</p>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
                             {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Email</label>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="email" className="block text-xs font-bold tracking-widest text-muted uppercase mb-2">
+                                Email
+                            </label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="email"
-                                    name="email"
                                     type="email"
-                                    placeholder="name@example.com"
-                                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    autoComplete="email"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="text-xs font-bold tracking-widest text-muted uppercase ml-1">Password</label>
+                        <div>
+                            <label htmlFor="password" className="block text-xs font-bold tracking-widest text-muted uppercase mb-2">
+                                Password
+                            </label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="password"
-                                    name="password"
                                     type="password"
-                                    placeholder="••••••••"
-                                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    autoComplete="current-password"
                                 />
                             </div>
                         </div>
@@ -101,7 +98,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2 font-medium"
+                            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                         >
                             {loading ? (
                                 <>
@@ -109,21 +106,19 @@ export default function LoginPage() {
                                     Signing In...
                                 </>
                             ) : (
-                                'Sign In'
+                                "Sign In"
                             )}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-muted">
-                            Don't have an account?{' '}
-                            <Link href="/signup" className="text-primary hover:underline font-medium">
-                                Create one
-                            </Link>
-                        </p>
-                    </div>
+                    <p className="text-center text-sm text-muted mt-6">
+                        Don't have an account?{" "}
+                        <Link href="/signup" className="text-primary hover:underline font-medium">
+                            Create one
+                        </Link>
+                    </p>
                 </div>
             </motion.div>
         </div>
-    );
+    )
 }
