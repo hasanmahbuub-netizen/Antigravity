@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 // Validate environment variables
@@ -10,10 +10,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration error');
 }
 
-console.log('Initializing Supabase client with URL:', supabaseUrl);
+console.log('✅ Supabase URL:', supabaseUrl);
 
-// Create browser client - @supabase/ssr handles cookies automatically
-export const supabase = createBrowserClient<Database>(
+// Use standard client for browser - it works with localStorage
+export const supabase = createClient<Database>(
     supabaseUrl,
-    supabaseAnonKey
+    supabaseAnonKey,
+    {
+        auth: {
+            storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true
+        }
+    }
 );
