@@ -42,7 +42,7 @@ function FiqhContent() {
                     .eq('id', user.id)
                     .single();
 
-                const madhab = profile?.madhab || 'hanafi';
+                const madhab = (profile as any)?.madhab || 'hanafi';
 
                 // 2. Consult AI Mufti (Gemini 2.0 Flash)
                 const result = await aiService.consultFiqh(q, madhab);
