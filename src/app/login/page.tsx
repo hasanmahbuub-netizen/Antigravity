@@ -12,6 +12,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Force rebuild 2024-12-19
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
