@@ -7,31 +7,43 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
 
-export default function LoginPage() {
+export default function SignInPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [localLoading, setLocalLoading] = useState(false)
-    const [localError, setLocalError] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
 
     const { signIn } = useAuth()
     const router = useRouter()
 
+    console.log('🎨 [SIGNIN PAGE] Rendering...')
+
     async function handleSubmit(e: React.FormEvent) {
+        console.log('\n═══════════════════════════════════════')
+        console.log('🎯 [FORM] Submit triggered')
         e.preventDefault()
-        setLocalError("")
-        setLocalLoading(true)
+        console.log('🎯 [FORM] Default prevented')
+
+        setError("")
+        setIsLoading(true)
+        console.log('🎯 [FORM] Loading state set')
+        console.log('🎯 [FORM] Email:', email)
 
         try {
-            console.log('🎯 [LOGIN PAGE] Form submitted')
+            console.log('🎯 [FORM] Calling signIn...')
             await signIn(email, password)
+            console.log('🎯 [FORM] signIn completed successfully!')
 
-            console.log('🎯 [LOGIN PAGE] Sign in successful, redirecting...')
+            console.log('🎯 [FORM] Redirecting to /dashboard...')
             router.push('/dashboard')
+            console.log('🎯 [FORM] Router.push called')
+            console.log('═══════════════════════════════════════\n')
 
         } catch (err: any) {
-            console.error('🎯 [LOGIN PAGE] Sign in failed:', err.message)
-            setLocalError(err.message || 'Login failed')
-            setLocalLoading(false)
+            console.error('🎯 [FORM] Error:', err.message)
+            setError(err.message || 'Failed to sign in')
+            setIsLoading(false)
+            console.log('═══════════════════════════════════════\n')
         }
     }
 
@@ -46,9 +58,9 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold text-center gradient-text mb-2">Welcome Back</h1>
                     <p className="text-center text-muted mb-8">Sign in to continue</p>
 
-                    {localError && (
+                    {error && (
                         <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-                            {localError}
+                            {error}
                         </div>
                     )}
 
@@ -61,12 +73,14 @@ export default function LoginPage() {
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="email"
+                                    name="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={localLoading}
+                                    disabled={isLoading}
+                                    autoComplete="email"
                                 />
                             </div>
                         </div>
@@ -79,22 +93,24 @@ export default function LoginPage() {
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     id="password"
+                                    name="password"
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={localLoading}
+                                    disabled={isLoading}
+                                    autoComplete="current-password"
                                 />
                             </div>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={localLoading}
+                            disabled={isLoading}
                             className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium transition-opacity"
                         >
-                            {localLoading ? (
+                            {isLoading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     Signing In...
