@@ -1,16 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
-
-// Direct Supabase initialization
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default function SignInPage() {
     const [email, setEmail] = useState("")
@@ -25,27 +20,32 @@ export default function SignInPage() {
         setError("")
 
         try {
+            console.log("🔐 Attempting login...")
             const { data, error: authError } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password: password
             })
 
             if (authError) {
+                console.error("❌ Auth error:", authError.message)
                 setError(authError.message)
                 setLoading(false)
                 return
             }
 
             if (!data.session) {
+                console.error("❌ No session returned")
                 setError("Login failed - no session")
                 setLoading(false)
                 return
             }
 
-            // Redirect to dashboard
-            router.push("/dashboard")
+            console.log("✅ Login successful! Redirecting...")
+            // Use window.location for reliable navigation
+            window.location.href = "/dashboard"
 
         } catch (err: any) {
+            console.error("❌ Exception:", err)
             setError(err.message || "Login failed")
             setLoading(false)
         }
