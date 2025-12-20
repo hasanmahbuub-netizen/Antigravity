@@ -25,8 +25,8 @@ export default function SignInPage() {
             await signIn(email, password)
 
             console.log("✅ Login successful! Redirecting...")
-            // Use window.location for reliable navigation to dashboard
-            window.location.href = "/dashboard"
+            // Use router.push for client-side navigation (preserves auth state)
+            router.push("/dashboard")
 
         } catch (err: any) {
             console.error("❌ Exception:", err)

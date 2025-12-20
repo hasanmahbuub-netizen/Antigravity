@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database'
 
 // Get environment variables with fallbacks for better error messages
@@ -22,7 +22,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
     }
 }
 
-console.log('✅ Supabase client initializing...')
+console.log('✅ Supabase browser client initializing...')
 console.log('URL:', supabaseUrl)
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Use createBrowserClient from @supabase/ssr for cookie-based session storage
+// This ensures the session is available to middleware and server components
+export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
