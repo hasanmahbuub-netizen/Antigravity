@@ -44,8 +44,7 @@ export default function OnboardingPage() {
 
             console.log('Saving onboarding data for user:', user.id);
 
-            const { error } = await supabase
-                .from('profiles')
+            const { error } = await (supabase.from('profiles') as any)
                 .update({
                     full_name: user.user_metadata?.full_name || 'User',
                     arabic_level: data.arabic_level,
