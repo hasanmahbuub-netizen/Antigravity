@@ -58,10 +58,10 @@ export default function HeroSection() {
                     </h2>
 
                     <div className="flex gap-4 w-full justify-center">
-                        <Link href="/onboarding" className="px-6 py-3 rounded-full border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors font-medium">
+                        <Link href="/auth/signup" className="px-6 py-3 rounded-full border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors font-medium">
                             Yes, I can
                         </Link>
-                        <Link href="/onboarding" className="px-6 py-3 rounded-full bg-[#D4AF37] text-[#0A1628] hover:bg-[#C4A030] transition-colors font-medium shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                        <Link href="/auth/signup" className="px-6 py-3 rounded-full bg-[#D4AF37] text-[#0A1628] hover:bg-[#C4A030] transition-colors font-medium shadow-[0_0_20px_rgba(212,175,55,0.2)]">
                             No, teach me
                         </Link>
                     </div>

@@ -1,11 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 export default function SettingsPage() {
     const router = useRouter();
+    const [signingOut, setSigningOut] = useState(false);
+
+    const handleSignOut = async () => {
+        setSigningOut(true);
+        try {
+            await supabase.auth.signOut();
+            router.push('/auth/signin');
+        } catch (error) {
+            console.error('Sign out failed:', error);
+            setSigningOut(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -27,6 +41,19 @@ export default function SettingsPage() {
                     <button onClick={() => router.push('/onboarding')} className="w-full flex items-center justify-between py-4 border-b border-border text-left">
                         <span className="text-foreground font-medium font-sans">Reset Progress</span>
                         <ChevronRight className="w-4 h-4 text-muted" />
+                    </button>
+                </Section>
+
+                <Section title="Account">
+                    <button
+                        onClick={handleSignOut}
+                        disabled={signingOut}
+                        className="w-full flex items-center justify-between py-4 border-b border-border text-left text-red-500 hover:text-red-600 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <LogOut className="w-4 h-4" />
+                            <span className="font-medium font-sans">{signingOut ? 'Signing out...' : 'Sign Out'}</span>
+                        </div>
                     </button>
                 </Section>
 

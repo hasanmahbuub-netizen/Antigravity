@@ -11,6 +11,7 @@ import PracticeTab from "./tabs/PracticeTab";
 
 import { quranApi } from "@/lib/quran-api";
 import { aiService, TajweedFeedback } from "@/lib/ai-service";
+import { ALL_114_SURAHS, getSurahById } from "@/lib/surah-list";
 
 // New Views
 import RecordingView from "./views/RecordingView";
@@ -23,12 +24,8 @@ import { AnimatePresence } from "framer-motion";
 type Tab = "listen" | "meaning" | "practice";
 type ViewMode = "tabs" | "recording" | "processing" | "feedback";
 
-const SURAHS = [
-    { id: 1, name: "Al-Fatiha", ayahs: 7 },
-    { id: 112, name: "Al-Ikhlas", ayahs: 4 },
-    { id: 113, name: "Al-Falaq", ayahs: 5 },
-    { id: 114, name: "An-Nas", ayahs: 6 }
-];
+// Use all 114 surahs from the surah list
+const SURAHS = ALL_114_SURAHS;
 
 export default function PracticeScreen() {
     const [activeTab, setActiveTab] = useState<Tab>("listen");
@@ -71,24 +68,45 @@ export default function PracticeScreen() {
         setViewMode("recording");
     };
 
-    const handleStopRecording = async () => {
+    const handleStopRecording = async (audioBlob: Blob | null) => {
         setViewMode("processing");
         setFeedback(null);
 
-        // Analyze recitation (using mock for now - passing null Blob just to satisfy interface)
-        const result = await aiService.analyzeRecitation(null as any, currentSurahId, currentVerseId);
-        setFeedback(result);
-        setViewMode("feedback");
+        try {
+            // Get session for API authentication
+            const { data: { session } } = await supabase.auth.getSession();
 
-        // Sync attempt to Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            await supabase.from('recitation_attempts').insert({
-                user_id: user.id,
-                surah: currentSurahId,
-                ayah: currentVerseId,
-                feedback: result
+            // Create form data for API call
+            const formData = new FormData();
+            if (audioBlob) {
+                formData.append('audio', audioBlob, 'recording.webm');
+            }
+            formData.append('surah', currentSurahId.toString());
+            formData.append('ayah', currentVerseId.toString());
+
+            // Call the analyze API
+            const response = await fetch('/api/quran/analyze', {
+                method: 'POST',
+                headers: {
+                    ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
+                },
+                body: formData
             });
+
+            if (!response.ok) {
+                throw new Error('Analysis failed');
+            }
+
+            const result = await response.json();
+            setFeedback(result.feedback);
+            setViewMode("feedback");
+
+        } catch (error) {
+            console.error('Recording analysis failed:', error);
+            // Fallback to local AI service
+            const result = await aiService.analyzeRecitation(audioBlob, currentSurahId, currentVerseId);
+            setFeedback(result);
+            setViewMode("feedback");
         }
     };
 
@@ -98,7 +116,7 @@ export default function PracticeScreen() {
         // Sync progress to Supabase
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-            await supabase.from('quran_verse_progress').insert({
+            await (supabase.from('quran_verse_progress') as any).insert({
                 user_id: user.id,
                 surah: currentSurahId,
                 ayah: currentVerseId
@@ -134,11 +152,10 @@ export default function PracticeScreen() {
         }
     };
 
-    const handleSurahSelect = (surahName: string) => {
-        const surah = SURAHS.find(s => s.name === surahName) || SURAHS[0];
-        setCurrentSurahId(surah.id);
-        setTotalAyahs(surah.ayahs);
-        setCurrentSurah(surah.name);
+    const handleSurahSelect = (surahId: number, surahName: string, totalVerses: number) => {
+        setCurrentSurahId(surahId);
+        setTotalAyahs(totalVerses);
+        setCurrentSurah(surahName);
         setShowSurahSelector(false);
         setActiveTab("listen");
         setViewMode("tabs");

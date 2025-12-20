@@ -26,39 +26,48 @@ function FiqhContent() {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [viewState, setViewState] = useState<"input" | "loading" | "result">("input");
+    const [answer, setAnswer] = useState<any>(null);
 
     // Auto-search effect
     useEffect(() => {
         const fetchAnswer = async (q: string) => {
             setViewState("loading");
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
+                const { data: { session } } = await supabase.auth.getSession();
 
-                // 1. Get user madhab preference
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('madhab')
-                    .eq('id', user.id)
-                    .single();
+                // Get user madhab preference
+                let madhab = 'hanafi';
+                if (session?.user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('madhab')
+                        .eq('id', session.user.id)
+                        .single();
+                    madhab = (profile as any)?.madhab || 'hanafi';
+                }
 
-                const madhab = (profile as any)?.madhab || 'hanafi';
+                // Call the API endpoint
+                const response = await fetch('/api/fiqh/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
+                    },
+                    body: JSON.stringify({
+                        question: q,
+                        madhab: madhab
+                    })
+                });
 
-                // 2. Consult AI Mufti (Gemini 2.0 Flash)
-                const result = await aiService.consultFiqh(q, madhab);
+                if (!response.ok) {
+                    throw new Error('Failed to get answer');
+                }
 
-                // 3. Save to Supabase History
-                // TODO: Fix type issues with fiqh_questions table
-                // await (supabase.from('fiqh_questions') as any).insert({
-                //     user_id: user.id,
-                //     question: q,
-                //     madhab: madhab,
-                //     answer: result
-                // });
-
+                const result = await response.json();
+                setAnswer(result);
                 setViewState("result");
             } catch (err) {
-                console.error("Fiqh AI failed:", err);
+                console.error("Fiqh API failed:", err);
                 setViewState("input");
             }
         };
@@ -70,6 +79,7 @@ function FiqhContent() {
         } else {
             setViewState("input");
             setQuery("");
+            setAnswer(null);
         }
     }, [searchParams]);
 
@@ -106,7 +116,7 @@ function FiqhContent() {
                     </button>
                     <span className="ml-2 font-bold text-sm uppercase tracking-widest text-muted">Fiqh Intelligence</span>
                 </header>
-                <AnswerView question={query} onAskAnother={handleClear} />
+                <AnswerView question={query} answer={answer} madhab={answer?.madhab || 'hanafi'} onAskAnother={handleClear} />
             </div>
         );
     }

@@ -15,7 +15,7 @@ export default function CTASection() {
                 <div className="flex flex-col md:flex-row gap-6 mb-12">
 
                     {/* 1. Learn Quran Path */}
-                    <Link href="/onboarding" className="flex-1 group">
+                    <Link href="/auth/signup" className="flex-1 group">
                         <div className="bg-white rounded-[24px] p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all h-full flex flex-col items-center">
                             <div className="w-16 h-16 bg-[#008080]/10 rounded-full flex items-center justify-center text-[#008080] mb-6 group-hover:bg-[#008080] group-hover:text-white transition-colors">
                                 <BookOpen className="w-8 h-8" strokeWidth={1.5} />

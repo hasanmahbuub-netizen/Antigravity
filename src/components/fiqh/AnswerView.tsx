@@ -3,19 +3,32 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface AnswerViewProps {
     question: string;
+    answer: any;
+    madhab: string;
     onAskAnother: () => void;
 }
 
-export default function AnswerView({ question, onAskAnother }: AnswerViewProps) {
+export default function AnswerView({ question, answer, madhab, onAskAnother }: AnswerViewProps) {
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
     const toggleSection = (section: string) => {
         setExpandedSection(expandedSection === section ? null : section);
     };
+
+    // Show loading if no answer yet
+    if (!answer) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin text-primary mb-4">⏳</div>
+                    <p className="text-muted">Loading answer...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 overflow-y-auto p-6 pb-20 space-y-8">
@@ -24,7 +37,7 @@ export default function AnswerView({ question, onAskAnother }: AnswerViewProps) 
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
                     <span className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-widest">
-                        YOUR MADHAB: HANAFI
+                        YOUR MADHAB: {madhab.toUpperCase()}
                     </span>
                 </div>
                 <h1 className="font-english text-xl font-medium text-foreground leading-relaxed">
@@ -38,74 +51,40 @@ export default function AnswerView({ question, onAskAnother }: AnswerViewProps) 
                     <span className="w-2 h-2 rounded-full bg-green-500" />
                     Answer
                 </div>
-                <p className="font-english text-lg leading-relaxed text-foreground font-medium">
-                    In the Hanafi school, you say "Ameen" <strong>silently</strong> after reciting Al-Fatiha in prayer, not out loud. This is the standard practice regardless of whether you are praying alone or behind an Imam.
-                </p>
+                <div className="font-english text-lg leading-relaxed text-foreground font-medium whitespace-pre-wrap">
+                    {answer.answer || "No answer available"}
+                </div>
             </div>
 
-            {/* 3. Reasoning (Accordion) */}
-            <AccordionItem
-                title="Why? See the reasoning"
-                isOpen={expandedSection === "reasoning"}
-                onClick={() => toggleSection("reasoning")}
-                icon={<Info className="w-4 h-4" />}
-            >
-                <div className="space-y-4 text-sm text-muted leading-relaxed">
-                    <p>
-                        The evidence for this position comes from the narration of Abdullah ibn Mas'ud (may Allah be pleased with him) who said that the Prophet (ﷺ) would say Ameen silently.
-                    </p>
-                    <p>
-                        The general principle in the Hanafi madhab is that supplications (du'a) in prayer should be silent unless there is specific evidence to say them aloud. Since "Ameen" is a du'a meaning "O Allah, answer our prayer", it falls under this rule.
-                    </p>
-                </div>
-            </AccordionItem>
-
-            {/* 4. Other Views (Accordion) */}
-            <AccordionItem
-                title="Other Schools of Thought"
-                isOpen={expandedSection === "other"}
-                onClick={() => toggleSection("other")}
-                icon={<BookOpen className="w-4 h-4" />}
-            >
-                <div className="space-y-4">
-                    <div className="p-3 rounded-lg bg-muted/5 border border-border/50">
-                        <p className="font-bold text-foreground text-sm mb-1">Shafi'i & Hanbali</p>
-                        <p className="text-sm text-muted">Recommend saying Ameen <strong>out loud</strong> in audible prayers (Fajr, Maghrib, Isha).</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/5 border border-border/50">
-                        <p className="font-bold text-foreground text-sm mb-1">Maliki</p>
-                        <p className="text-sm text-muted">Traditionally recommends <strong>not saying Ameen at all</strong> out loud, and distinct views on silent recitation.</p>
-                    </div>
-                </div>
-            </AccordionItem>
-
-            {/* 5. Sources */}
-            <div className="pt-4 border-t border-border">
-                <button
+            {/* 3. Sources & Context */}
+            {answer.sources && (
+                <AccordionItem
+                    title="Sources & Context"
+                    isOpen={expandedSection === "sources"}
                     onClick={() => toggleSection("sources")}
-                    className="flex items-center gap-2 text-xs text-muted hover:text-foreground transition-colors"
+                    icon={<BookOpen className="w-4 h-4" />}
                 >
-                    <BookOpen className="w-3 h-3" />
-                    {expandedSection === "sources" ? "Hide Sources" : "View Sources & Citations"}
-                </button>
+                    <div className="space-y-4 text-sm text-muted leading-relaxed">
+                        <p>{answer.sources}</p>
+                    </div>
+                </AccordionItem>
+            )}
 
-                <AnimatePresence>
-                    {expandedSection === "sources" && (
-                        <motion.ul
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="mt-4 space-y-2 text-xs text-muted overflow-hidden"
-                        >
-                            <li>• Sahih Bukhari, Hadith 780</li>
-                            <li>• Al-Hidayah, Vol 1, Page 45</li>
-                            <li>• Radd al-Muhtar, Ibn Abidin</li>
-                        </motion.ul>
-                    )}
-                </AnimatePresence>
-            </div>
+            {/* 4. Other Views (if available) */}
+            {answer.differences && (
+                <AccordionItem
+                    title="Other Schools of Thought"
+                    isOpen={expandedSection === "other"}
+                    onClick={() => toggleSection("other")}
+                    icon={<Info className="w-4 h-4" />}
+                >
+                    <div className="space-y-4 text-sm text-muted leading-relaxed">
+                        <p>{answer.differences}</p>
+                    </div>
+                </AccordionItem>
+            )}
 
-            {/* 6. Feedback & Actions */}
+            {/* 5. Feedback & Actions */}
             <div className="space-y-6 pt-8">
                 <div className="flex flex-col items-center gap-4">
                     <span className="text-xs text-muted font-medium">Was this helpful?</span>
