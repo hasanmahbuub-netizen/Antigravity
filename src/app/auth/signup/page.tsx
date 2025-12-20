@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -11,38 +11,27 @@ export default function SignUpPage() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [loading, setLoading] = useState(false)
+    const [localLoading, setLocalLoading] = useState(false)
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
     const router = useRouter()
+    const { signUp } = useAuth()
 
     async function handleSignup(e: React.FormEvent) {
         e.preventDefault()
-        setLoading(true)
+        setLocalLoading(true)
         setError("")
 
         try {
-            const { data, error: authError } = await supabase.auth.signUp({
-                email: email.trim(),
-                password: password,
-                options: {
-                    data: {
-                        full_name: name
-                    }
-                }
-            })
-
-            if (authError) {
-                setError(authError.message)
-                setLoading(false)
-                return
-            }
+            console.log("📝 Attempting signup via AuthContext...")
+            await signUp(email, password, name)
 
             setSuccess(true)
 
         } catch (err: any) {
+            console.error("❌ Exception:", err)
             setError(err.message || "Signup failed")
-            setLoading(false)
+            setLocalLoading(false)
         }
     }
 
@@ -107,7 +96,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setName(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={loading}
+                                    disabled={localLoading}
                                 />
                             </div>
                         </div>
@@ -125,7 +114,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={loading}
+                                    disabled={localLoading}
                                 />
                             </div>
                         </div>
@@ -143,7 +132,7 @@ export default function SignUpPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={loading}
+                                    disabled={localLoading}
                                     minLength={6}
                                 />
                             </div>
@@ -151,10 +140,10 @@ export default function SignUpPage() {
 
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={localLoading}
                             className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                         >
-                            {loading ? (
+                            {localLoading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     Creating Account...

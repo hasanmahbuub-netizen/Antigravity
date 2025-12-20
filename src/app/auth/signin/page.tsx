@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -10,44 +10,28 @@ import { Loader2, Mail, Lock } from "lucide-react"
 export default function SignInPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [loading, setLoading] = useState(false)
+    const [localLoading, setLocalLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
+    const { signIn } = useAuth()
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
-        setLoading(true)
+        setLocalLoading(true)
         setError("")
 
         try {
-            console.log("🔐 Attempting login...")
-            const { data, error: authError } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
-                password: password
-            })
-
-            if (authError) {
-                console.error("❌ Auth error:", authError.message)
-                setError(authError.message)
-                setLoading(false)
-                return
-            }
-
-            if (!data.session) {
-                console.error("❌ No session returned")
-                setError("Login failed - no session")
-                setLoading(false)
-                return
-            }
+            console.log("🔐 Attempting login via AuthContext...")
+            await signIn(email, password)
 
             console.log("✅ Login successful! Redirecting...")
-            // Use window.location for reliable navigation
+            // Use window.location for reliable navigation to dashboard
             window.location.href = "/dashboard"
 
         } catch (err: any) {
             console.error("❌ Exception:", err)
             setError(err.message || "Login failed")
-            setLoading(false)
+            setLocalLoading(false)
         }
     }
 
@@ -82,7 +66,7 @@ export default function SignInPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={loading}
+                                    disabled={localLoading}
                                 />
                             </div>
                         </div>
@@ -100,17 +84,17 @@ export default function SignInPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     required
-                                    disabled={loading}
+                                    disabled={localLoading}
                                 />
                             </div>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={localLoading}
                             className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                         >
-                            {loading ? (
+                            {localLoading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     Signing In...
