@@ -116,6 +116,26 @@ export interface Database {
                     created_at?: string
                 }
             }
+            quran_surahs: {
+                Row: {
+                    id: number
+                    name_arabic: string
+                    name_english: string
+                    created_at: string
+                }
+                Insert: {
+                    id: number
+                    name_arabic: string
+                    name_english: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    name_arabic?: string
+                    name_english?: string
+                    created_at?: string
+                }
+            }
         }
     }
 }
