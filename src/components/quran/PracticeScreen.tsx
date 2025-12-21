@@ -245,8 +245,12 @@ export default function PracticeScreen() {
                                 )}
                                 {activeTab === "practice" && (
                                     <PracticeTab
-                                        onStartRecording={handleStartRecording}
                                         arabic={verseData.arabic}
+                                        surahId={currentSurahId}
+                                        verseId={currentVerseId}
+                                        onRecordingComplete={(feedback) => {
+                                            setFeedback(feedback);
+                                        }}
                                     />
                                 )}
                             </>
