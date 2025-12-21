@@ -37,11 +37,36 @@ export async function POST(request: NextRequest) {
             Format your response clearly with sections if needed.`
         })
 
-        const result = await model.generateContent(`User Question: "${question}"`)
-        const response = await result.response
-        const answerText = response.text()
+        let answerText: string
 
-        console.log('✅ Gemini response received')
+        try {
+            const result = await model.generateContent(`User Question: "${question}"`)
+            const response = await result.response
+            answerText = response.text()
+            console.log('✅ Gemini response received')
+        } catch (aiError: any) {
+            console.error('Gemini API error:', aiError.status, aiError.message)
+
+            // Handle rate limiting
+            if (aiError.status === 429) {
+                return NextResponse.json({
+                    answer: `⏳ The AI service is currently experiencing high demand. Please try again in a moment.\n\nIn the meantime, regarding your question about "${question.substring(0, 50)}...", I recommend consulting with a local scholar or trusted Islamic resource for immediate guidance.`,
+                    sources: 'Rate limit - please retry',
+                    madhab: madhab,
+                    differences: null,
+                    isRateLimited: true
+                })
+            }
+
+            // Handle other errors
+            return NextResponse.json({
+                answer: `I apologize, but I'm temporarily unable to provide a detailed answer. For questions about "${question.substring(0, 50)}...", please consult with a qualified local scholar or trusted Islamic resource.`,
+                sources: 'AI service temporarily unavailable',
+                madhab: madhab,
+                differences: null,
+                error: aiError.message
+            })
+        }
 
         // Try to save to database (non-blocking)
         try {
