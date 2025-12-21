@@ -1,12 +1,13 @@
 /**
  * IMANOS AI Service Layer
  * Powered by Gemini 2.0 Flash
+ * NOTE: This is for server-side usage only (API routes)
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-const genAI = new GoogleGenerativeAI(API_KEY);
+// Use server-side environment variable (not NEXT_PUBLIC_)
+const getApiKey = () => process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
 export interface TajweedFeedback {
     score: number;
@@ -20,12 +21,14 @@ export const aiService = {
      * Analyze user recitation against a target verse using Gemini.
      */
     async analyzeRecitation(audioBlob: Blob | null, surah: number, ayah: number): Promise<TajweedFeedback> {
+        const API_KEY = getApiKey();
         if (!API_KEY) {
             console.warn("Gemini API Key missing. Falling back to mock.");
             return this.getMockTajweed();
         }
 
         try {
+            const genAI = new GoogleGenerativeAI(API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const prompt = `
@@ -65,12 +68,14 @@ export const aiService = {
      * Consult Fiqh knowledge base using Gemini.
      */
     async consultFiqh(question: string, madhab: string = 'hanafi'): Promise<any> {
+        const API_KEY = getApiKey();
         if (!API_KEY) {
             console.warn("Gemini API Key missing. Falling back to mock.");
             return this.getMockFiqh();
         }
 
         try {
+            const genAI = new GoogleGenerativeAI(API_KEY);
             const model = genAI.getGenerativeModel({
                 model: "gemini-2.0-flash",
                 systemInstruction: `You are an expert Islamic Jurist (Mufti) specializing in the ${madhab} Madhab. 

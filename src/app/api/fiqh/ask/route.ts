@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { aiService } from '@/lib/ai-service'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createServerClient } from '@supabase/ssr'
 
 export async function POST(request: NextRequest) {
     try {
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+
+        if (!GEMINI_API_KEY) {
+            console.error('❌ GEMINI_API_KEY not set!')
+            return NextResponse.json(
+                { error: 'AI service not configured. Please set GEMINI_API_KEY in environment variables.' },
+                { status: 500 }
+            )
+        }
+
         const body = await request.json()
         const { question, madhab = 'hanafi' } = body
 
@@ -17,51 +24,72 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get user session from authorization header
-        const authHeader = request.headers.get('authorization')
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..." (${madhab})`)
 
-        let userId = null
-        if (authHeader) {
-            const token = authHeader.replace('Bearer ', '')
-            const { data: { user } } = await supabase.auth.getUser(token)
-            userId = user?.id
-        }
+        // Initialize Gemini
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-2.0-flash',
+            systemInstruction: `You are an expert Islamic Jurist (Mufti) specializing in the ${madhab} Madhab. 
+            Your answers should be based on traditional secondary sources like Radd al-Muhtar, Al-Hidayah, or similar authoritative texts. 
+            Keep the tone respectful, clear, and educational. 
+            Always mention if there are major differences with other schools.
+            Format your response clearly with sections if needed.`
+        })
 
-        // Call AI service to get answer
-        console.log(`🤖 Consulting Fiqh AI for question: "${question.substring(0, 50)}..."`)
-        const result = await aiService.consultFiqh(question, madhab)
+        const result = await model.generateContent(`User Question: "${question}"`)
+        const response = await result.response
+        const answerText = response.text()
 
-        // Store question and answer in database
-        if (userId) {
-            try {
+        console.log('✅ Gemini response received')
+
+        // Try to save to database (non-blocking)
+        try {
+            const supabase = createServerClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                {
+                    cookies: {
+                        getAll() {
+                            return request.cookies.getAll()
+                        },
+                        setAll() { },
+                    },
+                }
+            )
+
+            const { data: { user } } = await supabase.auth.getUser()
+
+            if (user) {
                 await supabase
                     .from('fiqh_questions')
                     .insert({
-                        user_id: userId,
+                        user_id: user.id,
                         question: question,
-                        answer: result.answer,
+                        answer: answerText,
                         madhab: madhab,
-                        sources: result.context || ''
+                        sources: `${madhab.charAt(0).toUpperCase() + madhab.slice(1)} Jurisprudence`
                     })
                 console.log('✅ Saved to database')
-            } catch (dbError) {
-                console.error('Failed to save to database:', dbError)
-                // Continue even if DB save fails
             }
+        } catch (dbError) {
+            console.error('DB save failed (non-blocking):', dbError)
         }
 
         return NextResponse.json({
-            answer: result.answer,
-            sources: result.context,
+            answer: answerText,
+            sources: `Primary Source: ${madhab.charAt(0).toUpperCase() + madhab.slice(1)} Jurisprudence`,
             madhab: madhab,
-            differences: result.differences || null
+            differences: "Referenced within the answer if applicable."
         })
 
     } catch (error: any) {
         console.error('❌ Fiqh API error:', error)
         return NextResponse.json(
-            { error: 'Failed to process question', details: error.message },
+            {
+                error: 'Failed to process question',
+                details: error.message || 'Unknown error'
+            },
             { status: 500 }
         )
     }

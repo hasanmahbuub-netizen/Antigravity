@@ -240,6 +240,7 @@ export default function PracticeScreen() {
                                 {activeTab === "meaning" && (
                                     <MeaningTab
                                         translation={verseData.translation}
+                                        arabic={verseData.arabic}
                                     />
                                 )}
                                 {activeTab === "practice" && (
