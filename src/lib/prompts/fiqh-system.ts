@@ -143,22 +143,62 @@ export interface FiqhStructuredAnswer {
  * Parse and validate Fiqh AI response
  */
 export function parseFiqhResponse(rawText: string, madhab: string): FiqhStructuredAnswer {
-  // Clean up common issues
+  // Try multiple methods to extract JSON
+  let parsed: any = null;
+
+  // Method 1: Try direct parse after cleaning markdown
   let cleanText = rawText
     .replace(/```json\n?/g, '')
     .replace(/```\n?/g, '')
-    .replace(/^\s*{/, '{')
-    .replace(/}\s*$/, '}')
     .trim();
 
+  // Method 2: Extract JSON object using regex if direct parse fails
+  const jsonMatch = cleanText.match(/\{[\s\S]*"directAnswer"[\s\S]*\}/);
+  if (jsonMatch) {
+    cleanText = jsonMatch[0];
+  }
+
   try {
-    const parsed = JSON.parse(cleanText);
+    parsed = JSON.parse(cleanText);
 
-    // Validate required fields
-    if (!parsed.directAnswer || typeof parsed.directAnswer !== 'string') {
-      throw new Error('Missing directAnswer');
+    // Check if directAnswer is itself a JSON string (double-wrapped)
+    if (typeof parsed.directAnswer === 'string' && parsed.directAnswer.includes('"directAnswer"')) {
+      try {
+        const innerMatch = parsed.directAnswer.match(/\{[\s\S]*\}/);
+        if (innerMatch) {
+          const innerParsed = JSON.parse(innerMatch[0]);
+          if (innerParsed.directAnswer) {
+            parsed = innerParsed;
+          }
+        }
+      } catch {
+        // Keep outer parsed if inner parse fails
+      }
     }
+  } catch (e1) {
+    // Method 3: Try to find any valid JSON in the response
+    try {
+      const allJsonMatches = rawText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+      if (allJsonMatches) {
+        for (const match of allJsonMatches) {
+          try {
+            const testParse = JSON.parse(match);
+            if (testParse.directAnswer) {
+              parsed = testParse;
+              break;
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+    } catch {
+      // All methods failed
+    }
+  }
 
+  // If we got a valid parsed response
+  if (parsed && parsed.directAnswer && typeof parsed.directAnswer === 'string') {
     // Validate madhab is mentioned
     if (!parsed.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
       console.warn('Answer does not mention ' + madhab + '! Fixing...');
@@ -178,18 +218,23 @@ export function parseFiqhResponse(rawText: string, madhab: string): FiqhStructur
       otherSchools: filteredSchools,
       citations: Array.isArray(parsed.citations) ? parsed.citations : []
     };
-
-  } catch (error) {
-    console.error('JSON parse failed, using fallback structure');
-
-    // Return the raw text as direct answer if parsing fails
-    return {
-      directAnswer: 'In the ' + madhab + ' school, ' + rawText.substring(0, 400),
-      reasoning: 'Unable to parse detailed reasoning. Please try again.',
-      otherSchools: [],
-      citations: []
-    };
   }
+
+  // Fallback: try to extract answer from raw text
+  console.error('JSON parse failed, using fallback structure');
+
+  // Try to extract useful content from raw text
+  const answerMatch = rawText.match(/"directAnswer"\s*:\s*"([^"]+)"/);
+  const directAnswer = answerMatch
+    ? answerMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"')
+    : rawText.substring(0, 400);
+
+  return {
+    directAnswer: 'In the ' + madhab + ' school, ' + directAnswer,
+    reasoning: 'Unable to parse detailed reasoning. Please try again.',
+    otherSchools: [],
+    citations: []
+  };
 }
 
 /**

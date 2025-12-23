@@ -101,53 +101,73 @@ export async function POST(request: NextRequest) {
 
             console.log(`📤 Calling Gemini with ${madhab} prompts...`)
 
-            // Single attempt with faster model
-            try {
-                const response = await fetch(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-                            generationConfig: {
-                                temperature: 0.3,       // Slightly higher for more natural responses
-                                maxOutputTokens: 2000,  // Increased for detailed Arabic text + citations
-                                topP: 0.95,
-                                topK: 40,
-                                responseMimeType: "application/json"
-                            },
-                            safetySettings: [
-                                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
-                            ]
-                        })
-                    }
-                )
+            // Try multiple models with retry logic for rate limits
+            const models = [
+                'gemini-2.5-flash',       // Latest flash model
+                'gemini-2.0-flash',       // Stable flash model  
+                'gemini-2.0-flash-lite'   // Lightweight fallback
+            ];
 
-                if (response.ok) {
-                    const data = await response.json()
-                    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
+            for (const model of models) {
+                if (structuredAnswer) break; // Already got a response
 
-                    if (rawText) {
-                        structuredAnswer = parseFiqhResponse(rawText, madhab)
-                        console.log(`✅ Gemini response parsed (${Date.now() - startTime}ms)`)
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        console.log(`🔄 Trying ${model} (attempt ${attempt + 1})...`)
 
-                        // Validate madhab mention
-                        if (!structuredAnswer.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
-                            console.warn(`⚠️ Answer missing ${madhab}, prepending...`)
-                            structuredAnswer.directAnswer = `In the ${madhab} school, ` + structuredAnswer.directAnswer
+                        const response = await fetch(
+                            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                                    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+                                    generationConfig: {
+                                        temperature: 0.4,
+                                        maxOutputTokens: 2000,
+                                        topP: 0.95,
+                                        topK: 40,
+                                        responseMimeType: "application/json"
+                                    },
+                                    safetySettings: [
+                                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                                        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                                        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
+                                    ]
+                                })
+                            }
+                        )
+
+                        if (response.ok) {
+                            const data = await response.json()
+                            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+                            if (rawText) {
+                                structuredAnswer = parseFiqhResponse(rawText, madhab)
+                                console.log(`✅ ${model} response parsed (${Date.now() - startTime}ms)`)
+
+                                // Validate madhab mention
+                                if (!structuredAnswer.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
+                                    console.warn(`⚠️ Answer missing ${madhab}, prepending...`)
+                                    structuredAnswer.directAnswer = `In the ${madhab} school, ` + structuredAnswer.directAnswer
+                                }
+                                break; // Success, exit retry loop
+                            }
+                        } else if (response.status === 429) {
+                            console.log(`⚠️ ${model} returned 429, waiting before retry...`)
+                            await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))) // 2s, 4s
+                        } else {
+                            console.log(`⚠️ ${model} returned ${response.status}`)
+                            break; // Non-retryable error, try next model
                         }
-                    }
-                } else {
-                    console.log(`⚠️ Gemini returned ${response.status}`)
-                }
 
-            } catch (error) {
-                console.error(`❌ Gemini error:`, error)
+                    } catch (error) {
+                        console.error(`❌ ${model} error:`, error)
+                        break; // Try next model
+                    }
+                }
             }
         }
 
