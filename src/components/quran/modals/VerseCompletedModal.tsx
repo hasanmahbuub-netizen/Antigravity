@@ -37,3 +37,4 @@ export default function VerseCompletedModal({ onContinue }: VerseCompletedModalP
         </div>
     );
 }
+

@@ -71,3 +71,4 @@ function RevealText({ children, show, delay, color = "text-gray-400" }: { childr
         </motion.p>
     );
 }
+

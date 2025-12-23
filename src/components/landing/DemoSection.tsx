@@ -12,7 +12,7 @@ export default function DemoSection() {
             <div className="text-center mb-20 max-w-2xl mx-auto">
                 <h2 className="text-3xl md:text-5xl font-english font-bold mb-6">
                     Every other app shows you the Quran.
-                    <span className="block text-[#008080]">Imanos teaches you to READ it.</span>
+                    <span className="block text-[#008080]">MEEK teaches you to READ it.</span>
                 </h2>
             </div>
 
@@ -36,7 +36,7 @@ export default function DemoSection() {
                     </div>
                 </div>
 
-                {/* 2. Imanos Experience (The New Way) */}
+                {/* 2. MEEK Experience (The New Way) */}
                 <div className="flex-1">
                     <div className="bg-[#F8F5F2] rounded-[32px] p-0 h-[640px] border-4 border-[#0A1628] relative overflow-hidden shadow-2xl">
                         {/* Status Bar */}
@@ -52,7 +52,7 @@ export default function DemoSection() {
                         <InteractiveCard />
 
                     </div>
-                    <p className="mt-8 text-center font-bold text-[#008080]">IMANOS EXPERIENCE</p>
+                    <p className="mt-8 text-center font-bold text-[#008080]">MEEK EXPERIENCE</p>
                     <p className="text-center text-sm text-gray-600">Active. Guided. Alive.</p>
                 </div>
 
@@ -101,3 +101,4 @@ function InteractiveCard() {
         </div>
     );
 }
+

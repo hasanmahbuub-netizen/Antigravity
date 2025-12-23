@@ -215,3 +215,4 @@ export default function RecordingView({ onCancel, onStop }: RecordingViewProps) 
         </motion.div>
     );
 }
+

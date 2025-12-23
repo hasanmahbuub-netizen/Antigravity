@@ -54,3 +54,4 @@ function RevealLine({ children, show, delay }: { children: React.ReactNode, show
         </motion.p>
     );
 }
+

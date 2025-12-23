@@ -139,13 +139,14 @@ export default function ZoneA_Quran() {
                                     <div className="w-2 h-2 rounded-full bg-border" />
                                 </div>
 
-                                {/* Verse */}
+                                {/* Verse - Arabic Only */}
                                 <h1 className="font-arabic text-2xl md:text-3xl leading-loose text-arabic animate-in slide-in-from-bottom-2 duration-700">
-                                    {latestVerse?.arabic || "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّhِيمِ"}
+                                    {latestVerse?.arabic || "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"}
                                 </h1>
 
-                                <p className="text-sm text-muted max-w-[280px] leading-relaxed font-sans line-clamp-2">
-                                    "{latestVerse?.translation || "In the name of Allah..."}"
+                                {/* Tap to see meaning hint */}
+                                <p className="text-xs text-muted uppercase tracking-widest">
+                                    Tap to practice & see meaning
                                 </p>
                             </div>
 
@@ -163,3 +164,4 @@ export default function ZoneA_Quran() {
         </section>
     );
 }
+

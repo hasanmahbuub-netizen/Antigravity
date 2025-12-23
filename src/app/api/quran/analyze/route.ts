@@ -100,3 +100,4 @@ function generateLightweightFeedback(verseText: string, surah: number, ayah: num
         details: encouragements[encIndex]
     }
 }
+

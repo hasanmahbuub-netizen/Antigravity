@@ -28,3 +28,4 @@ console.log('URL:', supabaseUrl)
 // Use createBrowserClient from @supabase/ssr for cookie-based session storage
 // This ensures the session is available to middleware and server components
 export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+

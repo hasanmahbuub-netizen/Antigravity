@@ -125,7 +125,7 @@ const ALL_SURAHS = [
 export async function GET(request: NextRequest) {
     // Check for admin secret
     const adminSecret = request.nextUrl.searchParams.get('secret')
-    if (adminSecret !== 'imanos-setup-2024') {
+    if (adminSecret !== 'MEEK-setup-2024') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -182,3 +182,4 @@ export async function GET(request: NextRequest) {
         storage: results.storage
     })
 }
+

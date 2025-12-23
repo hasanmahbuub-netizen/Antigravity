@@ -144,3 +144,4 @@ export const SAMPLE_SURAHS: Surah[] = [
         total_verses: 120
     }
 ];
+

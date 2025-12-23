@@ -146,3 +146,4 @@ export function searchSurahs(query: string): SurahInfo[] {
         s.id.toString().includes(query)
     );
 }
+

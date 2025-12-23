@@ -239,3 +239,4 @@ export async function getSurahVersesFromDatabase(surahId: number): Promise<Quran
 
     return data || []
 }
+

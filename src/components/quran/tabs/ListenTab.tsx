@@ -154,11 +154,9 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
                     {arabic || "Loading..."}
                 </h1>
 
-                <div className="space-y-1">
-                    <p className="font-english text-base text-muted font-medium">
-                        "{translation || "Translation loading..."}"
-                    </p>
-                </div>
+                <p className="text-xs text-muted uppercase tracking-widest">
+                    Listen & repeat • See Meaning tab for translation
+                </p>
 
                 {/* Audio Player CTA */}
                 <button
@@ -215,8 +213,8 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => playWord(word, idx)}
                                 className={`p-3 rounded-xl text-center transition-all ${playingWordIndex === idx
-                                        ? 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg'
-                                        : 'bg-card border border-border hover:border-primary/30 hover:bg-muted/5'
+                                    ? 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg'
+                                    : 'bg-card border border-border hover:border-primary/30 hover:bg-muted/5'
                                     }`}
                             >
                                 <div className="text-xl mb-1 font-arabic" dir="rtl">
@@ -243,3 +241,4 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
         </div>
     );
 }
+

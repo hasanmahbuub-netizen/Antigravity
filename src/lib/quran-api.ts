@@ -1,5 +1,5 @@
 /**
- * IMANOS Quran API - Enhanced with multi-language translations
+ * MEEK Quran API - Enhanced with multi-language translations
  */
 
 const QURAN_COM_API_ROOT = "https://api.quran.com/api/v4";
@@ -157,3 +157,4 @@ function stripHTML(text: string): string {
         .replace(/\s+/g, ' ')          // Normalize whitespace
         .trim();
 }
+

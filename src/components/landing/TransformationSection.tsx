@@ -7,13 +7,13 @@ const STORIES = [
         name: "Ahmed, 24",
         role: "Tech Professional",
         before: "I felt embarrassed. I'm Muslim but I couldn't read Surah Al-Fatiha correctly. Every prayer felt incomplete.",
-        after: "After 7 days with Imanos, I can recite Al-Fatiha perfectly. Now prayer feels different. I understand what I'm saying."
+        after: "After 7 days with MEEK, I can recite Al-Fatiha perfectly. Now prayer feels different. I understand what I'm saying."
     },
     {
         name: "Sara, 19",
         role: "University Student",
         before: "I had so many questions about hijab and university life. Google gave me 100 confusing answers.",
-        after: "Imanos give me ONE clear answer with context. No more confusion. Just clarity."
+        after: "MEEK give me ONE clear answer with context. No more confusion. Just clarity."
     },
     {
         name: "Tariq, 32",
@@ -58,7 +58,7 @@ function StoryCard({ story, index }: { story: any, index: number }) {
             </div>
 
             <div className="md:w-2/3 flex flex-col justify-center">
-                <p className="text-xs font-bold text-[#D4AF37] mb-2">AFTER IMANOS</p>
+                <p className="text-xs font-bold text-[#D4AF37] mb-2">AFTER MEEK</p>
                 <p className="font-english text-xl md:text-2xl font-medium text-[#0A1628] leading-relaxed">
                     "{story.after}"
                 </p>
@@ -66,3 +66,4 @@ function StoryCard({ story, index }: { story: any, index: number }) {
         </motion.div>
     );
 }
+

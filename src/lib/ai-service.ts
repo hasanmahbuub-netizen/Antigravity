@@ -1,5 +1,5 @@
 /**
- * IMANOS AI Service Layer
+ * MEEK AI Service Layer
  * Powered by Gemini 2.0 Flash
  * NOTE: This is for server-side usage only (API routes)
  */
@@ -116,3 +116,4 @@ export const aiService = {
         };
     }
 };
+

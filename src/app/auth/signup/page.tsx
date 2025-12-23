@@ -74,7 +74,7 @@ export default function SignUpPage() {
             >
                 <div className="glass-panel p-8 rounded-2xl">
                     <h1 className="text-3xl font-bold text-center gradient-text mb-2">Create Account</h1>
-                    <p className="text-center text-muted mb-8">Join IMANOS today</p>
+                    <p className="text-center text-muted mb-8">Join MEEK today</p>
 
                     {error && (
                         <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
@@ -165,3 +165,4 @@ export default function SignUpPage() {
         </div>
     )
 }
+

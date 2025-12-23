@@ -98,3 +98,4 @@ export function getDisplayTranslation(translation: string | null | undefined): s
     }
     return translation;
 }
+

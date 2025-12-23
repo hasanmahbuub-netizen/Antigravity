@@ -134,3 +134,4 @@ export default function SurahSelectorModal({ onClose, onSelect }: SurahSelectorM
         </motion.div>
     );
 }
+

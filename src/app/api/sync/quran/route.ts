@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         if (!authHeader?.includes(expectedKey?.slice(0, 20) || 'service')) {
             // Check for simple admin password
             const body = await request.json().catch(() => ({}))
-            if (body.secret !== 'imanos-sync-2024') {
+            if (body.secret !== 'MEEK-sync-2024') {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             }
         }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         message: 'Quran sync endpoint',
         usage: {
             method: 'POST',
-            body: { secret: 'imanos-sync-2024' },
+            body: { secret: 'MEEK-sync-2024' },
             params: {
                 'type=surahs': 'Sync only surahs',
                 'type=verses': 'Sync only verses',
@@ -60,3 +60,4 @@ export async function GET(request: NextRequest) {
         }
     })
 }
+

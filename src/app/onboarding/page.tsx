@@ -70,7 +70,7 @@ export default function OnboardingPage() {
                     >
                         <span className="text-3xl">📿</span>
                     </motion.div>
-                    <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to IMANOS</h1>
+                    <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to MEEK</h1>
                     <p className="text-muted text-sm">Let's personalize your learning experience</p>
                 </div>
 
@@ -249,3 +249,4 @@ export default function OnboardingPage() {
         </div>
     );
 }
+

@@ -230,7 +230,7 @@ export default function SettingsPage() {
                 {/* App Info */}
                 <Section title="App">
                     <div className="flex items-center justify-between p-4">
-                        <span className="text-foreground font-medium font-sans">About IMANOS</span>
+                        <span className="text-foreground font-medium font-sans">About MEEK</span>
                         <span className="text-muted font-sans">v1.0.0</span>
                     </div>
                 </Section>
@@ -252,3 +252,4 @@ function Section({ title, icon, children }: { title: string, icon?: React.ReactN
         </div>
     );
 }
+

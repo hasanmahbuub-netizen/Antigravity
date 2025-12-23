@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'IMANOS',
-        short_name: 'IMANOS',
+        name: 'MEEK',
+        short_name: 'MEEK',
         description: 'A quiet companion for daily Quran and practical guidance.',
         start_url: '/',
         display: 'standalone',
@@ -29,3 +29,4 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
     };
 }
+

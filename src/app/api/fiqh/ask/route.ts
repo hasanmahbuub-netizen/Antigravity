@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import {
-    FIQH_SYSTEM_PROMPT,
+    getFiqhSystemPrompt,
     buildFiqhPrompt,
     parseFiqhResponse,
     getFallbackStructuredAnswer,
@@ -9,9 +9,11 @@ import {
 } from '@/lib/prompts/fiqh-system'
 
 export async function POST(request: NextRequest) {
+    const startTime = Date.now();
+
     try {
         const body = await request.json()
-        const { question } = body
+        const { question, madhab: requestMadhab } = body
 
         if (!question || question.trim().length < 3) {
             return NextResponse.json(
@@ -37,19 +39,27 @@ export async function POST(request: NextRequest) {
         // Get user
         const { data: { user } } = await supabase.auth.getUser()
 
-        // Get user's madhab preference
-        let madhab = 'Hanafi'
-        if (user) {
-            const { data: profile } = await (supabase
-                .from('profiles')
-                .select('madhab')
-                .eq('id', user.id)
-                .single() as any)
+        // Get user's madhab preference - CRITICAL for correct answers
+        let madhab = requestMadhab || 'Hanafi'
 
-            if (profile?.madhab) {
-                madhab = profile.madhab
+        if (user) {
+            try {
+                const { data: profile } = await (supabase
+                    .from('profiles')
+                    .select('madhab')
+                    .eq('id', user.id)
+                    .single() as any)
+
+                if (profile?.madhab) {
+                    madhab = profile.madhab
+                    console.log(`✅ User madhab from profile: ${madhab}`)
+                }
+            } catch (e) {
+                console.log(`⚠️ Could not fetch profile, using default: ${madhab}`)
             }
         }
+
+        console.log(`📚 Using madhab: ${madhab}`)
 
         // Check cache first
         const { data: cached } = await supabase
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
             .maybeSingle()
 
         if (cached?.answer) {
-            console.log('✅ Returning cached answer')
+            console.log(`✅ Returning cached answer (${Date.now() - startTime}ms)`)
             try {
                 const parsedAnswer = typeof cached.answer === 'string'
                     ? JSON.parse(cached.answer)
@@ -71,77 +81,77 @@ export async function POST(request: NextRequest) {
                     success: true,
                     data: parsedAnswer,
                     madhab,
-                    cached: true
+                    cached: true,
+                    timing: Date.now() - startTime
                 })
             } catch {
                 // Old format, continue to fetch new
             }
         }
 
-        // Call Gemini with JSON mode
+        // Call Gemini with explicit madhab prompts
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY
         let structuredAnswer: FiqhStructuredAnswer | null = null
 
         if (GEMINI_API_KEY) {
-            const systemPrompt = FIQH_SYSTEM_PROMPT.replace(/{MADHAB}/g, madhab)
+            const systemPrompt = getFiqhSystemPrompt(madhab)
             const userPrompt = buildFiqhPrompt(question, madhab)
 
-            // Retry logic
-            for (let attempt = 0; attempt < 3; attempt++) {
-                try {
-                    const response = await fetch(
-                        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                systemInstruction: { parts: [{ text: systemPrompt }] },
-                                contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-                                generationConfig: {
-                                    temperature: 0.3,
-                                    maxOutputTokens: 2048,
-                                    topP: 0.95,
-                                    topK: 40,
-                                    responseMimeType: "application/json"
-                                },
-                                safetySettings: [
-                                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
-                                ]
-                            })
+            console.log(`📤 Calling Gemini with ${madhab} prompts...`)
+
+            // Single attempt with faster model
+            try {
+                const response = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+                            generationConfig: {
+                                temperature: 0.2,       // Lower for consistent madhab adherence
+                                maxOutputTokens: 1200,  // Reduced for speed
+                                topP: 0.95,
+                                topK: 40,
+                                responseMimeType: "application/json"
+                            },
+                            safetySettings: [
+                                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
+                            ]
+                        })
+                    }
+                )
+
+                if (response.ok) {
+                    const data = await response.json()
+                    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+                    if (rawText) {
+                        structuredAnswer = parseFiqhResponse(rawText, madhab)
+                        console.log(`✅ Gemini response parsed (${Date.now() - startTime}ms)`)
+
+                        // Validate madhab mention
+                        if (!structuredAnswer.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
+                            console.warn(`⚠️ Answer missing ${madhab}, prepending...`)
+                            structuredAnswer.directAnswer = `In the ${madhab} school, ` + structuredAnswer.directAnswer
                         }
-                    )
-
-                    if (response.ok) {
-                        const data = await response.json()
-                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-                        if (rawText) {
-                            structuredAnswer = parseFiqhResponse(rawText)
-                            console.log('✅ Gemini JSON response parsed')
-                            break
-                        }
                     }
-
-                    console.log(`⚠️ Gemini attempt ${attempt + 1} failed: ${response.status}`)
-                    if (attempt < 2) {
-                        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
-                    }
-
-                } catch (error) {
-                    console.error(`Gemini attempt ${attempt + 1} error:`, error)
-                    if (attempt < 2) {
-                        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
-                    }
+                } else {
+                    console.log(`⚠️ Gemini returned ${response.status}`)
                 }
+
+            } catch (error) {
+                console.error(`❌ Gemini error:`, error)
             }
         }
 
         // Use fallback if Gemini failed
         if (!structuredAnswer) {
-            console.log('⚠️ Using fallback structured answer')
+            console.log(`⚠️ Using fallback for ${madhab}`)
             structuredAnswer = getFallbackStructuredAnswer(question, madhab)
         }
 
@@ -159,10 +169,14 @@ export async function POST(request: NextRequest) {
             })();
         }
 
+        const timing = Date.now() - startTime
+        console.log(`✅ Fiqh response ready (${timing}ms)`)
+
         return NextResponse.json({
             success: true,
             data: structuredAnswer,
-            madhab
+            madhab,
+            timing
         })
 
     } catch (error: any) {
@@ -173,7 +187,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             data: fallback,
-            madhab: 'Hanafi'
+            madhab: 'Hanafi',
+            timing: Date.now() - startTime
         })
     }
 }

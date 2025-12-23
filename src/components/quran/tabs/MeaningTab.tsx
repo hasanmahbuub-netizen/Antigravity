@@ -233,3 +233,4 @@ function getTafsirContent(surahId: number, verseId: number): string {
     // Default tafsir encouragement
     return `This verse from Surah ${surahId}, Verse ${verseId} contains profound wisdom. Take time to reflect on its meaning and how it applies to your life. The Quran speaks to us across all times - its guidance is timeless and universal. Consider reading the fuller tafsir (exegesis) from scholars like Ibn Kathir or As-Sa'di for deeper understanding.`;
 }
+

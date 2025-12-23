@@ -21,12 +21,12 @@ const amiri = Amiri({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | IMANOS",
-    default: "IMANOS - Learn Quran & Fiqh",
+    template: "%s | MEEK",
+    default: "MEEK - Learn Quran & Fiqh",
   },
   description: "Your quiet companion for daily Quran practice and Islamic guidance. Learn to recite with AI feedback and get clear Fiqh answers.",
   keywords: ["Quran", "Tajweed", "Islam", "Fiqh", "Prayer", "Hanafi", "Learn Quran"],
-  authors: [{ name: "IMANOS Team" }],
+  authors: [{ name: "MEEK Team" }],
 };
 
 export const viewport: Viewport = {
@@ -70,3 +70,4 @@ export default function RootLayout({
     </html>
   );
 }
+
