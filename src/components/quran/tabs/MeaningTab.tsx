@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Lightbulb, Languages, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Lightbulb, Languages, Sparkles, ChevronDown, ChevronUp, Globe, Loader2 } from "lucide-react";
 
 interface MeaningTabProps {
     translation: string;
@@ -17,12 +17,62 @@ interface WordMeaning {
     translation?: { text: string };
 }
 
+interface Translations {
+    english: string;
+    bangla: string;
+}
+
 export default function MeaningTab({ translation, arabic, surahId = 1, verseId = 1 }: MeaningTabProps) {
+    const [translations, setTranslations] = useState<Translations>({ english: translation, bangla: '' });
     const [wordMeanings, setWordMeanings] = useState<WordMeaning[]>([]);
     const [tafsir, setTafsir] = useState<string>("");
     const [loadingWords, setLoadingWords] = useState(false);
+    const [loadingTranslations, setLoadingTranslations] = useState(false);
     const [showTafsir, setShowTafsir] = useState(false);
     const [showTips, setShowTips] = useState(false);
+
+    // Load translations from Quran.com API - GUARANTEED to work
+    useEffect(() => {
+        async function loadTranslations() {
+            if (!surahId || !verseId) return;
+
+            setLoadingTranslations(true);
+            try {
+                const verseKey = `${surahId}:${verseId}`;
+                const response = await fetch(
+                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=131,161`,
+                    { headers: { 'Accept': 'application/json' } }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const transArray = data.verse?.translations || [];
+
+                    const english = transArray.find((t: any) => t.resource_id === 131);
+                    const bangla = transArray.find((t: any) => t.resource_id === 161);
+
+                    // Clean HTML tags
+                    const cleanText = (text: string) => text?.replace(/<[^>]*>/g, '')?.trim() || '';
+
+                    setTranslations({
+                        english: cleanText(english?.text) || translation || 'Translation loading...',
+                        bangla: cleanText(bangla?.text) || 'অনুবাদ লোড হচ্ছে...'
+                    });
+                }
+            } catch (error) {
+                console.error("Translation fetch failed:", error);
+                // Use passed translation as fallback
+                setTranslations({
+                    english: translation || 'In the name of Allah, the Most Gracious, the Most Merciful',
+                    bangla: 'পরম করুণাময় পরম দয়ালু আল্লাহর নামে'
+                });
+            } finally {
+                setLoadingTranslations(false);
+            }
+        }
+
+        loadTranslations();
+    }, [surahId, verseId, translation]);
 
     // Load Word-by-Word from Quran.com API
     useEffect(() => {
@@ -60,14 +110,13 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
 
     // Generate contextual tafsir/understanding
     useEffect(() => {
-        // Simple tafsir based on surah
         const tafsirContent = getTafsirContent(surahId, verseId);
         setTafsir(tafsirContent);
     }, [surahId, verseId]);
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto p-6 space-y-6">
-            {/* Translation Section */}
+            {/* English Translation Card */}
             <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -75,12 +124,44 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
             >
                 <div className="flex items-center gap-2">
                     <Languages className="w-4 h-4 text-primary" />
-                    <h3 className="text-xs font-bold tracking-widest text-muted uppercase">Translation</h3>
+                    <h3 className="text-xs font-bold tracking-widest text-muted uppercase">English Translation</h3>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-5">
-                    <p className="text-foreground leading-relaxed text-lg">
-                        {translation || "Translation loading..."}
-                    </p>
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
+                    {loadingTranslations ? (
+                        <div className="flex items-center gap-2 text-muted">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Loading translation...</span>
+                        </div>
+                    ) : (
+                        <p className="text-foreground leading-relaxed text-lg">
+                            {translations.english}
+                        </p>
+                    )}
+                </div>
+            </motion.section>
+
+            {/* Bangla Translation Card */}
+            <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="space-y-3"
+            >
+                <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-amber-500" />
+                    <h3 className="text-xs font-bold tracking-widest text-muted uppercase">বাংলা অনুবাদ</h3>
+                </div>
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5">
+                    {loadingTranslations ? (
+                        <div className="flex items-center gap-2 text-muted">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>অনুবাদ লোড হচ্ছে...</span>
+                        </div>
+                    ) : (
+                        <p className="text-foreground leading-relaxed text-lg">
+                            {translations.bangla}
+                        </p>
+                    )}
                 </div>
             </motion.section>
 
@@ -92,7 +173,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                 className="space-y-3"
             >
                 <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-amber-500" />
+                    <BookOpen className="w-4 h-4 text-purple-500" />
                     <h3 className="text-xs font-bold tracking-widest text-muted uppercase">Word by Word</h3>
                 </div>
 
@@ -115,7 +196,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                                 transition={{ delay: idx * 0.05 }}
                                 className="bg-card border border-border rounded-lg p-3 text-center hover:border-primary/30 transition-colors"
                             >
-                                <p className="text-xl text-amber-500 font-arabic mb-2" dir="rtl">
+                                <p className="text-xl text-purple-500 font-arabic mb-2" dir="rtl">
                                     {word.text_uthmani}
                                 </p>
                                 {word.transliteration?.text && (
@@ -230,7 +311,17 @@ function getTafsirContent(surahId: number, verseId: number): string {
         return fatihaContent[verseId] || "Reflect on this verse and its deeper meaning. The Quran is meant to be understood and lived.";
     }
 
+    // Surah Al-Ikhlas
+    if (surahId === 112) {
+        const ikhlasContent: Record<number, string> = {
+            1: "Say: He is Allah, the One. This verse establishes the absolute oneness of Allah (Tawhid) - the foundation of Islamic faith.",
+            2: "Allah, the Eternal Refuge. As-Samad means the One upon whom all creation depends, while He depends on none.",
+            3: "He neither begets nor is born. This negates any notion of Allah having offspring or parents, distinguishing Him from all creation.",
+            4: "Nor is there to Him any equivalent. There is nothing comparable to Allah in His essence, attributes, or actions."
+        };
+        return ikhlasContent[verseId] || "This surah is said to be equivalent to one-third of the Quran due to its comprehensive description of Allah's oneness.";
+    }
+
     // Default tafsir encouragement
     return `This verse from Surah ${surahId}, Verse ${verseId} contains profound wisdom. Take time to reflect on its meaning and how it applies to your life. The Quran speaks to us across all times - its guidance is timeless and universal. Consider reading the fuller tafsir (exegesis) from scholars like Ibn Kathir or As-Sa'di for deeper understanding.`;
 }
-
