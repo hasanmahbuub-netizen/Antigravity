@@ -61,12 +61,14 @@ export async function POST(request: NextRequest) {
 
         console.log(`📚 Using madhab: ${madhab}`)
 
-        // Check cache first
+        // Check cache first - but only use recent entries (since prompt V5 deployment)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { data: cached } = await supabase
             .from('fiqh_questions')
-            .select('answer')
+            .select('answer, created_at')
             .ilike('question', question.trim())
             .eq('madhab', madhab)
+            .gte('created_at', oneDayAgo) // Only use cache from last 24 hours
             .limit(1)
             .maybeSingle()
 
@@ -110,8 +112,8 @@ export async function POST(request: NextRequest) {
                             systemInstruction: { parts: [{ text: systemPrompt }] },
                             contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
                             generationConfig: {
-                                temperature: 0.2,       // Lower for consistent madhab adherence
-                                maxOutputTokens: 1200,  // Reduced for speed
+                                temperature: 0.3,       // Slightly higher for more natural responses
+                                maxOutputTokens: 2000,  // Increased for detailed Arabic text + citations
                                 topP: 0.95,
                                 topK: 40,
                                 responseMimeType: "application/json"
