@@ -2,24 +2,67 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ListenTabProps {
     arabic: string;
     translation: string;
     audioUrl: string;
+    surahId?: number;
+    verseId?: number;
 }
 
-export default function ListenTab({ arabic, translation, audioUrl }: ListenTabProps) {
+interface WordData {
+    text_uthmani: string;
+    transliteration?: { text: string };
+    translation?: { text: string };
+    audio?: { url: string };
+}
+
+export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, verseId = 1 }: ListenTabProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [wordMeanings, setWordMeanings] = useState<WordData[]>([]);
+    const [playingWordIndex, setPlayingWordIndex] = useState<number | null>(null);
+    const [loadingWords, setLoadingWords] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const wordAudioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Parse Arabic words for word-by-word display
-    const arabicWords = arabic ? arabic.split(' ').filter(w => w.trim()) : [];
+    // Load word-by-word data from Quran.com API
+    useEffect(() => {
+        async function loadWords() {
+            if (!surahId || !verseId) return;
+
+            setLoadingWords(true);
+            try {
+                const verseKey = `${surahId}:${verseId}`;
+                const response = await fetch(
+                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&word_fields=text_uthmani,transliteration&translations=131&audio=7`
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setWordMeanings(data.verse?.words || []);
+                }
+            } catch (err) {
+                console.error("Failed to load words:", err);
+                // Fallback to simple word split
+                setWordMeanings(arabic.split(' ').filter(w => w.trim()).map(word => ({
+                    text_uthmani: word,
+                    transliteration: { text: '' },
+                    translation: { text: '' }
+                })));
+            } finally {
+                setLoadingWords(false);
+            }
+        }
+
+        loadWords();
+    }, [surahId, verseId, arabic]);
 
     useEffect(() => {
-        // Create audio element
+        // Create audio element for main recitation
         if (audioUrl) {
             audioRef.current = new Audio(audioUrl);
 
@@ -62,6 +105,44 @@ export default function ListenTab({ arabic, translation, audioUrl }: ListenTabPr
             console.error("Audio play error:", err);
             setError("Failed to play audio");
             setIsLoading(false);
+        }
+    };
+
+    const playWord = async (word: WordData, idx: number) => {
+        // Stop any currently playing word audio
+        if (wordAudioRef.current) {
+            wordAudioRef.current.pause();
+            wordAudioRef.current = null;
+        }
+
+        // Check if word has audio URL
+        const audioUrl = word.audio?.url;
+        if (!audioUrl) {
+            // No word audio available, just highlight
+            setPlayingWordIndex(idx);
+            setTimeout(() => setPlayingWordIndex(null), 500);
+            return;
+        }
+
+        setPlayingWordIndex(idx);
+
+        try {
+            const audio = new Audio(`https://audio.qurancdn.com/${audioUrl}`);
+            wordAudioRef.current = audio;
+
+            audio.onended = () => {
+                setPlayingWordIndex(null);
+                wordAudioRef.current = null;
+            };
+            audio.onerror = () => {
+                setPlayingWordIndex(null);
+                wordAudioRef.current = null;
+            };
+
+            await audio.play();
+        } catch (err) {
+            console.error("Word audio error:", err);
+            setPlayingWordIndex(null);
         }
     };
 
@@ -110,29 +191,53 @@ export default function ListenTab({ arabic, translation, audioUrl }: ListenTabPr
 
             <div className="h-[1px] bg-border w-full my-2" />
 
-            {/* Word by Word (Dynamic from verse) */}
-            <div className="h-[200px] overflow-y-auto px-6 pb-6 space-y-4">
-                <h3 className="text-xs font-bold tracking-widest text-muted uppercase mb-4 sticky top-0 bg-background py-2">
-                    Word-by-Word Breakdown
+            {/* Word by Word with Audio */}
+            <div className="h-[220px] overflow-y-auto px-6 pb-6 space-y-3">
+                <h3 className="text-xs font-bold tracking-widest text-muted uppercase mb-4 sticky top-0 bg-background py-2 flex items-center gap-2">
+                    <Volume2 className="w-4 h-4" />
+                    Word-by-Word (Tap to Hear)
                 </h3>
 
-                {arabicWords.length > 0 ? (
-                    arabicWords.map((word, i) => (
-                        <div key={i} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/5 transition-colors border-b border-border/40 last:border-0 cursor-pointer group">
-                            <div className="flex flex-col text-left">
-                                <span className="font-english text-xs text-muted/60">Word {i + 1}</span>
-                                <span className="font-english text-sm font-medium text-foreground">-</span>
+                {loadingWords ? (
+                    <div className="grid grid-cols-3 gap-3">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="p-3 rounded-xl bg-muted/10 animate-pulse">
+                                <div className="h-6 bg-muted/20 rounded mb-2" />
+                                <div className="h-3 bg-muted/20 rounded w-1/2 mx-auto" />
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="font-arabic text-xl text-arabic" dir="rtl">{word}</span>
-                                <button className="p-2 rounded-full bg-muted/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Volume2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                        ))}
+                    </div>
                 ) : (
-                    <p className="text-muted text-sm text-center py-4">Loading words...</p>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                        {wordMeanings.filter(w => w.text_uthmani && !w.text_uthmani.includes('۞')).map((word, idx) => (
+                            <motion.button
+                                key={idx}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => playWord(word, idx)}
+                                className={`p-3 rounded-xl text-center transition-all ${playingWordIndex === idx
+                                        ? 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg'
+                                        : 'bg-card border border-border hover:border-primary/30 hover:bg-muted/5'
+                                    }`}
+                            >
+                                <div className="text-xl mb-1 font-arabic" dir="rtl">
+                                    {word.text_uthmani}
+                                </div>
+                                {word.transliteration?.text && (
+                                    <div className="text-xs text-muted italic mb-1">
+                                        {word.transliteration.text}
+                                    </div>
+                                )}
+                                {word.translation?.text && (
+                                    <div className="text-xs font-medium">
+                                        {word.translation.text}
+                                    </div>
+                                )}
+                                {playingWordIndex === idx && (
+                                    <Volume2 className="w-3 h-3 mx-auto mt-1 animate-pulse" />
+                                )}
+                            </motion.button>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

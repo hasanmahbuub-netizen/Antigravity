@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { FIQH_SYSTEM_PROMPT, FIQH_EDUCATIONAL_PREFACE, getFallbackAnswer } from '@/lib/prompts/fiqh-system'
+import { FIQH_SYSTEM_PROMPT, buildFiqhPrompt, getFallbackAnswer } from '@/lib/prompts/fiqh-system'
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,10 +31,7 @@ export async function POST(request: NextRequest) {
         // Get user for personalization
         const { data: { user } } = await supabase.auth.getUser()
 
-        // Check cache first (hash by question + madhab)
-        const cacheKey = `${question.toLowerCase().trim().replace(/\s+/g, '_')}_${madhab}`.substring(0, 200)
-
-        // Try to find cached answer
+        // Check cache first
         const { data: cached } = await supabase
             .from('fiqh_questions')
             .select('answer')
@@ -55,12 +52,12 @@ export async function POST(request: NextRequest) {
         // No cache hit - call Gemini with invisible prompt engineering
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
-        let answer: string
+        let answer: string = ''
 
         if (GEMINI_API_KEY) {
             // Prepare system prompt with madhab
             const systemPrompt = FIQH_SYSTEM_PROMPT.replace(/{MADHAB}/g, madhab)
-            const educationalQuery = FIQH_EDUCATIONAL_PREFACE(question, madhab)
+            const userPrompt = buildFiqhPrompt(question, madhab)
 
             // Retry logic with exponential backoff
             for (let attempt = 0; attempt < 3; attempt++) {
@@ -78,17 +75,19 @@ export async function POST(request: NextRequest) {
                                 },
                                 contents: [{
                                     role: 'user',
-                                    parts: [{ text: educationalQuery }]
+                                    parts: [{ text: userPrompt }]
                                 }],
                                 generationConfig: {
-                                    temperature: 0.3,
-                                    maxOutputTokens: 1000,
-                                    topP: 0.8
+                                    temperature: 0.4,
+                                    maxOutputTokens: 2048,
+                                    topP: 0.9,
+                                    topK: 40
                                 },
                                 safetySettings: [
                                     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
                                     { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }
+                                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
                                 ]
                             })
                         }
@@ -98,8 +97,8 @@ export async function POST(request: NextRequest) {
                         const data = await response.json()
                         answer = data.candidates?.[0]?.content?.parts?.[0]?.text
 
-                        if (answer) {
-                            console.log('✅ Gemini response received')
+                        if (answer && answer.length > 100) {
+                            console.log('✅ Gemini response received (' + answer.length + ' chars)')
                             break
                         }
                     }
@@ -122,7 +121,7 @@ export async function POST(request: NextRequest) {
         }
 
         // If no answer from Gemini, use intelligent fallback
-        if (!answer!) {
+        if (!answer || answer.length < 100) {
             console.log('⚠️ Using fallback answer')
             answer = getFallbackAnswer(question, madhab)
         }
@@ -149,18 +148,10 @@ export async function POST(request: NextRequest) {
         console.error('❌ Fiqh API error:', error)
 
         // NEVER return an error to user - always provide helpful content
+        const fallback = getFallbackAnswer('general question', 'Hanafi')
         return NextResponse.json({
-            answer: `Thank you for your question about Islamic guidance.
-
-Based on traditional Islamic scholarship, this topic has been discussed by scholars throughout history. The general principle in Islam is to seek knowledge and act upon what is clearly established in the Quran and Sunnah.
-
-**Recommended Actions**:
-1. Consult with a qualified local scholar or imam
-2. Visit reputable Islamic knowledge websites
-3. Refer to classical fiqh texts in your madhab
-
-📚 This is educational information based on classical Islamic scholarship. For personal religious guidance, please consult a qualified scholar in your community.`,
-            madhab: 'General',
+            answer: fallback,
+            madhab: 'Hanafi',
             sources: 'Islamic Tradition'
         })
     }

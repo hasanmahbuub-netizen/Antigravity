@@ -235,6 +235,8 @@ export default function PracticeScreen() {
                                         arabic={verseData.arabic}
                                         translation={verseData.translation}
                                         audioUrl={verseData.audio_url}
+                                        surahId={currentSurahId}
+                                        verseId={currentVerseId}
                                     />
                                 )}
                                 {activeTab === "meaning" && (
