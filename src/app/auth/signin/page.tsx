@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
@@ -13,6 +13,7 @@ export default function SignInPage() {
     const [localLoading, setLocalLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { signIn } = useAuth()
 
     async function handleLogin(e: React.FormEvent) {
@@ -25,8 +26,11 @@ export default function SignInPage() {
             await signIn(email, password)
 
             console.log("✅ Login successful! Redirecting...")
-            // Use router.push for client-side navigation (preserves auth state)
-            router.push("/dashboard")
+
+            // Use redirect param if provided, otherwise go to dashboard
+            const redirectTo = searchParams.get('redirect') || '/dashboard'
+            console.log("📍 Redirecting to:", redirectTo)
+            router.push(redirectTo)
 
         } catch (err: any) {
             console.error("❌ Exception:", err)
