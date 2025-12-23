@@ -10,7 +10,14 @@ import { quranApi } from "@/lib/quran-api";
 
 export default function ZoneA_Quran() {
     const [profile, setProfile] = useState<{ full_name: string | null, avatar_url: string | null } | null>(null);
-    const [latestVerse, setLatestVerse] = useState<{ surah: number, ayah: number, arabic: string, translation: string } | null>(null);
+    const [latestVerse, setLatestVerse] = useState<{
+        surah: number;
+        ayah: number;
+        arabic: string;
+        translation: string;
+        translation_english?: string;
+        translation_bangla?: string;
+    } | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -29,23 +36,26 @@ export default function ZoneA_Quran() {
                 setProfile(profileData);
 
                 // 2. Fetch Latest Progress
-                const { data: progressData } = await supabase
+                const { data: progressData } = await (supabase
                     .from('quran_verse_progress')
                     .select('surah, ayah')
                     .eq('user_id', user.id)
                     .order('completed_at', { ascending: false })
-                    .limit(1);
+                    .limit(1) as any);
 
-                const nextSurah = progressData?.[0] ? progressData[0].surah : 1;
-                const nextAyah = progressData?.[0] ? progressData[0].ayah + 1 : 1;
+                const progress = progressData?.[0] as { surah?: number; ayah?: number } | undefined;
+                const nextSurah = progress?.surah || 1;
+                const nextAyah = (progress?.ayah || 0) + 1;
 
-                // 3. Fetch Verse Text
+                // 3. Fetch Verse Text with both translations
                 const verseData = await quranApi.getVerseData(nextSurah, nextAyah);
                 setLatestVerse({
                     surah: nextSurah,
                     ayah: nextAyah,
                     arabic: verseData.arabic,
-                    translation: verseData.translation
+                    translation: verseData.translation,
+                    translation_english: verseData.translation_english,
+                    translation_bangla: verseData.translation_bangla
                 });
             } catch (err) {
                 console.error("Dashboard fetch failed:", err);
