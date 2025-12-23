@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
 :root {
+  /* Editorial Color Palette */
+  --deep-navy: #0A1628;
+  --teal: #2D5F5D;
+  --teal-dark: #1A3B3A;
+  --warm-gold: #E8C49A;
+  --charcoal: #2B2B2B;
+  --warm-gray: #6B6B6B;
+  --light-gray: #9B9B9B;
+  --cream: #F5F1E8;
+  --off-white: #FAFAF5;
+  --soft-gray-bg: #FAFAFA;
+
   /* Light Mode Tokens */
-  --bg-main: #F8F5F2;
-  /* Warm cream */
+  --bg-main: var(--off-white);
   --surface: #FFFFFF;
-  /* Cards / focus */
-  --text-primary: #3C3A36;
-  /* English UI */
-  --text-muted: #7A6F66;
-  /* Metadata */
-  --accent-primary: #6B4C3B;
-  /* Buttons, icons */
-  --accent-secondary: #A57C5B;
-  /* Pills, highlights */
-  --arabic-text: #422B1E;
-  /* Arabic */
+  --text-primary: var(--charcoal);
+  --text-muted: var(--warm-gray);
+  --accent-primary: var(--teal);
+  --accent-secondary: var(--warm-gold);
+  --arabic-text: var(--warm-gold);
   --border-light: #E4DDD4;
-  /* subtle dividers */
 
   /* Semantic Mapping for Tailwind */
   --background: var(--bg-main);
@@ -32,20 +36,19 @@
   --muted-foreground: var(--text-muted);
   --border: var(--border-light);
   --accent: var(--accent-primary);
-  /* Mapping generic accent to primary accent for utility */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     /* Dark Mode Tokens */
-    --bg-main: #1F1C19;
-    --surface: #2A2724;
-    --text-primary: #CFC7BF;
-    --text-muted: #8F8373;
-    --accent-primary: #A57C5B;
-    --accent-secondary: #C1A17D;
-    --arabic-text: #E8DCCF;
-    --border-light: #3C372F;
+    --bg-main: var(--deep-navy);
+    --surface: #1A2A3A;
+    --text-primary: var(--cream);
+    --text-muted: #8F8F8F;
+    --accent-primary: var(--teal);
+    --accent-secondary: var(--warm-gold);
+    --arabic-text: var(--warm-gold);
+    --border-light: #2A3A4A;
   }
 }
 
@@ -71,7 +74,8 @@
   --color-arabic: var(--arabic-text);
 
   --font-sans: var(--font-inter), 'Inter', sans-serif;
-  --font-arabic: var(--font-arabic), 'Noto Naskh Arabic', serif;
+  --font-serif: var(--font-serif), 'Crimson Text', Georgia, serif;
+  --font-arabic: var(--font-arabic-display), var(--font-arabic), 'Scheherazade New', 'Noto Naskh Arabic', serif;
 }
 
 body {
@@ -81,12 +85,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.font-arabic {
-  font-family: var(--font-arabic);
+/* Font Utilities */
+.font-sans {
+  font-family: var(--font-sans);
 }
 
-.font-english {
-  font-family: var(--font-sans);
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-arabic {
+  font-family: var(--font-arabic);
 }
 
 /* Custom scrollbar hiding */
@@ -97,4 +106,35 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--teal);
+  color: white;
+}
+
+/* Link underline animation */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--teal);
+  transition: width 0.3s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
 }

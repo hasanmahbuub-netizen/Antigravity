@@ -10,24 +10,23 @@ import CTASection from "@/components/landing/CTASection";
 export default function LandingPage() {
     return (
         <main className="min-h-screen w-full overflow-x-hidden">
-            {/* 1. The Moment (Hero) */}
+            {/* 1. The Moment (Hero) - Immersive Opening */}
             <HeroSection />
 
-            {/* 2. The Problem */}
+            {/* 2. The Realization (Problem) - Editorial Scroll */}
             <ProblemSection />
 
-            {/* 3. The Experience (Demo) */}
+            {/* 3. The Experience (Demo) - Interactive Phone Mockup */}
             <DemoSection />
 
-            {/* 4. The Transformation (Stories) */}
+            {/* 4. The Voices (Testimonials) - Pull Quotes */}
             <TransformationSection />
 
-            {/* 5. The Vision */}
+            {/* 5. The Invitation (CTA) - Mission + Soft CTA */}
             <VisionSection />
 
-            {/* 6. The Call */}
+            {/* 6. Footer - Minimal */}
             <CTASection />
         </main>
     );
 }
-

@@ -1,104 +1,208 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Play, Mic, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
+import { Play, Mic, Volume2, CheckCircle } from "lucide-react";
 
 export default function DemoSection() {
+    const [demoStep, setDemoStep] = useState<"idle" | "playing" | "recording" | "feedback">("idle");
+    const [showBubble, setShowBubble] = useState<string | null>(null);
+
+    const handlePlay = () => {
+        setDemoStep("playing");
+        setShowBubble("Crystal clear recitation");
+        setTimeout(() => setShowBubble(null), 3000);
+        setTimeout(() => setDemoStep("idle"), 4000);
+    };
+
+    const handleRecord = () => {
+        setDemoStep("recording");
+        setShowBubble("AI listens to your pronunciation");
+        setTimeout(() => {
+            setShowBubble(null);
+            setDemoStep("feedback");
+            setShowBubble("Specific guidance, not generic tips");
+            setTimeout(() => setShowBubble(null), 3000);
+        }, 3000);
+    };
+
     return (
-        <section className="min-h-screen bg-white text-[#0A1628] py-20 px-6 overflow-hidden">
+        <section className="relative w-full bg-[#FAFAFA] py-24 md:py-32">
+            {/* Section Headline */}
+            <motion.h2
+                className="font-serif text-[40px] md:text-[56px] text-[#2B2B2B] text-center mb-16 md:mb-20 px-6"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
+                See how it works
+            </motion.h2>
 
-            {/* Headline */}
-            <div className="text-center mb-20 max-w-2xl mx-auto">
-                <h2 className="text-3xl md:text-5xl font-english font-bold mb-6">
-                    Every other app shows you the Quran.
-                    <span className="block text-[#008080]">MEEK teaches you to READ it.</span>
-                </h2>
+            {/* Demo Container */}
+            <div className="relative max-w-[500px] mx-auto px-6">
+
+                {/* Floating Annotation Bubbles */}
+                <AnimatePresence>
+                    {showBubble && (
+                        <motion.div
+                            className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 bg-[#2D5F5D] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg whitespace-nowrap"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: -30 }}
+                            exit={{ opacity: 0, y: -50 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            {showBubble}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Phone Mockup */}
+                <motion.div
+                    className="relative mx-auto"
+                    style={{ maxWidth: "380px" }}
+                    initial={{ opacity: 0, y: 60 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    {/* Phone Frame */}
+                    <div
+                        className="relative rounded-[40px] bg-[#1A1A1A] p-3 shadow-[0_40px_80px_rgba(0,0,0,0.15)]"
+                        style={{ aspectRatio: "9/19" }}
+                    >
+                        {/* Screen */}
+                        <div className="relative w-full h-full rounded-[32px] bg-[#0F0F0F] overflow-hidden">
+
+                            {/* Notch */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#1A1A1A] rounded-b-2xl z-10" />
+
+                            {/* App Content */}
+                            <div className="absolute inset-0 pt-12 pb-6 px-5 flex flex-col">
+
+                                {/* Header */}
+                                <div className="text-center mb-6">
+                                    <span className="text-[11px] text-gray-500 uppercase tracking-widest">Surah Al-Fatiha</span>
+                                    <p className="text-gray-400 text-xs mt-1">Verse 1 of 7</p>
+                                </div>
+
+                                {/* Arabic Text */}
+                                <div className="flex-1 flex items-center justify-center">
+                                    <motion.p
+                                        className="font-arabic text-[28px] text-[#E8C49A] text-center leading-loose"
+                                        animate={demoStep === "playing" ? {
+                                            textShadow: ["0 0 0px rgba(232,196,154,0)", "0 0 30px rgba(232,196,154,0.6)", "0 0 0px rgba(232,196,154,0)"]
+                                        } : {}}
+                                        transition={{ duration: 2, repeat: demoStep === "playing" ? 1 : 0 }}
+                                    >
+                                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                                    </motion.p>
+                                </div>
+
+                                {/* Feedback Panel (when shown) */}
+                                <AnimatePresence>
+                                    {demoStep === "feedback" && (
+                                        <motion.div
+                                            className="bg-[#1A2A1A] border border-green-900/30 rounded-xl p-4 mb-4"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 20 }}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                                <span className="text-green-400 text-sm font-medium">85% Accuracy</span>
+                                            </div>
+                                            <p className="text-gray-400 text-xs leading-relaxed">
+                                                Great pronunciation of "Bismillah". Work on the "ح" in "الرحمن" - it should come from deeper in the throat.
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-3 mt-auto">
+                                    <button
+                                        onClick={handlePlay}
+                                        disabled={demoStep !== "idle" && demoStep !== "feedback"}
+                                        className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-medium text-sm transition-all ${demoStep === "playing"
+                                                ? "bg-[#2D5F5D] text-white"
+                                                : "bg-[#1A1A1A] border border-gray-800 text-gray-300 hover:border-[#2D5F5D]"
+                                            }`}
+                                    >
+                                        {demoStep === "playing" ? (
+                                            <Volume2 className="w-4 h-4 animate-pulse" />
+                                        ) : (
+                                            <Play className="w-4 h-4" />
+                                        )}
+                                        <span>{demoStep === "playing" ? "Playing..." : "Listen"}</span>
+                                    </button>
+
+                                    <button
+                                        onClick={handleRecord}
+                                        disabled={demoStep !== "idle" && demoStep !== "feedback"}
+                                        className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-medium text-sm transition-all ${demoStep === "recording"
+                                                ? "bg-red-600 text-white animate-pulse"
+                                                : "bg-[#2D5F5D] text-white hover:brightness-110"
+                                            }`}
+                                    >
+                                        <Mic className="w-4 h-4" />
+                                        <span>{demoStep === "recording" ? "Recording..." : "Practice"}</span>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Home Indicator */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-600 rounded-full" />
+                </motion.div>
+
+                {/* CTA Below Phone */}
+                <motion.p
+                    className="text-center text-gray-500 text-sm mt-8"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 }}
+                >
+                    Try it yourself ↑ Tap the buttons above
+                </motion.p>
             </div>
 
-            {/* Split Screen Demo */}
-            <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto items-center md:items-stretch">
+            {/* Three Principles */}
+            <motion.div
+                className="max-w-4xl mx-auto mt-24 px-6"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 text-center">
+                    {[
+                        { num: "1", title: "Listen", line1: "Hear correct", line2: "pronunciation", sub1: "No apps.", sub2: "No downloads." },
+                        { num: "2", title: "Practice", line1: "Record yourself", line2: "trying", sub1: "No judgment.", sub2: "No pressure." },
+                        { num: "3", title: "Improve", line1: "Get specific", line2: "feedback", sub1: "Until you're", sub2: "confident." },
+                    ].map((item, i) => (
+                        <div key={i} className="relative">
+                            {/* Large Number Behind */}
+                            <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 text-[72px] font-bold text-[#2D5F5D]/10 pointer-events-none">
+                                {item.num}
+                            </span>
 
-                {/* 1. Traditional App (The Old Way) */}
-                <div className="flex-1 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 scale-95">
-                    <div className="bg-gray-100 rounded-[32px] p-8 h-[600px] border border-gray-200 relative">
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-full" /> {/* Notch */}
-                        <div className="mt-8 space-y-4">
-                            <div className="h-6 w-32 bg-gray-300 rounded" />
-                            <div className="h-40 bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-center">
-                                <span className="font-amiri text-2xl text-gray-400">بِسْمِ ٱللَّهِ</span>
-                            </div>
-                            <div className="h-4 w-full bg-gray-200 rounded" />
-                            <div className="h-4 w-2/3 bg-gray-200 rounded" />
+                            <h3 className="text-xl font-semibold text-[#2B2B2B] mb-4 relative z-10">
+                                {item.title}
+                            </h3>
+                            <p className="text-[#6B6B6B] leading-relaxed text-base">
+                                {item.line1}<br />{item.line2}
+                            </p>
+                            <p className="text-[#9B9B9B] text-sm mt-3">
+                                {item.sub1}<br />{item.sub2}
+                            </p>
                         </div>
-                        <p className="mt-8 text-center font-bold text-gray-500">TRADITIONAL APP</p>
-                        <p className="text-center text-sm text-gray-400">Static. Passive. Lonely.</p>
-                    </div>
+                    ))}
                 </div>
-
-                {/* 2. MEEK Experience (The New Way) */}
-                <div className="flex-1">
-                    <div className="bg-[#F8F5F2] rounded-[32px] p-0 h-[640px] border-4 border-[#0A1628] relative overflow-hidden shadow-2xl">
-                        {/* Status Bar */}
-                        <div className="h-12 bg-white flex items-center justify-between px-6 border-b border-gray-100">
-                            <span className="text-xs font-bold">9:41</span>
-                            <div className="flex gap-1">
-                                <div className="w-4 h-4 rounded-full bg-black/10" />
-                                <div className="w-4 h-4 rounded-full bg-black/10" />
-                            </div>
-                        </div>
-
-                        {/* Interactive Card */}
-                        <InteractiveCard />
-
-                    </div>
-                    <p className="mt-8 text-center font-bold text-[#008080]">MEEK EXPERIENCE</p>
-                    <p className="text-center text-sm text-gray-600">Active. Guided. Alive.</p>
-                </div>
-
-            </div>
-
+            </motion.div>
         </section>
     );
 }
-
-function InteractiveCard() {
-    const [isPlaying, setIsPlaying] = useState(false);
-
-    return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-                <span className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full text-xs font-bold tracking-widest mb-8">DAILY PRACTICE</span>
-
-                <h3 className="font-amiri text-4xl leading-loose text-[#422B1E] mb-6">
-                    بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                </h3>
-
-                <p className="font-english text-gray-400 text-sm mb-12">
-                    Hold to practice pronunciation
-                </p>
-
-                {/* Mic Interaction */}
-                <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="w-24 h-24 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-lg shadow-[#008080]/30"
-                >
-                    <Mic className="w-8 h-8" />
-                </motion.button>
-            </div>
-
-            {/* Bottom Sheet */}
-            <div className="h-20 bg-white border-t border-gray-100 flex items-center justify-around">
-                <button className="text-[#008080] font-medium flex flex-col items-center text-xs gap-1">
-                    <Play className="w-5 h-5" />
-                    Listen
-                </button>
-                <button className="text-gray-400 font-medium flex flex-col items-center text-xs gap-1">
-                    <ChevronRight className="w-5 h-5" />
-                    Next
-                </button>
-            </div>
-        </div>
-    );
-}
-

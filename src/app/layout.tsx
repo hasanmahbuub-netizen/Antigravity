@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Naskh_Arabic, Amiri } from "next/font/google";
+import { Inter, Noto_Naskh_Arabic, Crimson_Text, Scheherazade_New } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -13,19 +13,26 @@ const notoNaskhArabic = Noto_Naskh_Arabic({
   subsets: ["arabic"],
 });
 
-const amiri = Amiri({
+const crimsonText = Crimson_Text({
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  subsets: ["latin"],
+});
+
+const scheherazadeNew = Scheherazade_New({
   weight: ["400", "700"],
-  variable: "--font-amiri",
+  variable: "--font-arabic-display",
   subsets: ["arabic"],
 });
 
 export const metadata: Metadata = {
   title: {
     template: "%s | MEEK",
-    default: "MEEK - Learn Quran & Fiqh",
+    default: "MEEK - Learn Quran with Perfect Pronunciation",
   },
-  description: "Your quiet companion for daily Quran practice and Islamic guidance. Learn to recite with AI feedback and get clear Fiqh answers.",
-  keywords: ["Quran", "Tajweed", "Islam", "Fiqh", "Prayer", "Hanafi", "Learn Quran"],
+  description: "Master Quranic pronunciation with AI-powered feedback. Learn to recite beautifully, one verse at a time.",
+  keywords: ["Quran", "Tajweed", "Islam", "Fiqh", "Prayer", "Hanafi", "Learn Quran", "Pronunciation"],
   authors: [{ name: "MEEK Team" }],
 };
 
@@ -35,14 +42,12 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F8F5F2' },
-    { media: '(prefers-color-scheme: dark)', color: '#1F1C19' },
+    { media: '(prefers-color-scheme: light)', color: '#FAFAF5' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A1628' },
   ],
 };
 
 import { AuthProvider } from "@/context/AuthContext";
-
-// ... existing imports ...
 
 export default function RootLayout({
   children,
@@ -56,18 +61,15 @@ export default function RootLayout({
         className={cn(
           inter.variable,
           notoNaskhArabic.variable,
-          amiri.variable,
-          "antialiased bg-background min-h-screen font-sans text-foreground"
+          crimsonText.variable,
+          scheherazadeNew.variable,
+          "antialiased min-h-screen font-sans text-foreground"
         )}
       >
         <AuthProvider>
-          {/* Global App Shell */}
-          <div className="max-w-[430px] mx-auto min-h-screen bg-background px-5 pt-6 pb-8 flex flex-col relative shadow-xl shadow-black/5">
-            {children}
-          </div>
+          {children}
         </AuthProvider>
       </body>
     </html>
   );
 }
-

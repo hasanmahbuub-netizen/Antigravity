@@ -1,57 +1,88 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function VisionSection() {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { amount: 0.5 });
-
     return (
-        <section ref={ref} className="min-h-screen flex flex-col items-center justify-center bg-[#1C1B18] text-white text-center px-6 py-20">
-            <div className="max-w-3xl space-y-16">
-                <RevealLine show={isInView} delay={0.1}>
-                    170 million Muslims in Bangladesh.
-                </RevealLine>
+        <section className="relative w-full bg-[#FAFAF5] py-32 md:py-48">
+            {/* Content Column */}
+            <div className="max-w-[600px] mx-auto px-6 text-center">
 
-                <RevealLine show={isInView} delay={0.2}>
-                    Imagine if every single one could read<br />the Quran fluently.
-                </RevealLine>
-
-                <RevealLine show={isInView} delay={0.3}>
-                    Could ask any Islamic question<br />and get clear guidance.
-                </RevealLine>
-
-                <RevealLine show={isInView} delay={0.4}>
-                    Could practice faith with confidence,<br />not confusion.
-                </RevealLine>
-
+                {/* Mission Statement */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                    className="pt-8"
+                    className="space-y-6"
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8 }}
                 >
-                    <h2 className="text-4xl md:text-6xl font-english font-bold text-[#D4AF37]">
-                        That's what we're building.
-                    </h2>
-                    <p className="mt-4 text-gray-400">And it starts with you.</p>
+                    <p className="text-[20px] md:text-[24px] text-[#2B2B2B] leading-relaxed">
+                        There are 2 billion Muslims in the world.
+                    </p>
+                    <p className="text-[20px] md:text-[24px] text-[#2B2B2B] leading-relaxed">
+                        Most of us can't read the Quran properly.
+                    </p>
+                    <p className="text-[18px] md:text-[20px] text-[#6B6B6B] leading-relaxed">
+                        Not because we don't care.<br />
+                        But because no one made it easy.
+                    </p>
                 </motion.div>
+
+                {/* The Declaration */}
+                <motion.div
+                    className="mt-12 mb-16"
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    <p className="font-serif text-[28px] md:text-[36px] text-[#2D5F5D] italic leading-snug">
+                        We're changing that.
+                    </p>
+                    <p className="text-[16px] md:text-[18px] text-[#6B6B6B] mt-4">
+                        One verse at a time.<br />
+                        One person at a time.
+                    </p>
+                </motion.div>
+
+                {/* Primary CTA */}
+                <motion.div
+                    className="space-y-4"
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                    <Link href="/quran/1/1">
+                        <motion.button
+                            className="bg-[#2D5F5D] text-white text-lg font-medium px-12 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                            whileHover={{ y: -2, backgroundColor: "#356b69" }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            Start with Al-Fatiha
+                        </motion.button>
+                    </Link>
+
+                    {/* Sub-text */}
+                    <p className="text-sm text-[#9B9B9B]">
+                        Free. Takes 5 minutes.
+                    </p>
+
+                    {/* Secondary Link */}
+                    <p className="text-sm text-[#6B6B6B] pt-4">
+                        Or{" "}
+                        <Link
+                            href="/quran"
+                            className="text-[#2D5F5D] underline underline-offset-4 hover:text-[#1A3B3A] transition-colors"
+                        >
+                            explore all surahs
+                        </Link>
+                        {" "}if you're ready
+                    </p>
+                </motion.div>
+
             </div>
         </section>
     );
 }
-
-function RevealLine({ children, show, delay }: { children: React.ReactNode, show: boolean, delay: number }) {
-    return (
-        <motion.p
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={show ? { opacity: 1, filter: "blur(0px)" } : {}}
-            transition={{ delay, duration: 0.5 }}
-            className="text-xl md:text-3xl font-light text-gray-200"
-        >
-            {children}
-        </motion.p>
-    );
-}
-

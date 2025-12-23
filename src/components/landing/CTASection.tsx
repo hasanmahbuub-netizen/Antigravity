@@ -1,66 +1,118 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { BookOpen, MessageCircle } from "lucide-react";
+
+const footerLinks = {
+    product: [
+        { label: "How it works", href: "#demo" },
+        { label: "All Surahs", href: "/quran" },
+        { label: "Fiqh Questions", href: "/fiqh" },
+    ],
+    company: [
+        { label: "About", href: "/about" },
+        { label: "Contact", href: "mailto:hello@meek.app" },
+    ],
+    social: [
+        { label: "Twitter", href: "https://twitter.com" },
+        { label: "Instagram", href: "https://instagram.com" },
+    ],
+};
 
 export default function CTASection() {
     return (
-        <section className="bg-[#FAFAF5] py-20 px-6 text-center border-t border-[#E4DDD4]">
-            <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl md:text-5xl font-english font-bold text-[#0A1628] mb-12">
-                    Start your journey today
-                </h2>
+        <footer className="relative w-full bg-white border-t border-[#EAEAEA] py-16 md:py-20">
+            <div className="max-w-5xl mx-auto px-6">
 
-                {/* Dual Path Cards */}
-                <div className="flex flex-col md:flex-row gap-6 mb-12">
+                {/* Main Footer Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
 
-                    {/* 1. Learn Quran Path */}
-                    <Link href="/auth/signup" className="flex-1 group">
-                        <div className="bg-white rounded-[24px] p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all h-full flex flex-col items-center">
-                            <div className="w-16 h-16 bg-[#008080]/10 rounded-full flex items-center justify-center text-[#008080] mb-6 group-hover:bg-[#008080] group-hover:text-white transition-colors">
-                                <BookOpen className="w-8 h-8" strokeWidth={1.5} />
-                            </div>
-                            <h3 className="text-xl font-bold text-[#0A1628] mb-2">I want to learn Quran</h3>
-                            <button className="mt-auto bg-[#008080] text-white px-8 py-3 rounded-full font-medium hover:bg-[#006666] transition-colors w-full">
-                                Start learning
-                            </button>
-                        </div>
-                    </Link>
-
-                    {/* 2. Ask Questions Path */}
-                    <Link href="/dashboard" className="flex-1 group">
-                        <div className="bg-white rounded-[24px] p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all h-full flex flex-col items-center">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mb-6 group-hover:bg-[#0A1628] group-hover:text-[#D4AF37] transition-colors">
-                                <MessageCircle className="w-8 h-8" strokeWidth={1.5} />
-                            </div>
-                            <h3 className="text-xl font-bold text-[#0A1628] mb-2">I have questions</h3>
-                            <button className="mt-auto border border-gray-300 text-[#0A1628] px-8 py-3 rounded-full font-medium hover:border-[#0A1628] transition-colors w-full">
-                                Ask now
-                            </button>
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Trust Factors */}
-                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 font-medium mb-20">
-                    <span className="flex items-center gap-2">✓ Free for 7 days</span>
-                    <span className="flex items-center gap-2">✓ No credit card required</span>
-                    <span className="flex items-center gap-2">✓ Works on any device</span>
-                </div>
-
-                {/* Footer */}
-                <footer className="border-t border-gray-200 pt-10 text-xs text-gray-400">
-                    <p className="mb-4">Made with ❤️ in Dhaka</p>
-                    <div className="flex justify-center gap-6">
-                        <span>Reviewed by scholars</span>
-                        <span>•</span>
-                        <span>Trusted by 10,000+ Muslims</span>
-                        <span>•</span>
-                        <span>Privacy Policy</span>
+                    {/* Brand Column */}
+                    <div className="md:col-span-2">
+                        <h3 className="text-xl font-semibold text-[#2B2B2B] mb-4">
+                            Meek
+                        </h3>
+                        <p className="text-[#6B6B6B] text-sm leading-relaxed max-w-xs">
+                            Making Quranic pronunciation accessible to everyone.
+                        </p>
+                        <p className="text-[#9B9B9B] text-sm mt-4">
+                            Made with care.
+                        </p>
                     </div>
-                </footer>
+
+                    {/* Links Column */}
+                    <div>
+                        <h4 className="text-xs uppercase tracking-widest text-[#9B9B9B] mb-4">
+                            Product
+                        </h4>
+                        <ul className="space-y-3">
+                            {footerLinks.product.map((link, i) => (
+                                <li key={i}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-sm text-[#6B6B6B] hover:text-[#2D5F5D] transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Contact Column */}
+                    <div>
+                        <h4 className="text-xs uppercase tracking-widest text-[#9B9B9B] mb-4">
+                            Connect
+                        </h4>
+                        <ul className="space-y-3">
+                            {footerLinks.company.map((link, i) => (
+                                <li key={i}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-sm text-[#6B6B6B] hover:text-[#2D5F5D] transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                            {footerLinks.social.map((link, i) => (
+                                <li key={i}>
+                                    <a
+                                        href={link.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-[#6B6B6B] hover:text-[#2D5F5D] transition-colors"
+                                    >
+                                        {link.label}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="mt-16 pt-8 border-t border-[#EAEAEA] flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-xs text-[#9B9B9B]">
+                        © {new Date().getFullYear()} Meek. All rights reserved.
+                    </p>
+                    <div className="flex items-center gap-6">
+                        <Link
+                            href="/privacy"
+                            className="text-xs text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
+                        >
+                            Privacy Policy
+                        </Link>
+                        <Link
+                            href="/terms"
+                            className="text-xs text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
+                        >
+                            Terms of Service
+                        </Link>
+                    </div>
+                </div>
+
             </div>
-        </section>
+        </footer>
     );
 }
-
