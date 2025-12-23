@@ -11,9 +11,6 @@ export default function HeroSection() {
         setMounted(true);
     }, []);
 
-    // Arabic words for staggered animation
-    const arabicWords = ["بِسْمِ", "ٱللَّهِ", "ٱلرَّحْمَـٰنِ", "ٱلرَّحِيمِ"];
-
     return (
         <section className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
             {/* LAYER 1: Base - Deep Navy */}
@@ -75,33 +72,20 @@ export default function HeroSection() {
                 {/* Top Breathing Room */}
                 <div className="h-[10vh]" />
 
-                {/* Arabic Bismillah - Staggered Animation */}
-                <motion.div
-                    className="flex flex-wrap justify-center gap-x-4 mb-8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
+                {/* Arabic Bismillah - Full Phrase with RTL */}
+                <motion.p
+                    className="font-arabic text-[48px] md:text-[64px] text-[#E8C49A] tracking-wide mb-8"
+                    dir="rtl"
+                    style={{
+                        textShadow: "0 0 60px rgba(232,196,154,0.4), 0 0 120px rgba(232,196,154,0.2)",
+                        lineHeight: 1.8,
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
                 >
-                    {arabicWords.map((word, i) => (
-                        <motion.span
-                            key={i}
-                            className="font-arabic text-[48px] md:text-[64px] text-[#E8C49A] tracking-wide"
-                            style={{
-                                textShadow: "0 0 60px rgba(232,196,154,0.4), 0 0 120px rgba(232,196,154,0.2)",
-                                lineHeight: 1.8,
-                            }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.8,
-                                delay: 0.5 + i * 0.15,
-                                ease: "easeOut"
-                            }}
-                        >
-                            {word}
-                        </motion.span>
-                    ))}
-                </motion.div>
+                    بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                </motion.p>
 
                 {/* English Translation */}
                 <motion.p
