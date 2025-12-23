@@ -2,21 +2,26 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, Info } from "lucide-react";
+import { ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, Info, FileText } from "lucide-react";
+
+interface FiqhStructuredAnswer {
+    directAnswer: string;
+    reasoning: string;
+    otherSchools: Array<{ madhab: string; position: string }>;
+    citations: Array<{ source: string; reference: string; text: string }>;
+}
 
 interface AnswerViewProps {
     question: string;
-    answer: any;
+    answer: FiqhStructuredAnswer | any;
     madhab: string;
     onAskAnother: () => void;
 }
 
 export default function AnswerView({ question, answer, madhab, onAskAnother }: AnswerViewProps) {
-    const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
-    const toggleSection = (section: string) => {
-        setExpandedSection(expandedSection === section ? null : section);
-    };
+    const [showReasoning, setShowReasoning] = useState(false);
+    const [showOtherSchools, setShowOtherSchools] = useState(false);
+    const [showCitations, setShowCitations] = useState(false);
 
     // Show loading if no answer yet
     if (!answer) {
@@ -30,11 +35,17 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
         );
     }
 
-    return (
-        <div className="flex-1 overflow-y-auto p-6 pb-20 space-y-8">
+    // Handle both old format (answer.answer) and new format (answer.directAnswer)
+    const directAnswer = answer.directAnswer || answer.answer || "No answer available";
+    const reasoning = answer.reasoning || answer.sources || "";
+    const otherSchools = answer.otherSchools || [];
+    const citations = answer.citations || [];
 
-            {/* 1. Header & Context */}
-            <div className="space-y-4">
+    return (
+        <div className="flex-1 overflow-y-auto p-6 pb-20 space-y-4">
+
+            {/* Header & Context */}
+            <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-2">
                     <span className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-widest">
                         YOUR MADHAB: {madhab.toUpperCase()}
@@ -45,54 +56,85 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
                 </h1>
             </div>
 
-            {/* 2. Direct Answer */}
-            <div className="p-6 bg-card rounded-[24px] border border-border shadow-sm">
-                <div className="flex items-center gap-2 mb-4 text-green-700 font-bold text-sm uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
-                    Answer
+            {/* Direct Answer Card - Green Dot Design */}
+            <div className="p-6 bg-card rounded-[20px] border border-border shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-sm font-bold text-green-600 uppercase tracking-widest">ANSWER</span>
                 </div>
-                <div className="font-english text-lg leading-relaxed text-foreground font-medium whitespace-pre-wrap">
-                    {answer.answer || "No answer available"}
+                <div className="font-english text-lg leading-relaxed text-foreground">
+                    {directAnswer}
                 </div>
             </div>
 
-            {/* 3. Sources & Context */}
-            {answer.sources && (
-                <AccordionItem
-                    title="Sources & Context"
-                    isOpen={expandedSection === "sources"}
-                    onClick={() => toggleSection("sources")}
-                    icon={<BookOpen className="w-4 h-4" />}
+            {/* Reasoning - Collapsible */}
+            {reasoning && (
+                <CollapsibleSection
+                    title="Why? See the reasoning"
+                    isOpen={showReasoning}
+                    onToggle={() => setShowReasoning(!showReasoning)}
+                    icon={<Info className="w-5 h-5" />}
                 >
-                    <div className="space-y-4 text-sm text-muted leading-relaxed">
-                        <p>{answer.sources}</p>
-                    </div>
-                </AccordionItem>
+                    <p className="text-foreground/80 leading-relaxed">{reasoning}</p>
+                </CollapsibleSection>
             )}
 
-            {/* 4. Other Views (if available) */}
-            {answer.differences && (
-                <AccordionItem
+            {/* Other Schools - Collapsible */}
+            {otherSchools.length > 0 && (
+                <CollapsibleSection
                     title="Other Schools of Thought"
-                    isOpen={expandedSection === "other"}
-                    onClick={() => toggleSection("other")}
-                    icon={<Info className="w-4 h-4" />}
+                    isOpen={showOtherSchools}
+                    onToggle={() => setShowOtherSchools(!showOtherSchools)}
+                    icon={<BookOpen className="w-5 h-5" />}
                 >
-                    <div className="space-y-4 text-sm text-muted leading-relaxed">
-                        <p>{answer.differences}</p>
+                    <div className="space-y-4">
+                        {otherSchools.map((school: any, idx: number) => (
+                            <div key={idx}>
+                                <h4 className="text-accent font-semibold mb-2">{school.madhab}</h4>
+                                <p className="text-foreground/80 leading-relaxed">{school.position}</p>
+                            </div>
+                        ))}
                     </div>
-                </AccordionItem>
+                </CollapsibleSection>
             )}
 
-            {/* 5. Feedback & Actions */}
-            <div className="space-y-6 pt-8">
+            {/* Citations - Collapsible */}
+            {citations.length > 0 && (
+                <CollapsibleSection
+                    title="View Sources & Citations"
+                    isOpen={showCitations}
+                    onToggle={() => setShowCitations(!showCitations)}
+                    icon={<FileText className="w-5 h-5" />}
+                >
+                    <div className="space-y-3">
+                        {citations.map((citation: any, idx: number) => (
+                            <div key={idx} className="bg-muted/5 p-4 rounded-lg border border-border/50">
+                                <div className="text-primary font-semibold mb-1">
+                                    {citation.source}: {citation.reference}
+                                </div>
+                                <p className="text-muted text-sm italic">
+                                    "{citation.text}"
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </CollapsibleSection>
+            )}
+
+            {/* Disclaimer */}
+            <p className="text-xs text-muted text-center py-4 px-6 bg-muted/5 rounded-xl">
+                📚 This is educational information based on classical Islamic scholarship. For personal guidance, consult a qualified scholar.
+            </p>
+
+            {/* Feedback & Actions */}
+            <div className="space-y-6 pt-4">
                 <div className="flex flex-col items-center gap-4">
                     <span className="text-xs text-muted font-medium">Was this helpful?</span>
                     <div className="flex gap-4">
-                        <button className="p-3 rounded-full bg-card border border-border hover:bg-muted/10 transition-colors text-muted hover:text-green-600">
+                        <button className="p-3 rounded-full bg-card border border-border hover:bg-green-500/10 transition-colors text-muted hover:text-green-600">
                             <ThumbsUp className="w-5 h-5" />
                         </button>
-                        <button className="p-3 rounded-full bg-card border border-border hover:bg-muted/10 transition-colors text-muted hover:text-red-500">
+                        <button className="p-3 rounded-full bg-card border border-border hover:bg-red-500/10 transition-colors text-muted hover:text-red-500">
                             <ThumbsDown className="w-5 h-5" />
                         </button>
                     </div>
@@ -110,30 +152,46 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
     );
 }
 
-function AccordionItem({ title, isOpen, onClick, children, icon }: any) {
+// Collapsible Section Component
+function CollapsibleSection({
+    title,
+    isOpen,
+    onToggle,
+    children,
+    icon
+}: {
+    title: string;
+    isOpen: boolean;
+    onToggle: () => void;
+    children: React.ReactNode;
+    icon: React.ReactNode;
+}) {
     return (
-        <div className="border border-border rounded-xl bg-card overflow-hidden">
+        <div className="border border-border rounded-[16px] bg-card overflow-hidden">
             <button
-                onClick={onClick}
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/5 transition-colors"
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-5 hover:bg-muted/5 transition-colors"
             >
-                <div className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <span className="p-1.5 bg-muted/10 rounded-md text-muted">
-                        {icon}
-                    </span>
+                <div className="flex items-center gap-3 text-foreground font-medium">
+                    <span className="text-muted">{icon}</span>
                     {title}
                 </div>
-                {isOpen ? <ChevronUp className="w-4 h-4 text-muted" /> : <ChevronDown className="w-4 h-4 text-muted" />}
+                {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted" />
+                ) : (
+                    <ChevronDown className="w-5 h-5 text-muted" />
+                )}
             </button>
+
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: "auto" }}
-                        exit={{ height: 0 }}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="p-4 pt-0 border-t border-border/50">
+                        <div className="px-5 pb-5 border-t border-border/50">
                             <div className="pt-4">
                                 {children}
                             </div>

@@ -116,7 +116,12 @@ function FiqhContent() {
                     </button>
                     <span className="ml-2 font-bold text-sm uppercase tracking-widest text-muted">Fiqh Intelligence</span>
                 </header>
-                <AnswerView question={query} answer={answer} madhab={answer?.madhab || 'hanafi'} onAskAnother={handleClear} />
+                <AnswerView
+                    question={query}
+                    answer={answer?.data || answer}
+                    madhab={answer?.madhab || 'Hanafi'}
+                    onAskAnother={handleClear}
+                />
             </div>
         );
     }

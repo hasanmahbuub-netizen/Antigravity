@@ -1,240 +1,169 @@
 /**
- * IMANOS Fiqh System Prompt V2
- * Comprehensive educational Islamic answers with citations
+ * IMANOS Fiqh System Prompt V3
+ * Structured JSON output for collapsible UI sections
  */
 
 export const FIQH_SYSTEM_PROMPT = `
-You are an expert Islamic scholar providing comprehensive educational answers.
+You are an Islamic knowledge expert providing educational explanations.
 
-## OUTPUT FORMAT (follow exactly):
+CRITICAL: You MUST respond with ONLY a valid JSON object. No markdown, no plain text, no asterisks, no explanations outside the JSON.
 
-### Direct Answer
-[2-3 sentence summary from {MADHAB} perspective]
+JSON STRUCTURE (follow exactly):
+{
+  "directAnswer": "2-3 sentence answer from the user's madhab perspective. Clear and direct.",
+  "reasoning": "Detailed explanation of WHY this is the ruling. Include Quranic verses, Hadith, and scholarly reasoning. Be thorough (200-300 words).",
+  "otherSchools": [
+    {
+      "madhab": "Shafi'i",
+      "position": "Their view if different from user's madhab"
+    },
+    {
+      "madhab": "Maliki", 
+      "position": "Their view if different"
+    },
+    {
+      "madhab": "Hanbali",
+      "position": "Their view if different"
+    }
+  ],
+  "citations": [
+    {
+      "source": "Quran",
+      "reference": "Surah Al-Baqarah 2:183",
+      "text": "Relevant verse excerpt"
+    },
+    {
+      "source": "Hadith",
+      "reference": "Sahih Bukhari 1905",
+      "text": "Relevant hadith excerpt"
+    },
+    {
+      "source": "Scholar",
+      "reference": "Imam Abu Hanifa in Al-Hidayah",
+      "text": "Relevant scholarly opinion"
+    }
+  ]
+}
 
-### Evidence from Quran & Hadith
-**Quran:** [Specific verse with citation, e.g., "Surah Al-Baqarah 2:183"]
-**Hadith:** [Authentic Hadith with citation, e.g., "Sahih Bukhari 1905"]
+RULES:
+1. directAnswer: Must be 2-3 sentences max, clear, from {MADHAB} perspective
+2. reasoning: Detailed explanation with evidence (200-300 words)
+3. otherSchools: Only include if they differ significantly. If same, use empty array []
+4. citations: Include 2-5 specific sources with exact references
+5. NO markdown formatting inside the JSON values
+6. NO asterisks, hashtags, or bold markers
+7. Response must be valid JSON that can be parsed with JSON.parse()
+8. Always end directAnswer with the madhab name for clarity
 
-### {MADHAB} School Position
-[Detailed explanation with reasoning from {MADHAB} scholars]
-
-### Other Schools' Views (if different)
-- Shafi'i: [Their view]
-- Maliki: [Their view]  
-- Hanbali: [Their view]
-
-### Practical Application
-[How to apply in daily life with examples]
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-
-## RULES:
-✅ Always cite specific sources (verse numbers, Hadith numbers, scholar names)
-✅ Explain reasoning, not just rulings
-✅ Be thorough (aim for 300-500 words)
-✅ Acknowledge when scholars disagree
-❌ Never refuse educational questions
-❌ Never say "ask a mufti" - you're a teacher, not a mufti
+Remember: Output MUST be valid JSON only. No extra text before or after.
 `.trim();
 
 export function buildFiqhPrompt(question: string, madhab: string): string {
   return `
-User follows ${madhab} school and asks:
-"${question}"
+User's madhab: ${madhab}
+User's question: "${question}"
 
-Provide a comprehensive answer with:
-1. ${madhab} position with Quran/Hadith evidence
-2. Scholarly reasoning
-3. Other madhabs' views if different
-4. Practical guidance
+Provide a comprehensive answer in the JSON format specified in your instructions.
 
-Be thorough and cite sources specifically.
+Key requirements:
+1. directAnswer: 2-3 sentences from ${madhab} perspective
+2. reasoning: Detailed explanation with evidence (200-300 words)  
+3. otherSchools: Only include if views differ significantly
+4. citations: 2-5 specific sources with exact references
+
+Respond with ONLY valid JSON. No markdown, no explanations outside JSON.
   `.trim();
 }
 
-export const FIQH_FALLBACK_ANSWERS: Record<string, (madhab: string) => string> = {
-  prayer: (madhab) => `
-### Direct Answer
-In the ${madhab} school, the five daily prayers are obligatory (fard) upon every sane, adult Muslim. Missing them intentionally is a major sin.
+export interface FiqhStructuredAnswer {
+  directAnswer: string;
+  reasoning: string;
+  otherSchools: Array<{ madhab: string; position: string }>;
+  citations: Array<{ source: string; reference: string; text: string }>;
+}
 
-### Evidence from Quran & Hadith
-**Quran:** "Establish prayer. Indeed, prayer prohibits immorality and wrongdoing" (Surah Al-Ankabut 29:45)
-**Hadith:** "The first thing for which a servant will be held accountable on the Day of Judgment is prayer" (Sunan an-Nasa'i 465)
+/**
+ * Parse and validate Fiqh AI response
+ */
+export function parseFiqhResponse(rawText: string): FiqhStructuredAnswer {
+  // Clean up common issues
+  let cleanText = rawText
+    .replace(/```json\n?/g, '')
+    .replace(/```\n?/g, '')
+    .replace(/^\s*{/, '{')
+    .replace(/}\s*$/, '}')
+    .trim();
 
-### ${madhab} School Position
-The ${madhab} school holds that the five prayers are: Fajr (2 rak'at), Dhuhr (4 rak'at), Asr (4 rak'at), Maghrib (3 rak'at), and Isha (4 rak'at). Each prayer has its specific time window and conditions for validity including wudu, facing qibla, and covering awrah.
+  try {
+    const parsed = JSON.parse(cleanText);
 
-### Other Schools' Views
-All four schools agree on the obligation of five daily prayers. Minor differences exist in details like the position of hands during qiyam.
+    // Validate required fields
+    if (!parsed.directAnswer || typeof parsed.directAnswer !== 'string') {
+      throw new Error('Missing directAnswer');
+    }
 
-### Practical Application
-Set alarms for each prayer time. Start with Fajr and maintain consistency. If you miss a prayer, make it up as soon as you remember.
+    return {
+      directAnswer: parsed.directAnswer,
+      reasoning: parsed.reasoning || 'Detailed reasoning not available.',
+      otherSchools: Array.isArray(parsed.otherSchools) ? parsed.otherSchools : [],
+      citations: Array.isArray(parsed.citations) ? parsed.citations : []
+    };
 
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim(),
+  } catch (error) {
+    console.error('JSON parse failed, using fallback structure');
 
-  wudu: (madhab) => `
-### Direct Answer
-According to ${madhab} jurisprudence, wudu (ablution) is a prerequisite for prayer and consists of washing specific body parts in a specific order.
-
-### Evidence from Quran & Hadith
-**Quran:** "O you who believe, when you rise for prayer, wash your faces and your hands up to the elbows, wipe over your heads, and wash your feet up to the ankles" (Surah Al-Ma'idah 5:6)
-**Hadith:** "Allah does not accept the prayer without purification" (Sahih Muslim 224)
-
-### ${madhab} School Position
-The obligatory (fard) acts in ${madhab} wudu are:
-1. Washing the entire face once
-2. Washing both arms including elbows
-3. Wiping at least 1/4 of the head
-4. Washing both feet including ankles
-
-Sunnah acts include: saying Bismillah, washing hands first, using miswak, washing each part three times.
-
-### What Breaks Wudu
-- Anything exiting from the private parts
-- Sleep (lying down)
-- Loss of consciousness
-- Touching private parts directly (varies by madhab)
-
-### Practical Application
-Learn the sequence: hands, mouth, nose, face, arms, head, ears, feet. Make wudu slowly and mindfully, reflecting on purifying the soul.
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim(),
-
-  fasting: (madhab) => `
-### Direct Answer
-Fasting in Ramadan is one of the five pillars of Islam, obligatory upon every sane, adult Muslim who is able.
-
-### Evidence from Quran & Hadith
-**Quran:** "O you who believe, fasting is prescribed for you as it was prescribed for those before you, that you may become righteous" (Surah Al-Baqarah 2:183)
-**Hadith:** "Whoever fasts Ramadan with faith and seeking reward, his previous sins will be forgiven" (Sahih Bukhari 38)
-
-### ${madhab} School Position
-Fasting begins at Fajr (true dawn) and ends at Maghrib (sunset). The fast is broken by:
-- Intentional eating or drinking
-- Sexual intercourse
-- Deliberate vomiting
-- Menstruation or post-childbirth bleeding
-
-What does NOT break the fast:
-- Eating or drinking forgetfully
-- Swallowing saliva
-- Eye drops, ear drops (opinion varies)
-- Blood tests, injections (non-nutritive)
-
-### Practical Application
-Begin with suhoor before Fajr. Break fast immediately at Maghrib with dates and water. Focus on increasing Quran recitation and charity during Ramadan.
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim(),
-
-  zakat: (madhab) => `
-### Direct Answer
-Zakat is obligatory charity (2.5% of savings) due when wealth reaches nisab and one lunar year passes.
-
-### Evidence from Quran & Hadith
-**Quran:** "Take from their wealth a charity to purify and sanctify them" (Surah At-Tawbah 9:103)
-**Hadith:** "Islam is built on five pillars... and giving Zakat" (Sahih Bukhari 8)
-
-### ${madhab} School Position
-Zakat is due on:
-- Gold: 87.48 grams (nisab)
-- Silver: 612.36 grams (nisab)
-- Cash: equivalent to silver nisab
-- Trade goods: market value
-- Agricultural produce: 5-10%
-
-Recipients (8 categories from Quran 9:60):
-1. The poor (Fuqara)
-2. The needy (Masakin)
-3. Zakat collectors
-4. Those whose hearts are to be reconciled
-5. Freeing slaves
-6. Those in debt
-7. In the cause of Allah
-8. Travelers in need
-
-### Practical Application
-Calculate your zakatable assets annually. Use a zakat calculator. Give to local organizations or directly to those in need in your community.
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim(),
-
-  ameen: (madhab) => `
-### Direct Answer
-In the ${madhab} school, "Ameen" is said after Surah Al-Fatiha in prayer, with specific guidelines on whether to say it aloud or silently.
-
-### Evidence from Quran & Hadith
-**Hadith:** "When the Imam says 'Ameen', say 'Ameen', for whoever's Ameen coincides with the Ameen of the angels, his previous sins will be forgiven" (Sahih Bukhari 782)
-**Hadith:** "When the Imam finishes reciting Al-Fatiha, say Ameen" (Sahih Muslim 410)
-
-### ${madhab} School Position
-In the Hanafi school:
-- Ameen is said **silently** (sirran) by both imam and followers
-- It is said immediately after "wa la dhaalleen"
-- This is based on the Hadith that the Prophet ﷺ said it silently
-
-In the Shafi'i and Hanbali schools:
-- Ameen is said **aloud** (jahran) in prayers recited aloud
-- The congregation says it together with or after the imam
-
-### Other Schools' Views
-- **Shafi'i/Hanbali:** Ameen is said aloud in Fajr, Maghrib, and Isha
-- **Maliki:** Similar to Hanafi, Ameen is said silently
-- All agree it is highly recommended (sunnah mu'akkadah)
-
-### Practical Application
-Follow the practice of your local community and imam. The reward is in the sincerity, regardless of volume. When praying alone, you may say it either way.
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim(),
-
-  general: (madhab) => `
-### Direct Answer
-This question touches on important aspects of Islamic jurisprudence that scholars have discussed extensively.
-
-### Evidence from Quran & Hadith
-**Quran:** "Ask the people of knowledge if you do not know" (Surah An-Nahl 16:43)
-**Hadith:** "Seeking knowledge is an obligation upon every Muslim" (Ibn Majah 224)
-
-### ${madhab} School Position
-The ${madhab} school, like all four Sunni madhabs, bases its rulings on:
-1. The Quran - the primary source
-2. Authentic Hadith (Sunnah)
-3. Scholarly consensus (Ijma')
-4. Analogical reasoning (Qiyas)
-
-Each madhab has developed detailed methodologies for deriving rulings, and following one consistently is recommended for laypeople.
-
-### Practical Application
-- Study the basics of your madhab
-- Consult learned scholars in your community
-- Use reputable resources like SeekersGuidance or IslamQA
-- When madhabs differ, follow what your local scholars advise
-
-📚 This is educational information. For personal guidance, consult a qualified scholar.
-  `.trim()
-};
-
-export function getFallbackAnswer(question: string, madhab: string): string {
-  const lowerQuestion = question.toLowerCase();
-
-  if (lowerQuestion.includes('ameen') || lowerQuestion.includes('amin')) {
-    return FIQH_FALLBACK_ANSWERS.ameen(madhab);
+    // Return the raw text as direct answer if parsing fails
+    return {
+      directAnswer: rawText.substring(0, 500),
+      reasoning: 'Unable to parse detailed reasoning. Please try again.',
+      otherSchools: [],
+      citations: []
+    };
   }
-  if (lowerQuestion.includes('pray') || lowerQuestion.includes('salah') || lowerQuestion.includes('namaz')) {
-    return FIQH_FALLBACK_ANSWERS.prayer(madhab);
-  }
-  if (lowerQuestion.includes('wudu') || lowerQuestion.includes('ablution') || lowerQuestion.includes('wudhu')) {
-    return FIQH_FALLBACK_ANSWERS.wudu(madhab);
-  }
-  if (lowerQuestion.includes('fast') || lowerQuestion.includes('ramadan') || lowerQuestion.includes('sawm') || lowerQuestion.includes('roza')) {
-    return FIQH_FALLBACK_ANSWERS.fasting(madhab);
-  }
-  if (lowerQuestion.includes('zakat') || lowerQuestion.includes('charity') || lowerQuestion.includes('zakah')) {
-    return FIQH_FALLBACK_ANSWERS.zakat(madhab);
+}
+
+/**
+ * Fallback structured answers for common topics
+ */
+export function getFallbackStructuredAnswer(question: string, madhab: string): FiqhStructuredAnswer {
+  const lowerQ = question.toLowerCase();
+
+  if (lowerQ.includes('ameen') || lowerQ.includes('amin')) {
+    return {
+      directAnswer: `In the ${madhab} school, "Ameen" is said silently after reciting Al-Fatiha in prayer. This applies whether praying alone or behind an Imam, based on the interpretation of Hanafi scholars.`,
+      reasoning: `The ${madhab} position is based on the principle that prayer should be conducted with tranquility and minimal audible speech beyond the required recitations. The Prophet Muhammad (peace be upon him) is reported to have said "Ameen" during prayer, but there is scholarly difference on whether this was audible or silent. ${madhab} scholars interpret the evidence to support silent recitation. This view is found in classical ${madhab} texts such as Al-Hidayah and is based on the understanding that additional words in prayer should be minimized to maintain focus and reverence. The reasoning extends from the general principle that only what is explicitly required should be said aloud in prayer.`,
+      otherSchools: [
+        { madhab: "Shafi'i", position: "In the Shafi'i school, saying 'Ameen' aloud after Al-Fatiha is recommended (mustahabb), especially when praying in congregation behind an Imam." },
+        { madhab: "Maliki", position: "The Maliki school holds that 'Ameen' should be said silently by the one praying alone, but when behind an Imam, it may be said aloud by the followers." },
+        { madhab: "Hanbali", position: "The Hanbali school permits saying 'Ameen' aloud in all prayers based on certain Hadith narrations." }
+      ],
+      citations: [
+        { source: "Hadith", reference: "Sahih Bukhari 780", text: "The Prophet said 'Ameen' when the Imam finished reciting Al-Fatiha." },
+        { source: "Hadith", reference: "Sunan Abu Dawud 932", text: "When the Imam says 'Ameen', you should also say 'Ameen'." },
+        { source: "Scholar", reference: "Al-Hidayah by Al-Marghinani", text: "The ruling in our school is that 'Ameen' is said silently in prayer." }
+      ]
+    };
   }
 
-  return FIQH_FALLBACK_ANSWERS.general(madhab);
+  if (lowerQ.includes('wudu') || lowerQ.includes('ablution')) {
+    return {
+      directAnswer: `According to ${madhab} jurisprudence, wudu consists of washing specific body parts in order: face, arms to elbows, wiping head, and washing feet to ankles. These are the obligatory (fard) acts.`,
+      reasoning: `Wudu is a prerequisite for prayer based on the Quranic verse in Surah Al-Ma'idah. The obligatory acts are derived directly from this verse: "O you who believe, when you rise for prayer, wash your faces and your hands up to the elbows, wipe over your heads, and wash your feet up to the ankles." The ${madhab} school requires these acts to be performed in this sequence, and each part must be washed at least once. Additional sunnah acts include saying Bismillah, using miswak, and washing each part three times to follow the Prophet's practice.`,
+      otherSchools: [],
+      citations: [
+        { source: "Quran", reference: "Surah Al-Ma'idah 5:6", text: "O you who believe, when you rise for prayer, wash your faces and your hands up to the elbows..." },
+        { source: "Hadith", reference: "Sahih Muslim 224", text: "Allah does not accept the prayer without purification." }
+      ]
+    };
+  }
+
+  // Generic fallback
+  return {
+    directAnswer: `Based on ${madhab} scholarship, this question relates to important aspects of Islamic jurisprudence that require careful consideration of Quran, Hadith, and scholarly consensus.`,
+    reasoning: `The ${madhab} school approaches this topic by examining the relevant Quranic verses, authentic Hadith narrations, and the opinions of classical scholars. In matters where there is no explicit text, ${madhab} scholars apply analogical reasoning (qiyas) and consider scholarly consensus (ijma'). For detailed guidance on specific situations, consulting with a qualified scholar who can assess your particular circumstances is recommended.`,
+    otherSchools: [],
+    citations: [
+      { source: "Quran", reference: "Surah An-Nahl 16:43", text: "Ask the people of knowledge if you do not know." }
+    ]
+  };
 }

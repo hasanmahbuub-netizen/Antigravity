@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { FIQH_SYSTEM_PROMPT, buildFiqhPrompt, getFallbackAnswer } from '@/lib/prompts/fiqh-system'
+import {
+    FIQH_SYSTEM_PROMPT,
+    buildFiqhPrompt,
+    parseFiqhResponse,
+    getFallbackStructuredAnswer,
+    FiqhStructuredAnswer
+} from '@/lib/prompts/fiqh-system'
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { question, madhab = 'Hanafi' } = body
+        const { question } = body
 
         if (!question || question.trim().length < 3) {
             return NextResponse.json(
-                { error: 'Please enter a valid question' },
+                { success: false, error: 'Please enter a valid question' },
                 { status: 400 }
             )
         }
 
-        console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..." (${madhab})`)
+        console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..."`)
 
-        // Create Supabase client for auth and caching
+        // Create Supabase client
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,8 +34,22 @@ export async function POST(request: NextRequest) {
             }
         )
 
-        // Get user for personalization
+        // Get user
         const { data: { user } } = await supabase.auth.getUser()
+
+        // Get user's madhab preference
+        let madhab = 'Hanafi'
+        if (user) {
+            const { data: profile } = await (supabase
+                .from('profiles')
+                .select('madhab')
+                .eq('id', user.id)
+                .single() as any)
+
+            if (profile?.madhab) {
+                madhab = profile.madhab
+            }
+        }
 
         // Check cache first
         const { data: cached } = await supabase
@@ -42,46 +62,47 @@ export async function POST(request: NextRequest) {
 
         if (cached?.answer) {
             console.log('✅ Returning cached answer')
-            return NextResponse.json({
-                answer: cached.answer,
-                madhab,
-                cached: true
-            })
+            try {
+                const parsedAnswer = typeof cached.answer === 'string'
+                    ? JSON.parse(cached.answer)
+                    : cached.answer
+
+                return NextResponse.json({
+                    success: true,
+                    data: parsedAnswer,
+                    madhab,
+                    cached: true
+                })
+            } catch {
+                // Old format, continue to fetch new
+            }
         }
 
-        // No cache hit - call Gemini with invisible prompt engineering
+        // Call Gemini with JSON mode
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-
-        let answer: string = ''
+        let structuredAnswer: FiqhStructuredAnswer | null = null
 
         if (GEMINI_API_KEY) {
-            // Prepare system prompt with madhab
             const systemPrompt = FIQH_SYSTEM_PROMPT.replace(/{MADHAB}/g, madhab)
             const userPrompt = buildFiqhPrompt(question, madhab)
 
-            // Retry logic with exponential backoff
+            // Retry logic
             for (let attempt = 0; attempt < 3; attempt++) {
                 try {
                     const response = await fetch(
                         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY,
                         {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                systemInstruction: {
-                                    parts: [{ text: systemPrompt }]
-                                },
-                                contents: [{
-                                    role: 'user',
-                                    parts: [{ text: userPrompt }]
-                                }],
+                                systemInstruction: { parts: [{ text: systemPrompt }] },
+                                contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
                                 generationConfig: {
-                                    temperature: 0.4,
+                                    temperature: 0.3,
                                     maxOutputTokens: 2048,
-                                    topP: 0.9,
-                                    topK: 40
+                                    topP: 0.95,
+                                    topK: 40,
+                                    responseMimeType: "application/json"
                                 },
                                 safetySettings: [
                                     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -95,18 +116,16 @@ export async function POST(request: NextRequest) {
 
                     if (response.ok) {
                         const data = await response.json()
-                        answer = data.candidates?.[0]?.content?.parts?.[0]?.text
+                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text
 
-                        if (answer && answer.length > 100) {
-                            console.log('✅ Gemini response received (' + answer.length + ' chars)')
+                        if (rawText) {
+                            structuredAnswer = parseFiqhResponse(rawText)
+                            console.log('✅ Gemini JSON response parsed')
                             break
                         }
                     }
 
-                    // Rate limited or error - retry with backoff
-                    const status = response.status
-                    console.log(`⚠️ Gemini attempt ${attempt + 1} failed: ${status}`)
-
+                    console.log(`⚠️ Gemini attempt ${attempt + 1} failed: ${response.status}`)
                     if (attempt < 2) {
                         await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
                     }
@@ -120,39 +139,41 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // If no answer from Gemini, use intelligent fallback
-        if (!answer || answer.length < 100) {
-            console.log('⚠️ Using fallback answer')
-            answer = getFallbackAnswer(question, madhab)
+        // Use fallback if Gemini failed
+        if (!structuredAnswer) {
+            console.log('⚠️ Using fallback structured answer')
+            structuredAnswer = getFallbackStructuredAnswer(question, madhab)
         }
 
         // Cache the answer (fire-and-forget)
         if (user) {
-            supabase.from('fiqh_questions').insert({
-                user_id: user.id,
-                question: question.trim(),
-                madhab: madhab,
-                answer: answer,
-                sources: `${madhab} Jurisprudence`
-            }).catch(() => { })
+            (async () => {
+                try {
+                    await supabase.from('fiqh_questions').insert({
+                        user_id: user.id,
+                        question: question.trim(),
+                        madhab: madhab,
+                        answer: JSON.stringify(structuredAnswer)
+                    });
+                } catch { }
+            })();
         }
 
         return NextResponse.json({
-            answer,
-            madhab,
-            sources: `${madhab} Islamic Jurisprudence`,
-            cached: false
+            success: true,
+            data: structuredAnswer,
+            madhab
         })
 
     } catch (error: any) {
         console.error('❌ Fiqh API error:', error)
 
-        // NEVER return an error to user - always provide helpful content
-        const fallback = getFallbackAnswer('general question', 'Hanafi')
+        // NEVER return an error - always provide helpful content
+        const fallback = getFallbackStructuredAnswer('general', 'Hanafi')
         return NextResponse.json({
-            answer: fallback,
-            madhab: 'Hanafi',
-            sources: 'Islamic Tradition'
+            success: true,
+            data: fallback,
+            madhab: 'Hanafi'
         })
     }
 }
