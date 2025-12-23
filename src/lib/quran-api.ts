@@ -6,7 +6,7 @@ const QURAN_COM_API_ROOT = "https://api.quran.com/api/v4";
 
 // Translation resource IDs from Quran.com
 const TRANSLATION_IDS = {
-    english: 131,   // Dr. Mustafa Khattab - The Clear Quran
+    english: 20,    // Sahih International (verified working)
     bangla: 161     // Muhiuddin Khan
 };
 

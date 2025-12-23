@@ -40,7 +40,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
             try {
                 const verseKey = `${surahId}:${verseId}`;
                 const response = await fetch(
-                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=131,161`,
+                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=20,161`,
                     { headers: { 'Accept': 'application/json' } }
                 );
 
@@ -48,7 +48,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                     const data = await response.json();
                     const transArray = data.verse?.translations || [];
 
-                    const english = transArray.find((t: any) => t.resource_id === 131);
+                    const english = transArray.find((t: any) => t.resource_id === 20);
                     const bangla = transArray.find((t: any) => t.resource_id === 161);
 
                     // Clean HTML tags
@@ -83,7 +83,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
             try {
                 const verseKey = `${surahId}:${verseId}`;
                 const response = await fetch(
-                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&word_fields=text_uthmani,transliteration&translations=131`
+                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&word_fields=text_uthmani,transliteration&translations=20`
                 );
 
                 if (response.ok) {

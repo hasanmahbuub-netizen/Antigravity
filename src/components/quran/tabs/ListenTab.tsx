@@ -38,7 +38,7 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
             try {
                 const verseKey = `${surahId}:${verseId}`;
                 const response = await fetch(
-                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&word_fields=text_uthmani,transliteration&translations=131&audio=7`
+                    `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&word_fields=text_uthmani,transliteration&translations=20&audio=7`
                 );
 
                 if (response.ok) {

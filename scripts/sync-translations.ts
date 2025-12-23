@@ -8,7 +8,7 @@ const SUPABASE_ACCESS_TOKEN = 'sbp_e1e4033eb3da092d8cdad2e5d73a85c913a89a38';
 const PROJECT_REF = 'lvysvebakhwidqxztrvd';
 
 // Translation IDs from Quran.com
-const ENGLISH_TRANSLATION_ID = 131; // Dr. Mustafa Khattab - The Clear Quran
+const ENGLISH_TRANSLATION_ID = 20;  // Sahih International (verified working)
 const BANGLA_TRANSLATION_ID = 161;  // Muhiuddin Khan
 
 interface Verse {

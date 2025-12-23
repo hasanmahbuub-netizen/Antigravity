@@ -10,7 +10,7 @@ interface Translation {
 /**
  * Fetch verse translations from Quran.com API
  * Resource IDs:
- * - 131 = Dr. Mustafa Khattab (English, The Clear Quran)
+ * - 20 = Sahih International (English, verified working)
  * - 161 = Bangla (Muhiuddin Khan)
  */
 export async function fetchVerseTranslations(
@@ -22,7 +22,7 @@ export async function fetchVerseTranslations(
         console.log(`📖 Fetching translations for ${verseKey}...`);
 
         const response = await fetch(
-            `https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=131,161`,
+            `https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=20,161`,
             {
                 headers: { 'Accept': 'application/json' },
                 cache: 'force-cache'
@@ -38,7 +38,7 @@ export async function fetchVerseTranslations(
         // Extract translations from response
         const translations = data.verse?.translations || [];
 
-        const englishTrans = translations.find((t: any) => t.resource_id === 131);
+        const englishTrans = translations.find((t: any) => t.resource_id === 20);
         const banglaTrans = translations.find((t: any) => t.resource_id === 161);
 
         const result = {
