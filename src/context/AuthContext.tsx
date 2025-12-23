@@ -18,11 +18,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Development-only logging
+const isDev = process.env.NODE_ENV === 'development'
+const devLog = (...args: any[]) => isDev && console.log(...args)
+const devError = (...args: any[]) => isDev && console.error(...args)
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
-    console.log('🏗️ [AUTH CONTEXT] Component mounting...')
+    devLog('🏗️ [AUTH CONTEXT] Component mounting...')
 
     // ============================================
     // INITIALIZATION - RUNS ONCE ON MOUNT

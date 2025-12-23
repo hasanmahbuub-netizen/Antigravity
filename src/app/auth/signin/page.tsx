@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
 
-export default function SignInPage() {
+function SignInForm() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [localLoading, setLocalLoading] = useState(false)
@@ -121,3 +121,14 @@ export default function SignInPage() {
     )
 }
 
+export default function SignInPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <SignInForm />
+        </Suspense>
+    )
+}

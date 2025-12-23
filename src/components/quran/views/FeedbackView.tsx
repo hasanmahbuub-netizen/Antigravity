@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Play, RotateCcw, CheckCircle, ChevronRight, Volume2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TajweedFeedback } from "@/lib/ai-service";
+import type { TajweedFeedback } from "@/types/ai";
 
 interface FeedbackViewProps {
     onRetry: () => void;

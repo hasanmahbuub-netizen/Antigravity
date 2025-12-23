@@ -10,7 +10,7 @@ import MeaningTab from "./tabs/MeaningTab";
 import PracticeTab from "./tabs/PracticeTab";
 
 import { quranApi } from "@/lib/quran-api";
-import { aiService, TajweedFeedback } from "@/lib/ai-service";
+import type { TajweedFeedback } from "@/types/ai";
 import { ALL_114_SURAHS, getSurahById } from "@/lib/surah-list";
 
 // New Views
@@ -103,9 +103,13 @@ export default function PracticeScreen() {
 
         } catch (error) {
             console.error('Recording analysis failed:', error);
-            // Fallback to local AI service
-            const result = await aiService.analyzeRecitation(audioBlob, currentSurahId, currentVerseId);
-            setFeedback(result);
+            // Show mock feedback as fallback
+            setFeedback({
+                score: 75,
+                positives: ["Good attempt at pronunciation"],
+                improvements: ["Try again for better analysis"],
+                details: "We couldn't analyze your recording. Please try again."
+            });
             setViewMode("feedback");
         }
     };

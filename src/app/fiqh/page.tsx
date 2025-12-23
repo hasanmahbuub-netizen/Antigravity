@@ -6,7 +6,6 @@ import { Search, ChevronRight, ChevronLeft, Info, HelpCircle, Loader2, Mic } fro
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { aiService } from "@/lib/ai-service";
 import AnswerView from "@/components/fiqh/AnswerView";
 
 const COMMON_QUESTIONS = [
