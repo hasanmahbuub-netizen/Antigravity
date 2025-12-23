@@ -3,25 +3,30 @@
 import InlineRecording from "./InlineRecording";
 
 interface PracticeTabProps {
-    onStartRecording?: () => void;
     arabic: string;
     surahId: number;
     verseId: number;
+    sheikhAudioUrl?: string;
     onRecordingComplete?: (feedback: any) => void;
+    onMarkComplete?: () => void;
 }
 
 export default function PracticeTab({
     arabic,
     surahId,
     verseId,
-    onRecordingComplete
+    sheikhAudioUrl,
+    onRecordingComplete,
+    onMarkComplete
 }: PracticeTabProps) {
     return (
         <InlineRecording
             arabic={arabic}
             surahId={surahId}
             verseId={verseId}
+            sheikhAudioUrl={sheikhAudioUrl}
             onComplete={onRecordingComplete}
+            onMarkComplete={onMarkComplete}
         />
     );
 }

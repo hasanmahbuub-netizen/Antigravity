@@ -241,6 +241,8 @@ export default function PracticeScreen() {
                                     <MeaningTab
                                         translation={verseData.translation}
                                         arabic={verseData.arabic}
+                                        surahId={currentSurahId}
+                                        verseId={currentVerseId}
                                     />
                                 )}
                                 {activeTab === "practice" && (
@@ -248,9 +250,11 @@ export default function PracticeScreen() {
                                         arabic={verseData.arabic}
                                         surahId={currentSurahId}
                                         verseId={currentVerseId}
+                                        sheikhAudioUrl={verseData.audio_url}
                                         onRecordingComplete={(feedback) => {
                                             setFeedback(feedback);
                                         }}
+                                        onMarkComplete={handleMarkComplete}
                                     />
                                 )}
                             </>

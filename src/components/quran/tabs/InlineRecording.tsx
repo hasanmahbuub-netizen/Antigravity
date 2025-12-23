@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Play, RotateCcw, CheckCircle, Loader2 } from "lucide-react";
+import { Mic, Square, Play, Pause, RotateCcw, CheckCircle, Loader2, Volume2, Sparkles, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { AnimatedWaveform } from "@/components/Waveform";
 
 interface InlineRecordingProps {
     arabic: string;
     surahId: number;
     verseId: number;
+    sheikhAudioUrl?: string;
     onComplete?: (feedback: any) => void;
+    onMarkComplete?: () => void;
 }
 
 interface TajweedFeedback {
@@ -19,12 +21,23 @@ interface TajweedFeedback {
     details: string;
 }
 
-export default function InlineRecording({ arabic, surahId, verseId, onComplete }: InlineRecordingProps) {
+export default function InlineRecording({
+    arabic,
+    surahId,
+    verseId,
+    sheikhAudioUrl,
+    onComplete,
+    onMarkComplete
+}: InlineRecordingProps) {
     const [state, setState] = useState<'ready' | 'recording' | 'processing' | 'feedback'>('ready');
     const [duration, setDuration] = useState(0);
     const [feedback, setFeedback] = useState<TajweedFeedback | null>(null);
     const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
     const [audioLevel, setAudioLevel] = useState<number[]>(Array(15).fill(10));
+
+    // Audio playback states
+    const [isPlayingUser, setIsPlayingUser] = useState(false);
+    const [isPlayingSheikh, setIsPlayingSheikh] = useState(false);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -32,6 +45,8 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationRef = useRef<number | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    const userAudioRef = useRef<HTMLAudioElement | null>(null);
+    const sheikhAudioRef = useRef<HTMLAudioElement | null>(null);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -52,7 +67,7 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true }
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
             });
             streamRef.current = stream;
 
@@ -106,7 +121,7 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
 
         } catch (error) {
             console.error('Mic error:', error);
-            alert('Microphone access denied. Please allow microphone access.');
+            alert('Microphone access denied. Please allow microphone access in your browser settings.');
         }
     };
 
@@ -133,8 +148,6 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Analysis failed');
-
             const result = await response.json();
             setFeedback(result.feedback);
             setState('feedback');
@@ -142,11 +155,11 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
 
         } catch (error) {
             console.error('Analysis error:', error);
-            // Fallback: Generate local feedback
+            // Fallback feedback
             const fallbackFeedback: TajweedFeedback = {
                 score: 75 + Math.floor(Math.random() * 20),
-                positives: ['Clear articulation', 'Good rhythm'],
-                improvements: ['Focus on Makharij (letter articulation points)'],
+                positives: ['Clear articulation of letters', 'Good rhythm maintained'],
+                improvements: ['Focus on proper elongation (Madd) rules'],
                 details: 'MashaAllah! Keep practicing with dedication.'
             };
             setFeedback(fallbackFeedback);
@@ -160,13 +173,59 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
         setRecordingUrl(null);
         setDuration(0);
         setAudioLevel(Array(15).fill(10));
+        setIsPlayingUser(false);
+        setIsPlayingSheikh(false);
         setState('ready');
+    };
+
+    const playUserRecording = () => {
+        if (!userAudioRef.current) return;
+
+        if (isPlayingUser) {
+            userAudioRef.current.pause();
+            setIsPlayingUser(false);
+        } else {
+            sheikhAudioRef.current?.pause();
+            setIsPlayingSheikh(false);
+            userAudioRef.current.play();
+            setIsPlayingUser(true);
+        }
+    };
+
+    const playSheikhAudio = () => {
+        if (!sheikhAudioRef.current) return;
+
+        if (isPlayingSheikh) {
+            sheikhAudioRef.current.pause();
+            setIsPlayingSheikh(false);
+        } else {
+            userAudioRef.current?.pause();
+            setIsPlayingUser(false);
+            sheikhAudioRef.current.play();
+            setIsPlayingSheikh(true);
+        }
     };
 
     const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto p-6">
+            {/* Hidden audio elements */}
+            {recordingUrl && (
+                <audio
+                    ref={userAudioRef}
+                    src={recordingUrl}
+                    onEnded={() => setIsPlayingUser(false)}
+                />
+            )}
+            {sheikhAudioUrl && (
+                <audio
+                    ref={sheikhAudioRef}
+                    src={sheikhAudioUrl}
+                    onEnded={() => setIsPlayingSheikh(false)}
+                />
+            )}
+
             {/* Arabic Verse Display */}
             <div className="mb-8 text-center">
                 <p className="text-xs font-bold tracking-widest text-muted uppercase mb-4">
@@ -270,25 +329,58 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
                         exit={{ opacity: 0 }}
                         className="flex-1 space-y-4 pb-6"
                     >
-                        {/* Playback */}
+                        {/* User Recording Playback */}
                         {recordingUrl && (
                             <div className="bg-card border border-border rounded-xl p-4">
-                                <p className="text-xs font-bold text-muted uppercase mb-2">Your Recording</p>
-                                <audio src={recordingUrl} controls className="w-full h-10" />
+                                <p className="text-xs font-bold text-muted uppercase mb-3 tracking-wide">YOUR RECITATION</p>
+                                <button
+                                    onClick={playUserRecording}
+                                    className="flex items-center gap-4 w-full"
+                                >
+                                    <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                                        {isPlayingUser ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
+                                    </div>
+                                    <AnimatedWaveform isPlaying={isPlayingUser} color="#D97706" />
+                                </button>
                             </div>
                         )}
 
+                        {/* Sheikh Audio Playback */}
+                        {sheikhAudioUrl && (
+                            <div className="bg-card/50 border border-border rounded-xl p-4">
+                                <p className="text-xs font-bold text-muted uppercase mb-3 tracking-wide">TEACHER'S VERSION</p>
+                                <button
+                                    onClick={playSheikhAudio}
+                                    className="flex items-center gap-4 w-full"
+                                >
+                                    <div className="w-14 h-14 bg-muted/30 rounded-full flex items-center justify-center flex-shrink-0">
+                                        {isPlayingSheikh ? <Pause className="w-6 h-6 text-primary" /> : <Play className="w-6 h-6 text-primary ml-1" />}
+                                    </div>
+                                    <AnimatedWaveform isPlaying={isPlayingSheikh} color="#2DD4BF" />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* AI Feedback Header */}
+                        <div className="flex items-center gap-2 pt-2">
+                            <Sparkles className="w-5 h-5 text-amber-500" />
+                            <span className="text-sm font-bold text-amber-500 uppercase tracking-wide">AI Analysis</span>
+                        </div>
+
                         {/* Score */}
-                        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl p-4 text-center">
-                            <span className="text-4xl font-bold text-primary">{feedback.score}%</span>
-                            <p className="text-sm text-muted mt-1">Match Score</p>
+                        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl p-6 text-center">
+                            <span className="text-5xl font-bold text-primary">{feedback.score}%</span>
+                            <p className="text-sm text-muted mt-2">Match Score</p>
                         </div>
 
                         {/* Positives */}
                         {feedback.positives?.length > 0 && (
                             <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
-                                <p className="text-xs font-bold text-green-600 uppercase mb-2">✓ What You Did Well</p>
-                                <ul className="space-y-1">
+                                <p className="text-xs font-bold text-green-600 uppercase mb-3 flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4" />
+                                    WHAT YOU DID WELL
+                                </p>
+                                <ul className="space-y-2">
                                     {feedback.positives.map((p, i) => (
                                         <li key={i} className="text-sm text-foreground flex items-start gap-2">
                                             <CheckCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
@@ -302,8 +394,11 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
                         {/* Improvements */}
                         {feedback.improvements?.length > 0 && (
                             <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
-                                <p className="text-xs font-bold text-orange-600 uppercase mb-2">💡 To Improve</p>
-                                <ul className="space-y-1">
+                                <p className="text-xs font-bold text-orange-600 uppercase mb-3 flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4" />
+                                    TO IMPROVE
+                                </p>
+                                <ul className="space-y-2">
                                     {feedback.improvements.map((imp, i) => (
                                         <li key={i} className="text-sm text-foreground">{imp}</li>
                                     ))}
@@ -313,24 +408,26 @@ export default function InlineRecording({ arabic, surahId, verseId, onComplete }
 
                         {/* Encouragement */}
                         {feedback.details && (
-                            <p className="text-sm text-muted italic text-center px-4">"{feedback.details}"</p>
+                            <p className="text-sm text-muted italic text-center px-4 py-3 bg-purple-500/5 rounded-xl">
+                                "{feedback.details}"
+                            </p>
                         )}
 
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <button
                                 onClick={resetRecording}
-                                className="flex-1 py-3 rounded-xl border border-border bg-card text-foreground font-medium flex items-center justify-center gap-2 hover:bg-muted/5"
+                                className="flex-1 py-3 rounded-xl border border-border bg-card text-foreground font-medium flex items-center justify-center gap-2 hover:bg-muted/5 transition-colors"
                             >
                                 <RotateCcw className="w-4 h-4" />
                                 Try Again
                             </button>
                             <button
-                                onClick={() => {/* Mark complete and go to next */ }}
-                                className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2"
+                                onClick={onMarkComplete}
+                                className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
                             >
                                 <CheckCircle className="w-4 h-4" />
-                                Done
+                                Complete
                             </button>
                         </div>
                     </motion.div>

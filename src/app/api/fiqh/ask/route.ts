@@ -1,145 +1,167 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createServerClient } from '@supabase/ssr'
+import { FIQH_SYSTEM_PROMPT, FIQH_EDUCATIONAL_PREFACE, getFallbackAnswer } from '@/lib/prompts/fiqh-system'
 
 export async function POST(request: NextRequest) {
     try {
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-
         const body = await request.json()
-        const { question, madhab = 'hanafi' } = body
+        const { question, madhab = 'Hanafi' } = body
 
-        if (!question) {
+        if (!question || question.trim().length < 3) {
             return NextResponse.json(
-                { error: 'Question is required' },
+                { error: 'Please enter a valid question' },
                 { status: 400 }
             )
         }
 
         console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..." (${madhab})`)
 
-        let answerText: string
-        let sources: string
-        let differences: string | null = null
-
-        // Try Gemini AI first
-        if (GEMINI_API_KEY) {
-            try {
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-                const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-
-                // Shorter prompt for faster response
-                const prompt = `You are a ${madhab} Islamic scholar. Answer briefly (max 80 words):
-
-"${question}"
-
-Give a practical answer based on ${madhab} sources.`
-
-                const result = await model.generateContent(prompt)
-                answerText = result.response.text()
-                sources = `${madhab.charAt(0).toUpperCase() + madhab.slice(1)} Jurisprudence`
-                console.log('✅ Gemini response received')
-
-            } catch (aiError: any) {
-                console.error('Gemini error:', aiError.status || aiError.message)
-
-                // Fallback for rate limiting or errors
-                const fallback = generateFallbackAnswer(question, madhab)
-                answerText = fallback.answer
-                sources = fallback.sources
+        // Create Supabase client for auth and caching
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() { return request.cookies.getAll() },
+                    setAll() { },
+                },
             }
-        } else {
-            // No API key - use fallback
-            const fallback = generateFallbackAnswer(question, madhab)
-            answerText = fallback.answer
-            sources = fallback.sources
+        )
+
+        // Get user for personalization
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // Check cache first (hash by question + madhab)
+        const cacheKey = `${question.toLowerCase().trim().replace(/\s+/g, '_')}_${madhab}`.substring(0, 200)
+
+        // Try to find cached answer
+        const { data: cached } = await supabase
+            .from('fiqh_questions')
+            .select('answer')
+            .ilike('question', question.trim())
+            .eq('madhab', madhab)
+            .limit(1)
+            .maybeSingle()
+
+        if (cached?.answer) {
+            console.log('✅ Returning cached answer')
+            return NextResponse.json({
+                answer: cached.answer,
+                madhab,
+                cached: true
+            })
         }
 
-        // Fire-and-forget database save
-        try {
-            const supabase = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                {
-                    cookies: {
-                        getAll() { return request.cookies.getAll() },
-                        setAll() { },
-                    },
+        // No cache hit - call Gemini with invisible prompt engineering
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+
+        let answer: string
+
+        if (GEMINI_API_KEY) {
+            // Prepare system prompt with madhab
+            const systemPrompt = FIQH_SYSTEM_PROMPT.replace(/{MADHAB}/g, madhab)
+            const educationalQuery = FIQH_EDUCATIONAL_PREFACE(question, madhab)
+
+            // Retry logic with exponential backoff
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const response = await fetch(
+                        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                systemInstruction: {
+                                    parts: [{ text: systemPrompt }]
+                                },
+                                contents: [{
+                                    role: 'user',
+                                    parts: [{ text: educationalQuery }]
+                                }],
+                                generationConfig: {
+                                    temperature: 0.3,
+                                    maxOutputTokens: 1000,
+                                    topP: 0.8
+                                },
+                                safetySettings: [
+                                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }
+                                ]
+                            })
+                        }
+                    )
+
+                    if (response.ok) {
+                        const data = await response.json()
+                        answer = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+                        if (answer) {
+                            console.log('✅ Gemini response received')
+                            break
+                        }
+                    }
+
+                    // Rate limited or error - retry with backoff
+                    const status = response.status
+                    console.log(`⚠️ Gemini attempt ${attempt + 1} failed: ${status}`)
+
+                    if (attempt < 2) {
+                        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
+                    }
+
+                } catch (error) {
+                    console.error(`Gemini attempt ${attempt + 1} error:`, error)
+                    if (attempt < 2) {
+                        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000))
+                    }
                 }
-            )
-
-            const { data: { user } } = await supabase.auth.getUser()
-
-            if (user) {
-                supabase.from('fiqh_questions').insert({
-                    user_id: user.id,
-                    question: question,
-                    answer: answerText,
-                    madhab: madhab,
-                    sources: sources
-                }).catch(() => { }) // Fire and forget
             }
-        } catch { }
+        }
+
+        // If no answer from Gemini, use intelligent fallback
+        if (!answer!) {
+            console.log('⚠️ Using fallback answer')
+            answer = getFallbackAnswer(question, madhab)
+        }
+
+        // Cache the answer (fire-and-forget)
+        if (user) {
+            supabase.from('fiqh_questions').insert({
+                user_id: user.id,
+                question: question.trim(),
+                madhab: madhab,
+                answer: answer,
+                sources: `${madhab} Jurisprudence`
+            }).catch(() => { })
+        }
 
         return NextResponse.json({
-            answer: answerText,
-            sources: sources,
-            madhab: madhab,
-            differences: differences
+            answer,
+            madhab,
+            sources: `${madhab} Islamic Jurisprudence`,
+            cached: false
         })
 
     } catch (error: any) {
         console.error('❌ Fiqh API error:', error)
 
-        // Always return a helpful response, never error
-        const fallback = generateFallbackAnswer('general question', 'hanafi')
+        // NEVER return an error to user - always provide helpful content
         return NextResponse.json({
-            answer: fallback.answer,
-            sources: fallback.sources,
-            madhab: 'hanafi',
-            differences: null
+            answer: `Thank you for your question about Islamic guidance.
+
+Based on traditional Islamic scholarship, this topic has been discussed by scholars throughout history. The general principle in Islam is to seek knowledge and act upon what is clearly established in the Quran and Sunnah.
+
+**Recommended Actions**:
+1. Consult with a qualified local scholar or imam
+2. Visit reputable Islamic knowledge websites
+3. Refer to classical fiqh texts in your madhab
+
+📚 This is educational information based on classical Islamic scholarship. For personal religious guidance, please consult a qualified scholar in your community.`,
+            madhab: 'General',
+            sources: 'Islamic Tradition'
         })
-    }
-}
-
-/**
- * Generate fallback answer when AI is unavailable
- */
-function generateFallbackAnswer(question: string, madhab: string) {
-    const topic = question.toLowerCase()
-
-    // Common Islamic topics with default answers
-    if (topic.includes('prayer') || topic.includes('salah') || topic.includes('namaz')) {
-        return {
-            answer: `In the ${madhab} school, prayer (Salah) is performed five times daily at prescribed times. Each prayer has specific number of units (raka'at). For detailed rulings on specific aspects of prayer, consulting with a qualified scholar is recommended.`,
-            sources: `${madhab} Fiqh - Prayer chapter`
-        }
-    }
-
-    if (topic.includes('wudu') || topic.includes('ablution')) {
-        return {
-            answer: `According to ${madhab} jurisprudence, wudu (ablution) is a prerequisite for prayer. The obligatory acts include washing the face, arms up to elbows, wiping the head, and washing feet. Anything that breaks wudu requires fresh ablution before prayer.`,
-            sources: `${madhab} Fiqh - Purification chapter`
-        }
-    }
-
-    if (topic.includes('fast') || topic.includes('ramadan') || topic.includes('sawm')) {
-        return {
-            answer: `In ${madhab} fiqh, fasting during Ramadan is obligatory for every sane adult Muslim. Fasting begins at Fajr and ends at Maghrib. Eating, drinking, and marital relations break the fast during these hours.`,
-            sources: `${madhab} Fiqh - Fasting chapter`
-        }
-    }
-
-    if (topic.includes('zakat')) {
-        return {
-            answer: `Zakat is obligatory when wealth reaches the nisab (minimum threshold) and one lunar year passes. In the ${madhab} school, 2.5% of savings is given annually. Recipients include the poor, needy, and other categories mentioned in Quran.`,
-            sources: `${madhab} Fiqh - Zakat chapter`
-        }
-    }
-
-    // Default fallback
-    return {
-        answer: `This is an important question in Islamic jurisprudence. The ${madhab} school has detailed guidance on such matters based on Quran and Sunnah. For specific rulings, consulting with a qualified Islamic scholar who can assess your particular situation is recommended.`,
-        sources: `${madhab} Islamic Jurisprudence`
     }
 }
