@@ -1,5 +1,6 @@
 "use client";
 
+import LandingNav from "@/components/landing/LandingNav";
 import HeroSection from "@/components/landing/HeroSection";
 import ProblemSection from "@/components/landing/ProblemSection";
 import DemoSection from "@/components/landing/DemoSection";
@@ -10,6 +11,9 @@ import CTASection from "@/components/landing/CTASection";
 export default function LandingPage() {
     return (
         <main className="min-h-screen w-full overflow-x-hidden">
+            {/* Fixed Navigation */}
+            <LandingNav />
+
             {/* 1. The Moment (Hero) - Immersive Opening */}
             <HeroSection />
 
