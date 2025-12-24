@@ -26,6 +26,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
     const [translations, setTranslations] = useState<Translations>({ english: translation, bangla: '' });
     const [wordMeanings, setWordMeanings] = useState<WordMeaning[]>([]);
     const [tafsir, setTafsir] = useState<string>("");
+    const [tafsirSource, setTafsirSource] = useState<string>("Ibn Kathir");
     const [loadingWords, setLoadingWords] = useState(false);
     const [loadingTranslations, setLoadingTranslations] = useState(false);
     const [showTafsir, setShowTafsir] = useState(false);
@@ -108,10 +109,44 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
         loadWordMeanings();
     }, [surahId, verseId, arabic]);
 
-    // Generate contextual tafsir/understanding
+    // Load Tafsir from API
     useEffect(() => {
-        const tafsirContent = getTafsirContent(surahId, verseId);
-        setTafsir(tafsirContent);
+        async function loadTafsir() {
+            if (!surahId || !verseId) return;
+
+            try {
+                // Fetch from QuranCDN API
+                const response = await fetch(
+                    `https://api.qurancdn.com/api/v4/tafsirs/169/by_ayah/${surahId}:${verseId}`
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.tafsir?.text) {
+                        // Clean HTML tags and set
+                        const cleanText = data.tafsir.text
+                            .replace(/<[^>]*>/g, '')
+                            .replace(/&nbsp;/g, ' ')
+                            .trim();
+                        setTafsir(cleanText);
+                        setTafsirSource(data.tafsir.resource_name || 'Ibn Kathir');
+                    } else {
+                        // Fallback to local content
+                        setTafsir(getTafsirContent(surahId, verseId));
+                        setTafsirSource('MEEK Commentary');
+                    }
+                } else {
+                    setTafsir(getTafsirContent(surahId, verseId));
+                    setTafsirSource('MEEK Commentary');
+                }
+            } catch (error) {
+                console.error("Tafsir fetch failed:", error);
+                setTafsir(getTafsirContent(surahId, verseId));
+                setTafsirSource('MEEK Commentary');
+            }
+        }
+
+        loadTafsir();
     }, [surahId, verseId]);
 
     return (
@@ -237,11 +272,16 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5"
+                        className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5 space-y-3"
                     >
                         <p className="text-foreground/90 leading-relaxed text-sm">
                             {tafsir}
                         </p>
+                        {/* Source Citation */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-purple-500/10">
+                            <span className="text-[10px] text-muted uppercase tracking-wider">Source:</span>
+                            <span className="text-xs text-purple-500 font-medium">{tafsirSource}</span>
+                        </div>
                     </motion.div>
                 )}
             </motion.section>

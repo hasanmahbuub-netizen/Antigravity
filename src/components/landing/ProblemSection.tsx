@@ -1,158 +1,164 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
+import { BookX, Clock, Users, Smartphone, Headphones, MessageCircle } from "lucide-react";
+
+const problems = [
+    {
+        icon: BookX,
+        title: "YouTube Videos",
+        subtitle: "Too generic",
+        description: "Generic tutorials don't address your specific pronunciation issues"
+    },
+    {
+        icon: Users,
+        title: "Family & Friends",
+        subtitle: "They're busy",
+        description: "Your loved ones have their own lives and can't always be there"
+    },
+    {
+        icon: Smartphone,
+        title: "Quran Apps",
+        subtitle: "Just show text",
+        description: "Most apps display verses but don't actually teach you to read"
+    },
+    {
+        icon: Clock,
+        title: "Masjid Classes",
+        subtitle: "Limited time",
+        description: "Weekly classes are great but not enough for daily practice"
+    },
+    {
+        icon: Headphones,
+        title: "Audio Recitations",
+        subtitle: "Passive listening",
+        description: "You listen but never get feedback on your own recitation"
+    },
+    {
+        icon: MessageCircle,
+        title: "Online Tutors",
+        subtitle: "Expensive",
+        description: "Quality Quran teachers cost $30-50/hour - not for everyone"
+    }
+];
 
 export default function ProblemSection() {
-    const sectionRef = useRef<HTMLElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isHovered, setIsHovered] = useState(false);
 
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start end", "end start"]
-    });
+    useEffect(() => {
+        const scrollContainer = scrollRef.current;
+        if (!scrollContainer) return;
 
-    // Background color transition from navy to cream
-    const bgColor = useTransform(
-        scrollYProgress,
-        [0, 0.3],
-        ["#0A1628", "#FAFAF5"]
-    );
+        let animationId: number;
+        let scrollPosition = 0;
+        const scrollSpeed = 0.5;
+
+        const animate = () => {
+            if (!isHovered && scrollContainer) {
+                scrollPosition += scrollSpeed;
+
+                // Reset when reaching halfway (duplicate cards)
+                if (scrollPosition >= scrollContainer.scrollWidth / 2) {
+                    scrollPosition = 0;
+                }
+
+                scrollContainer.scrollLeft = scrollPosition;
+            }
+            animationId = requestAnimationFrame(animate);
+        };
+
+        animationId = requestAnimationFrame(animate);
+
+        return () => cancelAnimationFrame(animationId);
+    }, [isHovered]);
+
+    // Duplicate cards for infinite scroll effect
+    const allProblems = [...problems, ...problems];
 
     return (
-        <motion.section
-            ref={sectionRef}
-            className="relative min-h-[200vh] w-full"
-            style={{ backgroundColor: bgColor }}
-        >
-            {/* Editorial Content Column */}
-            <div className="max-w-[700px] mx-auto px-6 py-32">
+        <section className="relative w-full bg-gradient-to-b from-[#0A1628] to-[#0F1D32] py-24 md:py-32 overflow-hidden">
+            {/* Ambient Glow Effects */}
+            <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-[#2D5F5D]/10 rounded-full blur-[150px] pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#E8C49A]/5 rounded-full blur-[120px] pointer-events-none" />
 
-                {/* Opening Statement */}
-                <motion.h2
-                    className="font-serif text-[36px] md:text-[48px] text-[#2B2B2B] leading-tight mb-10"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8 }}
-                >
-                    Most Muslims can't.
-                </motion.h2>
+            {/* Section Header */}
+            <motion.div
+                className="text-center mb-16 px-6"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
+                <span className="text-[11px] text-[#E8C49A]/60 uppercase tracking-[0.2em]">The Reality</span>
+                <h2 className="font-serif text-[36px] md:text-[48px] text-white mt-4">
+                    Most Muslims can't read properly
+                </h2>
+                <p className="text-[18px] md:text-[20px] text-white/60 mt-4 max-w-xl mx-auto">
+                    Not because of faith. Not because of effort.<br />
+                    <span className="text-white/80 font-medium">Because no one taught them how.</span>
+                </p>
+            </motion.div>
 
-                {/* The Reality */}
-                <motion.div
-                    className="space-y-2 mb-16"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                    <p className="text-[20px] md:text-[24px] text-[#5A5A5A] leading-relaxed">
-                        Not because of faith.
-                    </p>
-                    <p className="text-[20px] md:text-[24px] text-[#5A5A5A] leading-relaxed">
-                        Not because of effort.
-                    </p>
-                    <p className="text-[20px] md:text-[24px] text-[#2B2B2B] leading-relaxed mt-6 font-medium">
-                        But because no one ever taught them how.
-                    </p>
-                </motion.div>
+            {/* Auto-Scrolling Glassmorphism Cards */}
+            <div
+                ref={scrollRef}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className="flex gap-6 overflow-x-hidden px-6 pb-4 scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+                {allProblems.map((problem, index) => (
+                    <motion.div
+                        key={index}
+                        className="flex-shrink-0 w-[280px] md:w-[320px]"
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: Math.min(index * 0.1, 0.5) }}
+                    >
+                        {/* Glassmorphism Card */}
+                        <div className="relative h-full p-6 rounded-2xl border border-white/10 backdrop-blur-xl bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+                            {/* Icon */}
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5F5D] to-[#1A3B3A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <problem.icon className="w-6 h-6 text-[#E8C49A]" />
+                            </div>
 
-                {/* Visual Break - Waveform Art */}
-                <motion.div
-                    className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden mb-16 shadow-[0_20px_60px_rgba(0,0,0,0.08)]"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                >
-                    {/* Gradient Background */}
-                    <div
-                        className="absolute inset-0"
-                        style={{
-                            background: "linear-gradient(135deg, #2D5F5D 0%, #1A3B3A 50%, #E8C49A 100%)",
-                        }}
-                    />
+                            {/* Title & Subtitle */}
+                            <h3 className="text-lg font-semibold text-white mb-1">
+                                {problem.title}
+                            </h3>
+                            <p className="text-sm text-[#E8C49A]/80 font-medium mb-3">
+                                {problem.subtitle}
+                            </p>
 
-                    {/* Waveform Visualization */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <svg viewBox="0 0 400 100" className="w-[80%] h-auto opacity-60">
-                            <motion.path
-                                d="M0,50 Q25,20 50,50 T100,50 T150,50 T200,50 T250,50 T300,50 T350,50 T400,50"
-                                fill="none"
-                                stroke="rgba(255,255,255,0.5)"
-                                strokeWidth="2"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 2 }}
-                            />
-                            <motion.path
-                                d="M0,50 Q25,80 50,50 T100,50 T150,50 T200,50 T250,50 T300,50 T350,50 T400,50"
-                                fill="none"
-                                stroke="rgba(232,196,154,0.6)"
-                                strokeWidth="2"
-                                initial={{ pathLength: 0 }}
-                                whileInView={{ pathLength: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 2, delay: 0.3 }}
-                            />
-                        </svg>
-                    </div>
+                            {/* Description */}
+                            <p className="text-sm text-white/50 leading-relaxed">
+                                {problem.description}
+                            </p>
 
-                    {/* Caption */}
-                    <p className="absolute bottom-4 left-0 right-0 text-center text-sm text-white/60 italic">
-                        Every recitation has its own rhythm
-                    </p>
-                </motion.div>
-
-                {/* The Struggle */}
-                <motion.div
-                    className="space-y-4 mb-16"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <p className="text-[18px] md:text-[20px] text-[#6B6B6B] leading-relaxed">
-                        You've tried YouTube videos. <span className="text-[#9B9B9B]">Too generic.</span>
-                    </p>
-                    <p className="text-[18px] md:text-[20px] text-[#6B6B6B] leading-relaxed">
-                        You've asked family. <span className="text-[#9B9B9B]">They're busy.</span>
-                    </p>
-                    <p className="text-[18px] md:text-[20px] text-[#6B6B6B] leading-relaxed">
-                        You've used Quran apps. <span className="text-[#9B9B9B]">They just show text.</span>
-                    </p>
-                </motion.div>
-
-                {/* The Solution */}
-                <motion.div
-                    className="mb-16"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <p className="text-[20px] md:text-[24px] text-[#2B2B2B] leading-relaxed mb-6">
-                        What you need is simple:
-                    </p>
-                    <p className="text-[22px] md:text-[26px] text-[#2D5F5D] leading-relaxed font-medium">
-                        Listen. Practice. Get feedback.<br />
-                        <span className="text-[#6B6B6B] font-normal text-[18px]">Over and over, until it's perfect.</span>
-                    </p>
-                </motion.div>
-
-                {/* The Declaration */}
-                <motion.p
-                    className="font-serif text-[28px] md:text-[36px] text-[#2D5F5D] italic leading-snug"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8 }}
-                >
-                    That's what we built.
-                </motion.p>
-
+                            {/* Decorative Corner */}
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#2D5F5D]/20 to-transparent rounded-tr-2xl rounded-bl-[40px]" />
+                        </div>
+                    </motion.div>
+                ))}
             </div>
-        </motion.section>
+
+            {/* The Solution Statement */}
+            <motion.div
+                className="text-center mt-16 px-6"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+            >
+                <p className="text-[18px] text-white/60 mb-4">What you need is simple:</p>
+                <p className="font-serif text-[28px] md:text-[36px] text-[#E8C49A] italic">
+                    Listen. Practice. Get feedback.
+                </p>
+                <p className="text-white/40 mt-2">Over and over, until it's perfect.</p>
+            </motion.div>
+        </section>
     );
 }

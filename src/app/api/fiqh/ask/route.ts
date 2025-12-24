@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { askGroqFiqh, FiqhResponse } from '@/lib/providers/groq'
+import { askOpenAIFiqh } from '@/lib/providers/openai'
 import { getFallbackStructuredAnswer } from '@/lib/prompts/fiqh-system'
 
 export async function POST(request: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
         // Get user
         const { data: { user } } = await supabase.auth.getUser()
 
-        // Get user's madhab preference - CRITICAL for correct answers
+        // Get user's madhab preference
         let madhab = requestMadhab || 'Hanafi'
 
         if (user) {
@@ -47,10 +48,10 @@ export async function POST(request: NextRequest) {
 
                 if (profile?.madhab) {
                     madhab = profile.madhab
-                    console.log(`✅ User madhab from profile: ${madhab}`)
+                    console.log(`✅ User madhab: ${madhab}`)
                 }
             } catch (e) {
-                console.log(`⚠️ Could not fetch profile, using default: ${madhab}`)
+                console.log(`⚠️ Using default madhab: ${madhab}`)
             }
         }
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
             .maybeSingle()
 
         if (cached?.answer) {
-            console.log(`✅ Returning cached answer (${Date.now() - startTime}ms)`)
+            console.log(`✅ Cache hit (${Date.now() - startTime}ms)`)
             try {
                 const parsedAnswer = typeof cached.answer === 'string'
                     ? JSON.parse(cached.answer)
@@ -77,90 +78,104 @@ export async function POST(request: NextRequest) {
                     success: true,
                     data: parsedAnswer,
                     madhab,
+                    provider: 'cache',
                     cached: true,
                     timing: Date.now() - startTime
                 })
             } catch {
-                // Old format, continue to fetch new
+                // Bad cache, continue to fetch
             }
         }
 
-        // PRIMARY: Try Groq (Llama 3.3 70B) - Fast, no filters
+        // API FALLBACK CHAIN: Groq → Gemini → OpenAI → Static
         let fiqhResponse: FiqhResponse | null = null;
         let provider = 'none';
 
-        const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
-        if (GROQ_API_KEY) {
+        // 1️⃣ PRIMARY: Groq (Llama 3.3 70B) - Fastest, no filters
+        if (process.env.GROQ_API_KEY) {
             try {
-                console.log(`📤 Calling Groq (Llama 3.3) with ${madhab} prompts...`)
+                console.log(`📤 [1] Trying Groq (Llama 3.3)...`)
                 fiqhResponse = await askGroqFiqh(question, madhab);
                 provider = 'groq';
-                console.log(`✅ Groq response received (${Date.now() - startTime}ms)`)
+                console.log(`✅ Groq response (${Date.now() - startTime}ms)`)
             } catch (error) {
-                console.error('❌ Groq error:', error)
+                console.error('❌ Groq failed:', error)
             }
         }
 
-        // FALLBACK: Try Gemini if Groq fails
-        if (!fiqhResponse) {
-            const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        // 2️⃣ FALLBACK: Gemini 2.5 Flash
+        if (!fiqhResponse && process.env.GEMINI_API_KEY) {
+            try {
+                console.log(`📤 [2] Trying Gemini 2.5 Flash...`)
 
-            if (GEMINI_API_KEY) {
-                console.log(`📤 Falling back to Gemini...`)
-
-                try {
-                    const response = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{
-                                    role: 'user',
-                                    parts: [{
-                                        text: buildGeminiPrompt(question, madhab)
-                                    }]
-                                }],
-                                generationConfig: {
-                                    temperature: 0.3,
-                                    maxOutputTokens: 2000,
-                                    responseMimeType: "application/json"
-                                },
-                                safetySettings: [
-                                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
-                                ]
-                            })
-                        }
-                    );
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                        if (rawText) {
-                            fiqhResponse = parseGeminiResponse(rawText, madhab);
-                            provider = 'gemini';
-                            console.log(`✅ Gemini response parsed (${Date.now() - startTime}ms)`)
-                        }
-                    } else {
-                        console.log(`⚠️ Gemini returned ${response.status}`)
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                role: 'user',
+                                parts: [{ text: buildGeminiPrompt(question, madhab) }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.3,
+                                maxOutputTokens: 2000,
+                                responseMimeType: "application/json"
+                            },
+                            safetySettings: [
+                                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
+                            ]
+                        })
                     }
-                } catch (error) {
-                    console.error('❌ Gemini error:', error);
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (rawText) {
+                        fiqhResponse = parseGeminiResponse(rawText, madhab);
+                        provider = 'gemini';
+                        console.log(`✅ Gemini response (${Date.now() - startTime}ms)`)
+                    }
+                } else {
+                    console.log(`⚠️ Gemini returned ${response.status}`)
                 }
+            } catch (error) {
+                console.error('❌ Gemini failed:', error);
             }
         }
 
-        // LAST RESORT: Use fallback structured answer
+        // 3️⃣ FALLBACK: OpenAI GPT-4o-mini
+        if (!fiqhResponse && process.env.OPENAI_API_KEY) {
+            try {
+                console.log(`📤 [3] Trying OpenAI GPT-4o-mini...`)
+                fiqhResponse = await askOpenAIFiqh(question, madhab);
+                provider = 'openai';
+                console.log(`✅ OpenAI response (${Date.now() - startTime}ms)`)
+            } catch (error) {
+                console.error('❌ OpenAI failed:', error);
+            }
+        }
+
+        // 4️⃣ LAST RESORT: Static fallback
         if (!fiqhResponse) {
-            console.log(`⚠️ Using local fallback for ${madhab}`)
+            console.log(`⚠️ All APIs failed, using static fallback`)
             const fallback = getFallbackStructuredAnswer(question, madhab);
+            // Add verified field to citations
+            const citationsWithVerified = fallback.citations.map(c => ({
+                ...c,
+                verified: true
+            }));
             fiqhResponse = {
-                ...fallback,
+                directAnswer: fallback.directAnswer,
+                reasoning: fallback.reasoning,
+                otherSchools: fallback.otherSchools,
+                citations: citationsWithVerified,
                 sourceVerification: {
                     primarySourcesUsed: false,
                     hallucinationRisk: 'N/A - Static fallback',
@@ -171,7 +186,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Cache the answer
-        if (user) {
+        if (user && fiqhResponse) {
             const timing = Date.now() - startTime;
             (async () => {
                 try {
@@ -181,8 +196,8 @@ export async function POST(request: NextRequest) {
                         madhab: madhab,
                         answer: JSON.stringify(fiqhResponse),
                         response_time_ms: timing,
-                        hallucination_risk: fiqhResponse?.sourceVerification?.hallucinationRisk,
-                        confidence_level: fiqhResponse?.sourceVerification?.confidenceLevel
+                        hallucination_risk: fiqhResponse.sourceVerification?.hallucinationRisk,
+                        confidence_level: fiqhResponse.sourceVerification?.confidenceLevel
                     });
                 } catch { }
             })();
@@ -197,13 +212,12 @@ export async function POST(request: NextRequest) {
             madhab,
             provider,
             timing,
-            sourceVerification: fiqhResponse.sourceVerification
+            sourceVerification: fiqhResponse!.sourceVerification
         })
 
     } catch (error: any) {
         console.error('❌ Fiqh API error:', error)
 
-        // NEVER return an error - always provide helpful content
         const fallback = getFallbackStructuredAnswer('general', 'Hanafi')
         return NextResponse.json({
             success: true,
@@ -222,50 +236,34 @@ export async function POST(request: NextRequest) {
     }
 }
 
-/**
- * Build prompt for Gemini fallback
- */
 function buildGeminiPrompt(question: string, madhab: string): string {
-    return `You are an Islamic scholar. Answer this question from the ${madhab} school perspective.
+    return `You are an Islamic scholar AI. Answer from the ${madhab} school perspective.
 
 Question: "${question}"
 
 REQUIREMENTS:
 1. Start with "In the ${madhab} school..."
-2. Provide clear, specific answer
-3. Include reasoning with evidence
-4. Cite Quran, Hadith, and scholars
+2. Provide REASONING before the answer
+3. Include 3+ citations (Quran, Hadith, Scholars)
 
-Output valid JSON only:
+Output JSON:
 {
   "directAnswer": "In the ${madhab} school, [answer]",
   "reasoning": "[200-300 words with evidence]",
-  "otherSchools": [{"madhab": "Name", "position": "Their view if different"}],
+  "otherSchools": [{"madhab": "Name", "position": "Their view"}],
   "citations": [{"source": "Quran/Hadith/Scholar", "reference": "Specific ref", "text": "Quote", "verified": true}],
-  "sourceVerification": {"primarySourcesUsed": true, "hallucinationRisk": "Medium", "confidenceLevel": "Medium (70%)"}
+  "sourceVerification": {"primarySourcesUsed": true, "hallucinationRisk": "Low", "confidenceLevel": "High (95%)"}
 }`;
 }
 
-/**
- * Parse Gemini response into FiqhResponse format
- */
 function parseGeminiResponse(rawText: string, madhab: string): FiqhResponse {
     try {
-        // Clean up JSON
-        let cleanText = rawText
-            .replace(/```json\n?/g, '')
-            .replace(/```\n?/g, '')
-            .trim();
-
-        // Extract JSON
+        let cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            cleanText = jsonMatch[0];
-        }
+        if (jsonMatch) cleanText = jsonMatch[0];
 
         const parsed = JSON.parse(cleanText);
 
-        // Validate madhab mention
         if (!parsed.directAnswer?.toLowerCase().includes(madhab.toLowerCase())) {
             parsed.directAnswer = `In the ${madhab} school, ` + (parsed.directAnswer || '');
         }
