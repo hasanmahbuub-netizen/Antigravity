@@ -49,7 +49,7 @@ export default function CTASection() {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/quran/1/1">
+                        <Link href="/auth/signin?redirect=/quran">
                             <motion.button
                                 className="group flex items-center gap-3 bg-[#E8C49A] text-[#0A1628] font-semibold text-lg px-10 py-5 rounded-full hover:bg-[#d4b088] transition-all shadow-lg shadow-[#E8C49A]/20"
                                 whileHover={{ scale: 1.05 }}

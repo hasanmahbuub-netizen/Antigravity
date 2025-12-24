@@ -145,7 +145,7 @@ export default function HowItWorksSection() {
                         viewport={{ once: true }}
                         transition={{ delay: 0.5 }}
                     >
-                        <Link href="/quran/1/1">
+                        <Link href="/auth/signin?redirect=/quran">
                             <button className="bg-[#E8C49A] text-[#0A1628] font-semibold px-8 py-4 rounded-full hover:bg-[#d4b088] transition-all hover:scale-105 active:scale-95">
                                 Try it now — It's free
                             </button>
