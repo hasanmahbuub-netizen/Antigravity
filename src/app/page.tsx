@@ -2,34 +2,30 @@
 
 import LandingNav from "@/components/landing/LandingNav";
 import HeroSection from "@/components/landing/HeroSection";
-import ProblemSection from "@/components/landing/ProblemSection";
-import DemoSection from "@/components/landing/DemoSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import FeaturesShowcase from "@/components/landing/FeaturesShowcase";
 import TransformationSection from "@/components/landing/TransformationSection";
-import VisionSection from "@/components/landing/VisionSection";
 import CTASection from "@/components/landing/CTASection";
 
 export default function LandingPage() {
     return (
-        <main className="min-h-screen w-full overflow-x-hidden">
+        <main className="min-h-screen w-full overflow-x-hidden bg-[#0A0A0A]">
             {/* Fixed Navigation */}
             <LandingNav />
 
-            {/* 1. The Moment (Hero) - Immersive Opening */}
+            {/* 1. Hero - Immersive Opening with Bismillah */}
             <HeroSection />
 
-            {/* 2. The Realization (Problem) - Editorial Scroll */}
-            <ProblemSection />
+            {/* 2. How It Works - Interactive 4-Step Product Demo */}
+            <HowItWorksSection />
 
-            {/* 3. The Experience (Demo) - Interactive Phone Mockup */}
-            <DemoSection />
+            {/* 3. Features - Gradient Cards with Key Capabilities */}
+            <FeaturesShowcase />
 
-            {/* 4. The Voices (Testimonials) - Pull Quotes */}
+            {/* 4. Testimonials - Social Proof with Auto-Scroll */}
             <TransformationSection />
 
-            {/* 5. The Invitation (CTA) - Mission + Soft CTA */}
-            <VisionSection />
-
-            {/* 6. Footer - Minimal */}
+            {/* 5. Final CTA - Strong Call to Action */}
             <CTASection />
         </main>
     );
