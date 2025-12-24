@@ -25,17 +25,32 @@ export async function POST(req: NextRequest) {
         if (!GEMINI_API_KEY) {
             console.error('GEMINI_API_KEY not configured');
             return NextResponse.json({
-                success: true,
-                feedback: getDefaultFeedback()
+                success: false,
+                error: 'AI analysis not available',
+                feedback: null
             });
         }
 
         // Convert audio to base64
         const audioBuffer = await audioFile.arrayBuffer();
         const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+        const audioSize = audioFile.size;
 
         console.log(`🎙️ Analyzing Tajweed for verse: ${verseKey}`);
-        console.log(`📁 Audio type: ${audioFile.type}, size: ${audioFile.size} bytes`);
+        console.log(`📁 Audio type: ${audioFile.type}, size: ${audioSize} bytes`);
+
+        // CRITICAL: Validate audio is not empty/silent
+        // WebM files with no real audio are typically very small
+        const MIN_AUDIO_SIZE = 5000; // 5KB minimum for real speech
+
+        if (audioSize < MIN_AUDIO_SIZE) {
+            console.log(`⚠️ Audio too small (${audioSize} bytes) - likely silence`);
+            return NextResponse.json({
+                success: false,
+                error: 'Recording too short or silent. Please recite the verse and try again.',
+                feedback: null
+            });
+        }
 
         const prompt = buildTajweedPrompt(expectedText, verseKey);
 
@@ -73,8 +88,9 @@ export async function POST(req: NextRequest) {
             console.error('Error details:', errorData);
 
             return NextResponse.json({
-                success: true,
-                feedback: getDefaultFeedback()
+                success: false,
+                error: 'AI analysis temporarily unavailable. Please try again.',
+                feedback: null
             });
         }
 
@@ -84,16 +100,26 @@ export async function POST(req: NextRequest) {
         if (!rawText) {
             console.error('No response text from Gemini');
             return NextResponse.json({
-                success: true,
-                feedback: getDefaultFeedback()
+                success: false,
+                error: 'Could not analyze the recording. Please try again.',
+                feedback: null
             });
         }
 
         // Parse the response
         const feedback = parseTajweedFeedback(rawText);
 
+        // Additional validation: if AI detected silence or no speech
+        if (feedback.accuracy < 20 || feedback.strengths.length === 0) {
+            return NextResponse.json({
+                success: false,
+                error: 'No clear recitation detected. Please speak clearly and try again.',
+                feedback: null
+            });
+        }
+
         const timing = Date.now() - startTime;
-        console.log(`✅ Tajweed analysis complete (${timing}ms)`);
+        console.log(`✅ Tajweed analysis complete (${timing}ms), accuracy: ${feedback.accuracy}%`);
 
         return NextResponse.json({
             success: true,
@@ -105,8 +131,9 @@ export async function POST(req: NextRequest) {
         console.error('Tajweed analysis error:', error);
 
         return NextResponse.json({
-            success: true,
-            feedback: getDefaultFeedback()
+            success: false,
+            error: 'Failed to analyze recording. Please try again.',
+            feedback: null
         });
     }
 }
@@ -125,52 +152,37 @@ Expected verse (Uthmani script):
 
 Verse reference: ${verseKey}
 
-CRITICAL ANALYSIS POINTS:
+CRITICAL FIRST STEP:
+- FIRST, determine if there is ACTUAL SPEECH in this audio
+- If the audio is SILENT, contains only noise, or has NO CLEAR SPEECH, you MUST return accuracy: 0 and note this in improvements
+- Do NOT give high scores to silence or noise
+
+ANALYSIS POINTS (only if speech is detected):
 1. Makhraj (مخارج) - Are letters pronounced from correct articulation points?
-   - Throat letters (ح، خ، ع، غ، ء، ه)
-   - Tongue letters (ق، ك، ج، ش، ض، ل، ن، ر، ط، د، ت، ص، ز، س، ظ، ذ، ث)
-   - Lip letters (ف، و، ب، م)
-
-2. Sifaat (صفات) - Characteristics of letters
-   - Tafkheem (heavy) vs Tarqeeq (light)
-   - Qalqalah (echoing) on ق، ط، ب، ج، د
-   - Ghunnah (nasalization) on ن and م
-
-3. Madd (مد) - Elongation rules
-   - Natural Madd (2 counts)
-   - Connected Madd (4-5 counts)
-   - Separated Madd (4-5 counts)
-   - Substitution Madd (2 counts)
-
-4. Waqf (وقف) - If stopped mid-verse, was it at a proper stopping point?
-
-5. Overall flow - Smooth, measured recitation
+2. Sifaat (صفات) - Characteristics of letters (Tafkheem, Tarqeeq, Qalqalah, Ghunnah)
+3. Madd (مد) - Elongation rules (Natural, Connected, Separated)
+4. Overall flow - Smooth, measured recitation
 
 RESPONSE FORMAT (JSON):
 {
-  "accuracy": 85,
-  "strengths": [
-    "Clear pronunciation of heavy letters (ق، ط، ظ، ض)",
-    "Proper elongation on Madd Munfasil"
-  ],
-  "improvements": [
-    "The Ra (ر) needs more emphasis - it's a heavy letter here",
-    "Slight rushing on the elongation - hold for full 4 counts"
-  ],
+  "accuracy": 0,
+  "strengths": [],
+  "improvements": ["No speech detected in the recording. Please recite the verse clearly."],
   "tajweedScore": {
-    "makhraj": 90,
-    "sifaat": 85,
-    "madd": 80,
-    "overall": 85
+    "makhraj": 0,
+    "sifaat": 0,
+    "madd": 0,
+    "overall": 0
   },
-  "detailedNotes": "Optional detailed analysis"
+  "detailedNotes": "Audio was silent or contained no recognizable speech"
 }
 
+IF SPEECH IS DETECTED, provide actual feedback with realistic scores (60-95% for learners).
+
 IMPORTANT:
-- Be SPECIFIC with feedback - mention exact letters and rules
-- Be ENCOURAGING but PRECISE
-- Accuracy should be realistic (70-95% for learners)
-- If audio is unclear or too short, note that in improvements
+- Be HONEST - silence = 0 accuracy
+- Be SPECIFIC with feedback when speech IS present
+- Accuracy should reflect ACTUAL performance
 
 Output valid JSON only.
   `.trim();
@@ -196,51 +208,32 @@ function parseTajweedFeedback(rawText: string): TajweedFeedback {
         const parsed = JSON.parse(cleanText);
 
         // Validate structure
-        if (!parsed.accuracy || !parsed.strengths || !parsed.improvements) {
+        if (parsed.accuracy === undefined) {
             throw new Error('Invalid feedback structure');
         }
 
         return {
             accuracy: Math.min(100, Math.max(0, parsed.accuracy)),
             strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
-            improvements: Array.isArray(parsed.improvements) ? parsed.improvements : [],
+            improvements: Array.isArray(parsed.improvements) ? parsed.improvements : ['Please try recording again'],
             tajweedScore: parsed.tajweedScore || {
-                makhraj: parsed.accuracy || 75,
-                sifaat: parsed.accuracy || 75,
-                madd: parsed.accuracy || 75,
-                overall: parsed.accuracy || 75
+                makhraj: parsed.accuracy || 0,
+                sifaat: parsed.accuracy || 0,
+                madd: parsed.accuracy || 0,
+                overall: parsed.accuracy || 0
             },
             detailedNotes: parsed.detailedNotes
         };
 
     } catch (error) {
         console.error('Failed to parse Tajweed feedback:', error);
-        return getDefaultFeedback();
+        return {
+            accuracy: 0,
+            strengths: [],
+            improvements: ['Could not analyze the recording. Please try again.'],
+            tajweedScore: { makhraj: 0, sifaat: 0, madd: 0, overall: 0 }
+        };
     }
-}
-
-/**
- * Default feedback when AI analysis fails
- */
-function getDefaultFeedback(): TajweedFeedback {
-    return {
-        accuracy: 75,
-        strengths: [
-            "You completed the verse confidently",
-            "Clear enunciation of most letters"
-        ],
-        improvements: [
-            "Focus on elongating vowels (Madd) for the proper duration",
-            "Practice heavy letters (ق، ط، ظ، ض) with deeper throat sound",
-            "Maintain consistent pace throughout the verse"
-        ],
-        tajweedScore: {
-            makhraj: 75,
-            sifaat: 70,
-            madd: 75,
-            overall: 75
-        }
-    };
 }
 
 interface TajweedFeedback {
