@@ -199,19 +199,7 @@ export default function PracticeScreen() {
 
             {/* Tab Navigation */}
             {viewMode === "tabs" && (
-                <div className="py-4 px-6 flex justify-center items-center shrink-0 gap-3">
-                    {/* Left swipe hint - subtle chevron */}
-                    <ChevronLeft
-                        className={cn(
-                            "w-4 h-4 transition-opacity duration-300",
-                            activeTab === "listen" ? "opacity-0" : "opacity-20 hover:opacity-40"
-                        )}
-                        onClick={() => {
-                            if (activeTab === "meaning") setActiveTab("listen");
-                            else if (activeTab === "practice") setActiveTab("meaning");
-                        }}
-                    />
-
+                <div className="py-4 px-6 flex justify-center items-center shrink-0">
                     <div className="bg-muted/10 p-1 rounded-full flex relative">
                         {["listen", "meaning", "practice"].map((tab) => (
                             <button
@@ -231,18 +219,6 @@ export default function PracticeScreen() {
                                 activeTab === "meaning" ? "left-[33.3%] right-[33.3%]" : "left-[66.6%] right-1"
                         )} />
                     </div>
-
-                    {/* Right swipe hint - subtle chevron */}
-                    <ChevronRight
-                        className={cn(
-                            "w-4 h-4 transition-opacity duration-300",
-                            activeTab === "practice" ? "opacity-0" : "opacity-20 hover:opacity-40"
-                        )}
-                        onClick={() => {
-                            if (activeTab === "listen") setActiveTab("meaning");
-                            else if (activeTab === "meaning") setActiveTab("practice");
-                        }}
-                    />
                 </div>
             )}
 
@@ -329,23 +305,79 @@ export default function PracticeScreen() {
 
             {/* Bottom Navigation */}
             {viewMode === "tabs" && (
-                <footer className="h-[80px] border-t border-border bg-background px-6 flex items-center justify-between shrink-0">
-                    <button
-                        onClick={handlePrevVerse}
-                        disabled={currentVerseId === 1}
-                        className="flex items-center gap-2 text-muted hover:text-foreground text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        Prev Verse
-                    </button>
-                    <span className="text-xs text-muted/40 font-mono">Verse {currentVerseId}</span>
-                    <button
-                        onClick={handleNextVerse}
-                        className="flex items-center gap-2 text-primary text-sm font-medium hover:opacity-80"
-                    >
-                        Next Verse
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
+                <footer className="h-[80px] border-t border-border bg-background px-4 flex items-center justify-between shrink-0">
+                    {/* Left side: Prev Verse + Tab Back */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrevVerse}
+                            disabled={currentVerseId === 1}
+                            className="flex items-center gap-1 text-muted hover:text-foreground text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                            <span className="hidden sm:inline">Prev</span>
+                        </button>
+
+                        {/* Subtle tab back button */}
+                        <button
+                            onClick={() => {
+                                if (activeTab === "meaning") setActiveTab("listen");
+                                else if (activeTab === "practice") setActiveTab("meaning");
+                            }}
+                            disabled={activeTab === "listen"}
+                            className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                                activeTab === "listen"
+                                    ? "opacity-0 cursor-default"
+                                    : "opacity-30 hover:opacity-60 hover:bg-muted/20"
+                            )}
+                            title="Previous tab"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Center: Tab indicator dots */}
+                    <div className="flex items-center gap-2">
+                        {["listen", "meaning", "practice"].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as Tab)}
+                                className={cn(
+                                    "w-2 h-2 rounded-full transition-all",
+                                    activeTab === tab ? "bg-primary w-6" : "bg-muted/30 hover:bg-muted/50"
+                                )}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Right side: Tab Forward + Next Verse */}
+                    <div className="flex items-center gap-2">
+                        {/* Subtle tab forward button */}
+                        <button
+                            onClick={() => {
+                                if (activeTab === "listen") setActiveTab("meaning");
+                                else if (activeTab === "meaning") setActiveTab("practice");
+                            }}
+                            disabled={activeTab === "practice"}
+                            className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                                activeTab === "practice"
+                                    ? "opacity-0 cursor-default"
+                                    : "opacity-30 hover:opacity-60 hover:bg-muted/20"
+                            )}
+                            title="Next tab"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        <button
+                            onClick={handleNextVerse}
+                            className="flex items-center gap-1 text-primary text-sm font-medium hover:opacity-80"
+                        >
+                            <span className="hidden sm:inline">Next</span>
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
                 </footer>
             )}
 
