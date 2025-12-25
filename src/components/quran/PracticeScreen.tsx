@@ -199,7 +199,19 @@ export default function PracticeScreen() {
 
             {/* Tab Navigation */}
             {viewMode === "tabs" && (
-                <div className="py-4 px-6 flex justify-center shrink-0">
+                <div className="py-4 px-6 flex justify-center items-center shrink-0 gap-3">
+                    {/* Left swipe hint - subtle chevron */}
+                    <ChevronLeft
+                        className={cn(
+                            "w-4 h-4 transition-opacity duration-300",
+                            activeTab === "listen" ? "opacity-0" : "opacity-20 hover:opacity-40"
+                        )}
+                        onClick={() => {
+                            if (activeTab === "meaning") setActiveTab("listen");
+                            else if (activeTab === "practice") setActiveTab("meaning");
+                        }}
+                    />
+
                     <div className="bg-muted/10 p-1 rounded-full flex relative">
                         {["listen", "meaning", "practice"].map((tab) => (
                             <button
@@ -219,6 +231,18 @@ export default function PracticeScreen() {
                                 activeTab === "meaning" ? "left-[33.3%] right-[33.3%]" : "left-[66.6%] right-1"
                         )} />
                     </div>
+
+                    {/* Right swipe hint - subtle chevron */}
+                    <ChevronRight
+                        className={cn(
+                            "w-4 h-4 transition-opacity duration-300",
+                            activeTab === "practice" ? "opacity-0" : "opacity-20 hover:opacity-40"
+                        )}
+                        onClick={() => {
+                            if (activeTab === "listen") setActiveTab("meaning");
+                            else if (activeTab === "meaning") setActiveTab("practice");
+                        }}
+                    />
                 </div>
             )}
 
