@@ -130,7 +130,7 @@ export default function TransformationSection() {
                     100% { transform: translateX(-50%); }
                 }
                 .animate-testimonial-marquee {
-                    animation: testimonialMarquee 40s linear infinite;
+                    animation: testimonialMarquee 20s linear infinite;
                 }
                 .animate-testimonial-marquee:hover {
                     animation-play-state: paused;

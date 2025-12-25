@@ -82,7 +82,7 @@ export default function HeroSection() {
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
+                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                 >
                     بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                 </motion.p>
@@ -92,7 +92,7 @@ export default function HeroSection() {
                     className="font-serif text-[22px] md:text-[28px] text-[#F5F1E8]/85 italic mb-16 leading-relaxed"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 1.5 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
                 >
                     "In the name of Allah,<br />
                     the Most Gracious, the Most Merciful"
@@ -103,7 +103,7 @@ export default function HeroSection() {
                     className="max-w-[500px] mb-20"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 2.2 }}
+                    transition={{ duration: 0.6, delay: 1 }}
                 >
                     <p className="text-[18px] md:text-[20px] text-[#B8B8B8] leading-relaxed font-sans">
                         You recite this verse 17 times every day.
@@ -118,7 +118,7 @@ export default function HeroSection() {
                     className="flex flex-col items-center text-[#B8B8B8]/50"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 3 }}
+                    transition={{ duration: 0.6, delay: 1.4 }}
                 >
                     <span className="text-xs tracking-widest uppercase mb-2">Keep scrolling</span>
                     <motion.div

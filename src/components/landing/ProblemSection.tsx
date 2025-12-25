@@ -133,7 +133,7 @@ export default function ProblemSection() {
                     100% { transform: translateX(-50%); }
                 }
                 .animate-marquee {
-                    animation: marquee 30s linear infinite;
+                    animation: marquee 15s linear infinite;
                 }
                 .animate-marquee:hover {
                     animation-play-state: paused;
