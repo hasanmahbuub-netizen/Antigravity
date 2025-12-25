@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
 import { BookX, Clock, Users, Smartphone, Headphones, MessageCircle } from "lucide-react";
 
 const problems = [
@@ -44,37 +43,7 @@ const problems = [
 ];
 
 export default function ProblemSection() {
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [isHovered, setIsHovered] = useState(false);
-
-    useEffect(() => {
-        const scrollContainer = scrollRef.current;
-        if (!scrollContainer) return;
-
-        let animationId: number;
-        let scrollPosition = 0;
-        const scrollSpeed = 0.5;
-
-        const animate = () => {
-            if (!isHovered && scrollContainer) {
-                scrollPosition += scrollSpeed;
-
-                // Reset when reaching halfway (duplicate cards)
-                if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-                    scrollPosition = 0;
-                }
-
-                scrollContainer.scrollLeft = scrollPosition;
-            }
-            animationId = requestAnimationFrame(animate);
-        };
-
-        animationId = requestAnimationFrame(animate);
-
-        return () => cancelAnimationFrame(animationId);
-    }, [isHovered]);
-
-    // Duplicate cards for infinite scroll effect
+    // Duplicate cards for seamless loop
     const allProblems = [...problems, ...problems];
 
     return (
@@ -101,48 +70,45 @@ export default function ProblemSection() {
                 </p>
             </motion.div>
 
-            {/* Auto-Scrolling Glassmorphism Cards */}
-            <div
-                ref={scrollRef}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className="flex gap-6 overflow-x-hidden px-6 pb-4 scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {allProblems.map((problem, index) => (
-                    <motion.div
-                        key={index}
-                        className="flex-shrink-0 w-[280px] md:w-[320px]"
-                        initial={{ opacity: 0, y: 40 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: Math.min(index * 0.1, 0.5) }}
-                    >
-                        {/* Glassmorphism Card */}
-                        <div className="relative h-full p-6 rounded-2xl border border-white/10 backdrop-blur-xl bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
-                            {/* Icon */}
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5F5D] to-[#1A3B3A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <problem.icon className="w-6 h-6 text-[#E8C49A]" />
+            {/* CSS Marquee - Smooth Infinite Scroll */}
+            <div className="relative overflow-hidden">
+                {/* Gradient Fades */}
+                <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0A1628] to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0F1D32] to-transparent z-10 pointer-events-none" />
+
+                {/* Scrolling Container */}
+                <div className="flex animate-marquee hover:pause-animation">
+                    {allProblems.map((problem, index) => (
+                        <div
+                            key={index}
+                            className="flex-shrink-0 w-[280px] md:w-[320px] mx-3"
+                        >
+                            {/* Glassmorphism Card */}
+                            <div className="relative h-full p-6 rounded-2xl border border-white/10 backdrop-blur-xl bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+                                {/* Icon */}
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5F5D] to-[#1A3B3A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <problem.icon className="w-6 h-6 text-[#E8C49A]" />
+                                </div>
+
+                                {/* Title & Subtitle */}
+                                <h3 className="text-lg font-semibold text-white mb-1">
+                                    {problem.title}
+                                </h3>
+                                <p className="text-sm text-[#E8C49A]/80 font-medium mb-3">
+                                    {problem.subtitle}
+                                </p>
+
+                                {/* Description */}
+                                <p className="text-sm text-white/50 leading-relaxed">
+                                    {problem.description}
+                                </p>
+
+                                {/* Decorative Corner */}
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#2D5F5D]/20 to-transparent rounded-tr-2xl rounded-bl-[40px]" />
                             </div>
-
-                            {/* Title & Subtitle */}
-                            <h3 className="text-lg font-semibold text-white mb-1">
-                                {problem.title}
-                            </h3>
-                            <p className="text-sm text-[#E8C49A]/80 font-medium mb-3">
-                                {problem.subtitle}
-                            </p>
-
-                            {/* Description */}
-                            <p className="text-sm text-white/50 leading-relaxed">
-                                {problem.description}
-                            </p>
-
-                            {/* Decorative Corner */}
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#2D5F5D]/20 to-transparent rounded-tr-2xl rounded-bl-[40px]" />
                         </div>
-                    </motion.div>
-                ))}
+                    ))}
+                </div>
             </div>
 
             {/* The Solution Statement */}
@@ -159,6 +125,20 @@ export default function ProblemSection() {
                 </p>
                 <p className="text-white/40 mt-2">Over and over, until it's perfect.</p>
             </motion.div>
+
+            {/* CSS Keyframes for Marquee */}
+            <style jsx>{`
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-marquee {
+                    animation: marquee 30s linear infinite;
+                }
+                .animate-marquee:hover {
+                    animation-play-state: paused;
+                }
+            `}</style>
         </section>
     );
 }
