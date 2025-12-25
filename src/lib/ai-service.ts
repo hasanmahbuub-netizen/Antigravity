@@ -5,11 +5,12 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { TajweedFeedback, FiqhAnswer } from "@/types/ai";
 
 // Use server-side environment variable only (never NEXT_PUBLIC_)
 const getApiKey = () => process.env.GEMINI_API_KEY || "";
 
-// Export types from shared types file
+// Re-export types for consumers
 export type { TajweedFeedback, FiqhAnswer } from "@/types/ai";
 
 export const aiService = {

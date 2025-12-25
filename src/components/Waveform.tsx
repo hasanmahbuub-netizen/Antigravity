@@ -15,7 +15,7 @@ export default function Waveform({
     barCount = 20
 }: WaveformProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | undefined>(undefined);
     const barsRef = useRef<number[]>([]);
 
     // Initialize bars
