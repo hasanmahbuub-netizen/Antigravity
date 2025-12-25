@@ -104,11 +104,11 @@ export default function ZoneA_Quran() {
             </header>
 
             {/* Today Super-Card (The Soul) */}
-            <div className="block w-full flex-1 min-h-0">
+            <Link href="/quran" className="block w-full flex-1 min-h-0 cursor-pointer">
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full h-full bg-card rounded-[32px] relative overflow-hidden p-6 md:p-8 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] flex flex-col items-center justify-between text-center group border border-transparent dark:border-border"
+                    className="w-full h-full bg-card rounded-[32px] relative overflow-hidden p-6 md:p-8 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] flex flex-col items-center justify-between text-center group border border-transparent dark:border-border hover:border-primary/20 transition-all"
                 >
                     {loading ? (
                         <div className="flex-1 flex flex-col items-center justify-center space-y-4">
@@ -146,21 +146,21 @@ export default function ZoneA_Quran() {
 
                                 {/* Tap to see meaning hint */}
                                 <p className="text-xs text-muted uppercase tracking-widest">
-                                    Tap to practice & see meaning
+                                    Tap anywhere to practice
                                 </p>
                             </div>
 
                             {/* Bottom CTA */}
-                            <Link href="/quran" className="w-full">
-                                <button className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:brightness-110">
+                            <div className="w-full">
+                                <div className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 group-hover:brightness-110 transition-all">
                                     <Play className="w-4 h-4 fill-current" />
                                     <span>Continue Practice</span>
-                                </button>
-                            </Link>
+                                </div>
+                            </div>
                         </>
                     )}
                 </motion.div>
-            </div>
+            </Link>
         </section>
     );
 }

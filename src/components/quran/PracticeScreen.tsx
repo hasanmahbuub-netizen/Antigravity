@@ -19,7 +19,7 @@ import ProcessingView from "./views/ProcessingView";
 import FeedbackView from "./views/FeedbackView";
 import VerseCompletedModal from "./modals/VerseCompletedModal";
 import SurahSelectorModal from "./modals/SurahSelector";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Tab = "listen" | "meaning" | "practice";
 type ViewMode = "tabs" | "recording" | "processing" | "feedback";
@@ -225,7 +225,7 @@ export default function PracticeScreen() {
             {/* Main Content Area */}
             <main className="flex-1 overflow-hidden relative flex flex-col">
 
-                {/* 1. TABS MODE */}
+                {/* 1. TABS MODE with Swipe Gesture Support */}
                 {viewMode === "tabs" && (
                     <>
                         {loadingVerse ? (
@@ -233,7 +233,31 @@ export default function PracticeScreen() {
                                 <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                             </div>
                         ) : verseData && (
-                            <>
+                            <motion.div
+                                key={activeTab}
+                                className="flex-1 overflow-hidden"
+                                initial={{ opacity: 0, x: 0 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={0.2}
+                                onDragEnd={(e, { offset, velocity }) => {
+                                    const swipe = offset.x;
+                                    const swipeThreshold = 50;
+
+                                    if (swipe < -swipeThreshold) {
+                                        // Swiped left -> go to next tab
+                                        if (activeTab === "listen") setActiveTab("meaning");
+                                        else if (activeTab === "meaning") setActiveTab("practice");
+                                    } else if (swipe > swipeThreshold) {
+                                        // Swiped right -> go to previous tab
+                                        if (activeTab === "practice") setActiveTab("meaning");
+                                        else if (activeTab === "meaning") setActiveTab("listen");
+                                    }
+                                }}
+                            >
                                 {activeTab === "listen" && (
                                     <ListenTab
                                         arabic={verseData.arabic}
@@ -263,7 +287,7 @@ export default function PracticeScreen() {
                                         onMarkComplete={handleMarkComplete}
                                     />
                                 )}
-                            </>
+                            </motion.div>
                         )}
                     </>
                 )}
