@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,30 @@ export default function PracticeScreen() {
     const [verseData, setVerseData] = useState<{ arabic: string, translation: string, audio_url: string } | null>(null);
     const [loadingVerse, setLoadingVerse] = useState(true);
     const [feedback, setFeedback] = useState<TajweedFeedback | null>(null);
+
+    // Touch swipe handling - works on scrollable content
+    const touchStartX = useRef<number>(0);
+    const touchEndX = useRef<number>(0);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        touchEndX.current = e.changedTouches[0].clientX;
+        const swipeDistance = touchEndX.current - touchStartX.current;
+        const swipeThreshold = 80;
+
+        if (swipeDistance < -swipeThreshold) {
+            // Swiped left -> go to next tab
+            if (activeTab === "listen") setActiveTab("meaning");
+            else if (activeTab === "meaning") setActiveTab("practice");
+        } else if (swipeDistance > swipeThreshold) {
+            // Swiped right -> go to previous tab
+            if (activeTab === "practice") setActiveTab("meaning");
+            else if (activeTab === "meaning") setActiveTab("listen");
+        }
+    };
 
     // Fetch Verse Data
     useEffect(() => {
@@ -233,30 +257,10 @@ export default function PracticeScreen() {
                                 <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                             </div>
                         ) : verseData && (
-                            <motion.div
-                                key={activeTab}
+                            <div
                                 className="flex-1 overflow-hidden"
-                                initial={{ opacity: 0, x: 0 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 0 }}
-                                dragElastic={0.2}
-                                onDragEnd={(e, { offset, velocity }) => {
-                                    const swipe = offset.x;
-                                    const swipeThreshold = 50;
-
-                                    if (swipe < -swipeThreshold) {
-                                        // Swiped left -> go to next tab
-                                        if (activeTab === "listen") setActiveTab("meaning");
-                                        else if (activeTab === "meaning") setActiveTab("practice");
-                                    } else if (swipe > swipeThreshold) {
-                                        // Swiped right -> go to previous tab
-                                        if (activeTab === "practice") setActiveTab("meaning");
-                                        else if (activeTab === "meaning") setActiveTab("listen");
-                                    }
-                                }}
+                                onTouchStart={handleTouchStart}
+                                onTouchEnd={handleTouchEnd}
                             >
                                 {activeTab === "listen" && (
                                     <ListenTab
@@ -287,7 +291,7 @@ export default function PracticeScreen() {
                                         onMarkComplete={handleMarkComplete}
                                     />
                                 )}
-                            </motion.div>
+                            </div>
                         )}
                     </>
                 )}

@@ -58,27 +58,27 @@ export default function ZoneB_Fiqh() {
                 Ask a Question
             </h2>
 
-            {/* Search Bar - ALWAYS VISIBLE */}
-            <form onSubmit={handleSubmit} className="shrink-0">
+            {/* Search Bar - Navigates to /fiqh on click */}
+            <div className="shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="flex-1 relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                         <input
                             type="text"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
                             placeholder="Ask about prayer, fasting..."
-                            className="w-full h-12 pl-10 pr-4 rounded-full bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
+                            className="w-full h-12 pl-10 pr-4 rounded-full bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm cursor-pointer"
+                            readOnly
+                            onClick={() => router.push("/fiqh")}
                         />
                     </div>
-                    <button
-                        type="submit"
+                    <Link
+                        href="/fiqh"
                         className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors shrink-0"
                     >
                         <Mic className="w-5 h-5" />
-                    </button>
+                    </Link>
                 </div>
-            </form>
+            </div>
 
             {/* Recent Questions - Scrollable below search */}
             {loading ? (
