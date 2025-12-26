@@ -245,6 +245,45 @@ function FiqhContent() {
                     </div>
                 </motion.div>
 
+                {/* Coming Soon Section */}
+                <motion.div
+                    className="space-y-4 pt-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">Coming Soon</span>
+                    </div>
+                    <p className="text-sm text-muted">We're building more than answers.</p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Halal Investment */}
+                        <div className="p-4 rounded-2xl bg-card border border-border/50 relative overflow-hidden">
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-muted/20 text-[9px] text-muted uppercase tracking-wider">Coming 2025</div>
+                            <span className="text-2xl mb-2 block">💰</span>
+                            <h3 className="text-sm font-semibold text-foreground mb-1">Halal Investment Guidance</h3>
+                            <p className="text-xs text-muted">Know where to invest with confidence.</p>
+                        </div>
+
+                        {/* Lifestyle Decisions */}
+                        <div className="p-4 rounded-2xl bg-card border border-border/50 relative overflow-hidden">
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-muted/20 text-[9px] text-muted uppercase tracking-wider">Coming 2025</div>
+                            <span className="text-2xl mb-2 block">👕</span>
+                            <h3 className="text-sm font-semibold text-foreground mb-1">Lifestyle Decisions</h3>
+                            <p className="text-xs text-muted">What to wear, where to shop, how to live.</p>
+                        </div>
+
+                        {/* Zakat Intelligence */}
+                        <div className="p-4 rounded-2xl bg-card border border-border/50 relative overflow-hidden">
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-muted/20 text-[9px] text-muted uppercase tracking-wider">Coming 2025</div>
+                            <span className="text-2xl mb-2 block">🤝</span>
+                            <h3 className="text-sm font-semibold text-foreground mb-1">Zakat Intelligence</h3>
+                            <p className="text-xs text-muted">When, how much, where to give.</p>
+                        </div>
+                    </div>
+                </motion.div>
+
                 {/* AI Disclaimer */}
                 <motion.div
                     className="p-4 rounded-2xl bg-muted/10 border border-border/50"
