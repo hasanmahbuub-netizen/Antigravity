@@ -97,6 +97,17 @@ body {
 
 .font-arabic {
   font-family: var(--font-arabic);
+  direction: rtl;
+  unicode-bidi: bidi-override;
+  text-align: right;
+  line-height: 2;
+  word-spacing: 0.1em;
+}
+
+/* Arabic text in centered contexts */
+.font-arabic.text-center {
+  text-align: center;
+  unicode-bidi: isolate;
 }
 
 /* Custom scrollbar hiding */

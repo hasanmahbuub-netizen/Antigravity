@@ -272,7 +272,7 @@ export default function PracticeScreen() {
                             </div>
                         ) : verseData && (
                             <div
-                                className="flex-1 overflow-hidden"
+                                className="flex-1 flex flex-col overflow-hidden"
                                 onTouchStart={handleTouchStart}
                                 onTouchEnd={handleTouchEnd}
                             >

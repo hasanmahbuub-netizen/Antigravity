@@ -49,7 +49,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] gap-4 overflow-hidden">
       {/* Dashboard Header */}
-      <header className="flex items-center justify-between shrink-0 -mt-2 -mx-1">
+      <header className="flex items-center justify-between shrink-0 pt-1">
         <div>
           <h1 className="text-lg font-semibold text-foreground">{greeting}</h1>
           {currentPrayerInfo && !loading ? (
