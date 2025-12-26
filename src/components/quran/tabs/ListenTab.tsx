@@ -206,32 +206,38 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {wordMeanings.filter(w => w.text_uthmani && !w.text_uthmani.includes('۞')).map((word, idx) => (
                             <motion.button
                                 key={idx}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => playWord(word, idx)}
-                                className={`p-3 rounded-xl text-center transition-all ${playingWordIndex === idx
-                                    ? 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg'
-                                    : 'bg-card border border-border hover:border-primary/30 hover:bg-muted/5'
+                                className={`p-4 rounded-2xl text-center transition-all relative ${playingWordIndex === idx
+                                    ? 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg shadow-primary/20'
+                                    : 'bg-card border border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5'
                                     }`}
                             >
-                                <div className="text-xl mb-1 font-arabic" dir="rtl">
+                                {/* Sequence Number */}
+                                <div className={`absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${playingWordIndex === idx ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted/20 text-muted'
+                                    }`}>
+                                    {idx + 1}
+                                </div>
+
+                                <div className="text-2xl mb-2 font-arabic text-primary" dir="rtl">
                                     {word.text_uthmani}
                                 </div>
                                 {word.transliteration?.text && (
-                                    <div className="text-xs text-muted italic mb-1">
+                                    <div className="text-xs text-muted italic mb-1 tracking-wide">
                                         {word.transliteration.text}
                                     </div>
                                 )}
                                 {word.translation?.text && (
-                                    <div className="text-xs font-medium">
+                                    <div className="text-sm font-medium text-foreground/80">
                                         {word.translation.text}
                                     </div>
                                 )}
                                 {playingWordIndex === idx && (
-                                    <Volume2 className="w-3 h-3 mx-auto mt-1 animate-pulse" />
+                                    <Volume2 className="w-3 h-3 mx-auto mt-2 animate-pulse" />
                                 )}
                             </motion.button>
                         ))}

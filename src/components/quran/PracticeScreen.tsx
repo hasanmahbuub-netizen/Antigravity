@@ -337,6 +337,7 @@ export default function PracticeScreen() {
                             key="selector"
                             onClose={() => setShowSurahSelector(false)}
                             onSelect={handleSurahSelect}
+                            currentSurahId={currentSurahId}
                         />
                     )}
                 </AnimatePresence>

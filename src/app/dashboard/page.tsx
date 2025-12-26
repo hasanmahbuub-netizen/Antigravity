@@ -48,20 +48,18 @@ export default function Dashboard() {
       <header className="flex items-center justify-between shrink-0 -mt-2 -mx-1">
         <div>
           <h1 className="text-lg font-semibold text-foreground">{greeting}</h1>
-          {prayerReminder && !loading && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <Clock className="w-3 h-3 text-primary" />
-              <p className="text-xs text-muted">
-                <span className="text-primary font-medium">{prayerReminder.prayer.name}</span>
-                {prayerReminder.status === 'now'
-                  ? ' is now'
-                  : ` in ${formatTimeUntil(prayerReminder.minutesUntil)}`
-                }
-              </p>
+          {prayerReminder && !loading ? (
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <Clock className="w-3 h-3 text-primary" />
+                <span className="text-xs font-medium text-primary">{prayerReminder.prayer.name}</span>
+              </div>
+              <span className="text-xs text-muted">
+                {prayerReminder.status === 'now' ? 'Time now' : `in ${formatTimeUntil(prayerReminder.minutesUntil)}`}
+              </span>
             </div>
-          )}
-          {!prayerReminder && (
-            <p className="text-xs text-muted">Let's continue your journey</p>
+          ) : (
+            <p className="text-xs text-muted">Continue your journey</p>
           )}
         </div>
 
@@ -86,7 +84,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute right-0 top-12 w-80 bg-card border border-border rounded-2xl shadow-xl shadow-black/10 overflow-hidden z-50"
+                  className="fixed left-4 right-4 top-16 max-w-sm mx-auto bg-card border border-border rounded-2xl shadow-xl shadow-black/20 overflow-hidden z-50"
                 >
                   <div className="p-3 border-b border-border">
                     <div className="flex items-center gap-2">

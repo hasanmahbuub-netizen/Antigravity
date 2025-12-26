@@ -236,8 +236,13 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                                 }}
                                 viewport={{ once: false, amount: 0.5 }}
                                 whileHover={{ scale: 1.02 }}
-                                className="bg-card border border-border rounded-2xl p-4 text-center hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
+                                className="bg-card border border-border rounded-2xl p-4 text-center hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all relative"
                             >
+                                {/* Sequence Number */}
+                                <div className="absolute top-2 left-2 w-5 h-5 rounded-full bg-muted/20 flex items-center justify-center text-[10px] font-bold text-muted">
+                                    {idx + 1}
+                                </div>
+
                                 <p className="text-2xl text-primary font-arabic mb-3" dir="rtl">
                                     {word.text_uthmani}
                                 </p>
