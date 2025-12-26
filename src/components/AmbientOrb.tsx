@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronUp, Clock, Sparkles } from "lucide-react";
+import { X, ChevronUp, Clock, Moon } from "lucide-react";
 import { getSpiritualNudge, type SpiritualNudge } from "@/lib/agents/dua-agent";
-import { getNextPrayer, formatTimeUntil, type PrayerReminder } from "@/lib/agents/namaz-agent";
+import { getNextPrayer, getCurrentPrayer, formatTimeUntil, type PrayerReminder, type CurrentPrayerInfo } from "@/lib/agents/namaz-agent";
 
 /**
  * The Ambient Orb - A Breakthrough UI Component
@@ -27,6 +27,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [nudge, setNudge] = useState<SpiritualNudge | null>(null);
     const [prayerReminder, setPrayerReminder] = useState<PrayerReminder | null>(null);
+    const [currentPrayer, setCurrentPrayer] = useState<CurrentPrayerInfo | null>(null);
     const [isActive, setIsActive] = useState(false);
 
     // Fetch spiritual context
@@ -40,12 +41,12 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
             const nextPrayer = await getNextPrayer();
             setPrayerReminder(nextPrayer);
 
-            // Activate orb if prayer is within 30 minutes
-            if (nextPrayer && nextPrayer.minutesUntil <= 30) {
-                setIsActive(true);
-            } else {
-                setIsActive(true); // For demo, always active
-            }
+            // Get current prayer info
+            const prayerInfo = await getCurrentPrayer();
+            setCurrentPrayer(prayerInfo);
+
+            // Activate orb
+            setIsActive(true);
         } catch (error) {
             console.error("Failed to fetch spiritual context:", error);
         }
@@ -66,41 +67,29 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                 onClick={() => setIsExpanded(true)}
                 className={`fixed bottom-6 right-6 z-40 ${className}`}
                 initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                    opacity: isActive ? 1 : 0.3,
-                    scale: 1
-                }}
+                animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
             >
                 {/* Outer glow ring - pulses when active */}
                 <motion.div
-                    className="absolute inset-0 rounded-full bg-primary/20"
+                    className="absolute inset-0 rounded-full bg-primary/30"
                     animate={isActive ? {
-                        scale: [1, 1.5, 1],
-                        opacity: [0.3, 0, 0.3]
+                        scale: [1, 1.4, 1],
+                        opacity: [0.4, 0, 0.4]
                     } : {}}
                     transition={{
-                        duration: 3,
+                        duration: 2.5,
                         repeat: Infinity,
                         ease: "easeInOut"
                     }}
-                    style={{ width: 48, height: 48 }}
+                    style={{ width: 44, height: 44 }}
                 />
 
-                {/* Inner orb */}
-                <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                    <Sparkles className="w-5 h-5 text-primary-foreground" />
+                {/* Inner orb - clean minimal design */}
+                <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/30">
+                    <Moon className="w-5 h-5 text-primary-foreground fill-current" />
                 </div>
-
-                {/* Notification dot */}
-                {isActive && (
-                    <motion.div
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border-2 border-primary"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                    />
-                )}
             </motion.button>
 
             {/* Expanded Panel - Spiritual Context */}
@@ -133,7 +122,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-6 pb-4">
                                     <div className="flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4 text-primary" />
+                                        <Moon className="w-4 h-4 text-primary" />
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted">Spiritual Moment</span>
                                     </div>
                                     <button
@@ -143,6 +132,27 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                         <X className="w-4 h-4 text-muted" />
                                     </button>
                                 </div>
+
+                                {/* Current Prayer Window */}
+                                {currentPrayer?.current && (
+                                    <div className="px-6 pb-4">
+                                        <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                                        {currentPrayer.current.name} Time
+                                                    </p>
+                                                    <p className="text-xs text-muted">
+                                                        {formatTimeUntil(currentPrayer.current.minutesRemaining)} remaining
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Prayer Reminder */}
                                 {prayerReminder && (

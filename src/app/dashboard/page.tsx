@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Settings, Sparkles, Clock } from "lucide-react";
+import { Bell, Clock, User } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneA_Quran from "@/components/dashboard/ZoneA_Quran";
@@ -47,27 +47,25 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] gap-4">
+    <div className="flex flex-col h-[calc(100vh-56px)] gap-4 overflow-hidden">
       {/* Dashboard Header */}
       <header className="flex items-center justify-between shrink-0 -mt-2 -mx-1">
         <div>
           <h1 className="text-lg font-semibold text-foreground">{greeting}</h1>
           {currentPrayerInfo && !loading ? (
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              {/* Current Prayer Window */}
-              {currentPrayerInfo.current && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+            <div className="flex items-center gap-2 mt-1">
+              {/* Current Prayer - Primary Display */}
+              {currentPrayerInfo.current ? (
+                <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                  <span className="text-xs font-medium text-foreground">
                     {currentPrayerInfo.current.name}
                   </span>
-                  <span className="text-[10px] text-muted">
-                    {formatTimeUntil(currentPrayerInfo.current.minutesRemaining)} left
+                  <span className="text-xs text-muted">
+                    • {formatTimeUntil(currentPrayerInfo.current.minutesRemaining)} left
                   </span>
                 </div>
-              )}
-              {/* Next Prayer */}
-              {currentPrayerInfo.next && (
+              ) : currentPrayerInfo.next && (
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3 h-3 text-muted" />
                   <span className="text-xs text-muted">
@@ -106,7 +104,7 @@ export default function Dashboard() {
                 >
                   <div className="p-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-3 h-3 text-primary" />
+                      <Clock className="w-3 h-3 text-primary" />
                       <span className="text-xs font-medium text-muted uppercase tracking-wider">Spiritual Nudges</span>
                     </div>
                   </div>
@@ -146,12 +144,12 @@ export default function Dashboard() {
             </AnimatePresence>
           </div>
 
-          {/* Settings */}
+          {/* Profile */}
           <Link
             href="/settings"
-            className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary/30 transition-colors"
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
           >
-            <Settings className="w-4 h-4 text-muted" />
+            <User className="w-4 h-4 text-primary" />
           </Link>
         </div>
       </header>
