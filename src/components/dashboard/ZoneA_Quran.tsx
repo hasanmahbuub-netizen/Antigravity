@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from 'next/link';
 import { motion } from "framer-motion";
 import { Play, Loader2 } from "lucide-react";
@@ -9,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { quranApi } from "@/lib/quran-api";
 
 export default function ZoneA_Quran() {
-    const [profile, setProfile] = useState<{ full_name: string | null, avatar_url: string | null } | null>(null);
     const [latestVerse, setLatestVerse] = useState<{
         surah: number;
         ayah: number;
@@ -27,15 +25,7 @@ export default function ZoneA_Quran() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
-                // 1. Fetch Profile
-                const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('full_name, avatar_url')
-                    .eq('id', user.id)
-                    .single();
-                setProfile(profileData);
-
-                // 2. Fetch Latest Progress
+                // Fetch Latest Progress
                 const { data: progressData } = await (supabase
                     .from('quran_verse_progress')
                     .select('surah, ayah')
@@ -47,7 +37,7 @@ export default function ZoneA_Quran() {
                 const nextSurah = progress?.surah || 1;
                 const nextAyah = (progress?.ayah || 0) + 1;
 
-                // 3. Fetch Verse Text with both translations
+                // Fetch Verse Text with both translations
                 const verseData = await quranApi.getVerseData(nextSurah, nextAyah);
                 setLatestVerse({
                     surah: nextSurah,
@@ -67,41 +57,9 @@ export default function ZoneA_Quran() {
         fetchDashboardData();
     }, []);
 
-    const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
-    const hijriDate = "DHUL QADAH 14"; // Simplified for now
 
     return (
         <section className="h-full flex flex-col gap-4">
-            {/* Header (Orientation) */}
-            <header className="flex justify-between items-center px-1">
-                <div className="flex flex-col text-left">
-                    <span className="text-xs uppercase tracking-widest text-muted font-sans font-medium">
-                        {hijriDate}
-                    </span>
-                    <span className="text-sm font-medium text-foreground mt-0.5 font-sans">
-                        {dayName}, {profile?.full_name?.split(' ')[0] || "User"}
-                    </span>
-                </div>
-
-                {/* Profile Presence */}
-                <Link href="/settings">
-                    <div className="w-[36px] h-[36px] relative rounded-full overflow-hidden bg-muted animate-in fade-in zoom-in duration-500">
-                        {profile?.avatar_url ? (
-                            <Image
-                                src={profile.avatar_url}
-                                alt="Profile"
-                                fill
-                                sizes="36px"
-                                className="object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                {profile?.full_name?.[0] || "?"}
-                            </div>
-                        )}
-                    </div>
-                </Link>
-            </header>
 
             {/* Today Super-Card (The Soul) */}
             <Link href="/quran" className="block w-full flex-1 min-h-0 cursor-pointer">

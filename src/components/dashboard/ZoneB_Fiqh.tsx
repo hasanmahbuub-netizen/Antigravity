@@ -6,13 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-const DEFAULT_TOPICS = [
-    "Prayer",
-    "Fasting",
-    "Marriage",
-    "Zakat"
-];
-
 export default function ZoneB_Fiqh() {
     const [recentQuestions, setRecentQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -108,19 +101,6 @@ export default function ZoneB_Fiqh() {
                     </p>
                 </div>
             )}
-
-            {/* Suggested Topic Chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0">
-                {DEFAULT_TOPICS.map((topic) => (
-                    <Link
-                        key={topic}
-                        href={`/fiqh?q=${encodeURIComponent(topic)}`}
-                        className="px-3 py-1.5 rounded-full border border-border bg-card text-xs font-medium text-muted hover:text-foreground hover:border-primary/30 active:scale-95 transition-all whitespace-nowrap"
-                    >
-                        {topic}
-                    </Link>
-                ))}
-            </div>
         </section>
     );
 }
