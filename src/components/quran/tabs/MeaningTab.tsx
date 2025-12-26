@@ -222,25 +222,31 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {wordMeanings.filter(w => w.text_uthmani && !w.text_uthmani.includes('۞')).map((word, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="bg-card border border-border rounded-lg p-3 text-center hover:border-primary/30 transition-colors"
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{
+                                    opacity: 1,
+                                    y: 0,
+                                    scale: 1,
+                                    transition: { delay: idx * 0.03, duration: 0.3 }
+                                }}
+                                viewport={{ once: false, amount: 0.5 }}
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-card border border-border rounded-2xl p-4 text-center hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
                             >
-                                <p className="text-xl text-purple-500 font-arabic mb-2" dir="rtl">
+                                <p className="text-2xl text-primary font-arabic mb-3" dir="rtl">
                                     {word.text_uthmani}
                                 </p>
                                 {word.transliteration?.text && (
-                                    <p className="text-xs text-muted mb-1 italic">
+                                    <p className="text-xs text-muted mb-1.5 italic tracking-wide">
                                         {word.transliteration.text}
                                     </p>
                                 )}
                                 {word.translation?.text && (
-                                    <p className="text-xs text-foreground">
+                                    <p className="text-sm text-foreground/80 font-medium">
                                         {word.translation.text}
                                     </p>
                                 )}
@@ -259,28 +265,32 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
             >
                 <button
                     onClick={() => setShowTafsir(!showTafsir)}
-                    className="flex items-center justify-between w-full"
+                    className="flex items-center justify-between w-full group"
                 >
                     <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-500" />
-                        <h3 className="text-xs font-bold tracking-widest text-muted uppercase">Understanding</h3>
+                        <Sparkles className="w-4 h-4 text-primary/60" />
+                        <h3 className="text-xs font-bold tracking-widest text-muted uppercase group-hover:text-foreground transition-colors">Understanding</h3>
                     </div>
-                    {showTafsir ? <ChevronUp className="w-4 h-4 text-muted" /> : <ChevronDown className="w-4 h-4 text-muted" />}
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted/60">Tafsir</span>
+                        {showTafsir ? <ChevronUp className="w-4 h-4 text-muted" /> : <ChevronDown className="w-4 h-4 text-muted" />}
+                    </div>
                 </button>
 
                 {showTafsir && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5 space-y-3"
+                        className="bg-card border border-border rounded-2xl p-6 space-y-4"
                     >
-                        <p className="text-foreground/90 leading-relaxed text-sm">
+                        {/* Tafseer text with improved readability */}
+                        <p className="text-foreground/80 leading-[1.9] text-base" style={{ wordSpacing: '0.05em' }}>
                             {tafsir}
                         </p>
                         {/* Source Citation */}
-                        <div className="flex items-center gap-2 pt-2 border-t border-purple-500/10">
+                        <div className="flex items-center gap-2 pt-4 border-t border-border">
                             <span className="text-[10px] text-muted uppercase tracking-wider">Source:</span>
-                            <span className="text-xs text-purple-500 font-medium">{tafsirSource}</span>
+                            <span className="text-xs text-primary font-medium">{tafsirSource}</span>
                         </div>
                     </motion.div>
                 )}

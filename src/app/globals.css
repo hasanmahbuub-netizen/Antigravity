@@ -45,8 +45,9 @@
     --surface: #1A2A3A;
     --text-primary: var(--cream);
     --text-muted: #8F8F8F;
-    --accent-primary: var(--teal);
-    --accent-secondary: var(--warm-gold);
+    /* Primary is now warm-gold for better contrast in dark mode */
+    --accent-primary: var(--warm-gold);
+    --accent-secondary: var(--teal);
     --arabic-text: var(--warm-gold);
     --border-light: #2A3A4A;
   }

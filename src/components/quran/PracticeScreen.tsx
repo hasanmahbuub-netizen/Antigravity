@@ -41,24 +41,38 @@ export default function PracticeScreen() {
     const [loadingVerse, setLoadingVerse] = useState(true);
     const [feedback, setFeedback] = useState<TajweedFeedback | null>(null);
 
-    // Touch swipe handling - works on scrollable content
+    // Smart gesture handling - angle-based detection to distinguish scroll from swipe
     const touchStartX = useRef<number>(0);
-    const touchEndX = useRef<number>(0);
+    const touchStartY = useRef<number>(0);
 
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
-        touchEndX.current = e.changedTouches[0].clientX;
-        const swipeDistance = touchEndX.current - touchStartX.current;
-        const swipeThreshold = 80;
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
 
-        if (swipeDistance < -swipeThreshold) {
+        const deltaX = endX - touchStartX.current;
+        const deltaY = endY - touchStartY.current;
+
+        // Calculate gesture angle (0° = horizontal, 90° = vertical)
+        const angle = Math.abs(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
+        const horizontalDistance = Math.abs(deltaX);
+
+        // Only trigger swipe if:
+        // 1. Angle is mostly horizontal (< 30° or > 150°)
+        // 2. Minimum 100px horizontal movement
+        const isHorizontalSwipe = (angle < 30 || angle > 150) && horizontalDistance > 100;
+
+        if (!isHorizontalSwipe) return; // It's a scroll, not a swipe
+
+        if (deltaX < 0) {
             // Swiped left -> go to next tab
             if (activeTab === "listen") setActiveTab("meaning");
             else if (activeTab === "meaning") setActiveTab("practice");
-        } else if (swipeDistance > swipeThreshold) {
+        } else if (deltaX > 0) {
             // Swiped right -> go to previous tab
             if (activeTab === "practice") setActiveTab("meaning");
             else if (activeTab === "meaning") setActiveTab("listen");
@@ -330,6 +344,32 @@ export default function PracticeScreen() {
                 {viewMode === "processing" && <ProcessingView />}
 
             </main>
+
+            {/* Verse Navigation Footer - Minimal */}
+            {viewMode === "tabs" && (
+                <footer className="h-16 border-t border-border bg-background/80 backdrop-blur-sm px-4 flex items-center justify-between shrink-0">
+                    <button
+                        onClick={handlePrevVerse}
+                        disabled={currentVerseId === 1}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Prev</span>
+                    </button>
+
+                    <span className="text-xs text-muted">
+                        Verse {currentVerseId} of {totalAyahs}
+                    </span>
+
+                    <button
+                        onClick={handleNextVerse}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-primary hover:opacity-80 transition-colors"
+                    >
+                        <span>Next</span>
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </footer>
+            )}
 
             {/* MODALS */}
             {showCompletionModal && (
