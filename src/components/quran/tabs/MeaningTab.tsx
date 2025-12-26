@@ -30,6 +30,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
     const [loadingWords, setLoadingWords] = useState(false);
     const [loadingTranslations, setLoadingTranslations] = useState(false);
     const [showTafsir, setShowTafsir] = useState(false);
+    const [expandedTafsir, setExpandedTafsir] = useState(false);
     const [showTips, setShowTips] = useState(false);
 
     // Load translations from Quran.com API - GUARANTEED to work
@@ -277,16 +278,39 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                     </div>
                 </button>
 
+
                 {showTafsir && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         className="bg-card border border-border rounded-2xl p-6 space-y-4"
                     >
-                        {/* Tafseer text with improved readability */}
-                        <p className="text-foreground/80 leading-[1.9] text-base" style={{ wordSpacing: '0.05em' }}>
-                            {tafsir}
-                        </p>
+                        {/* Tafseer text with progressive disclosure */}
+                        <div className="relative">
+                            <p
+                                className={`text-foreground/80 leading-[1.9] text-base transition-all duration-300 ${!expandedTafsir && tafsir.length > 200 ? 'line-clamp-4' : ''
+                                    }`}
+                                style={{ wordSpacing: '0.05em' }}
+                            >
+                                {tafsir}
+                            </p>
+
+                            {/* Gradient fade when collapsed */}
+                            {!expandedTafsir && tafsir.length > 200 && (
+                                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent" />
+                            )}
+                        </div>
+
+                        {/* Continue reading / Show less button */}
+                        {tafsir.length > 200 && (
+                            <button
+                                onClick={() => setExpandedTafsir(!expandedTafsir)}
+                                className="text-sm text-primary hover:underline transition-all"
+                            >
+                                {expandedTafsir ? '← Show less' : 'Continue reading →'}
+                            </button>
+                        )}
+
                         {/* Source Citation */}
                         <div className="flex items-center gap-2 pt-4 border-t border-border">
                             <span className="text-[10px] text-muted uppercase tracking-wider">Source:</span>
