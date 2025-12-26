@@ -77,11 +77,18 @@ function parseTimeToTimestamp(timeStr: string): number {
 /**
  * Fetch prayer times from Aladhan API
  * Uses geolocation if available, otherwise defaults to Dhaka
+ * 
+ * Calculation Methods:
+ * 1 = University of Islamic Sciences, Karachi
+ * 2 = Islamic Society of North America (ISNA)
+ * 3 = Muslim World League (SAFE - moderate across madhabs)
+ * 4 = Umm Al-Qura University, Makkah
+ * 5 = Egyptian General Authority of Survey
  */
 export async function fetchPrayerTimes(
     latitude: number = 23.8103,  // Default: Dhaka
     longitude: number = 90.4125,
-    method: number = 1  // University of Islamic Sciences, Karachi
+    method: number = 3  // Muslim World League - safe/moderate calculation
 ): Promise<PrayerTimes> {
     const today = new Date().toISOString().split('T')[0];
 
@@ -266,4 +273,97 @@ export function formatTimeUntil(minutes: number): string {
  */
 export async function getAllPrayerTimes(): Promise<PrayerTimes> {
     return fetchPrayerTimes();
+}
+
+export interface CurrentPrayerInfo {
+    current: {
+        name: string;
+        arabicName: string;
+        startTime: string;
+        minutesRemaining: number;
+    } | null;
+    next: {
+        name: string;
+        arabicName: string;
+        time: string;
+        minutesUntil: number;
+    } | null;
+}
+
+/**
+ * Get current prayer window and next prayer info
+ * Shows which prayer window we're currently in and how long until next
+ */
+export async function getCurrentPrayer(): Promise<CurrentPrayerInfo> {
+    const times = await fetchPrayerTimes();
+    const now = Date.now();
+    
+    const prayerSequence: [string, PrayerTime, PrayerTime][] = [
+        ['Fajr', times.fajr, times.sunrise],
+        ['Dhuhr', times.dhuhr, times.asr],
+        ['Asr', times.asr, times.maghrib],
+        ['Maghrib', times.maghrib, times.isha],
+        ['Isha', times.isha, times.fajr], // Isha until Fajr (next day)
+    ];
+    
+    let current: CurrentPrayerInfo['current'] = null;
+    let next: CurrentPrayerInfo['next'] = null;
+    
+    for (let i = 0; i < prayerSequence.length; i++) {
+        const [name, startPrayer, endPrayer] = prayerSequence[i];
+        const startTime = startPrayer.timestamp;
+        let endTime = endPrayer.timestamp;
+        
+        // Handle Isha to Fajr (crosses midnight)
+        if (name === 'Isha' && endTime < startTime) {
+            endTime += 24 * 60 * 60 * 1000; // Add 24 hours
+        }
+        
+        if (now >= startTime && now < endTime) {
+            const minutesRemaining = Math.floor((endTime - now) / 60000);
+            current = {
+                name,
+                arabicName: startPrayer.arabicName,
+                startTime: startPrayer.time,
+                minutesRemaining
+            };
+            
+            // Get next prayer
+            const nextIndex = (i + 1) % prayerSequence.length;
+            const [nextName, nextPrayer] = prayerSequence[nextIndex];
+            let nextTime = nextPrayer.timestamp;
+            if (nextTime < now) nextTime += 24 * 60 * 60 * 1000;
+            
+            next = {
+                name: nextName,
+                arabicName: nextPrayer.arabicName,
+                time: nextPrayer.time,
+                minutesUntil: Math.floor((nextTime - now) / 60000)
+            };
+            
+            break;
+        }
+    }
+    
+    // If no current prayer found, we're between Sunrise and Dhuhr (no prayer window)
+    if (!current) {
+        // Find next prayer
+        const prayers = [times.dhuhr, times.asr, times.maghrib, times.isha, times.fajr];
+        for (const prayer of prayers) {
+            let prayerTime = prayer.timestamp;
+            if (prayerTime < now) prayerTime += 24 * 60 * 60 * 1000;
+            
+            if (prayerTime > now) {
+                next = {
+                    name: prayer.name,
+                    arabicName: prayer.arabicName,
+                    time: prayer.time,
+                    minutesUntil: Math.floor((prayerTime - now) / 60000)
+                };
+                break;
+            }
+        }
+    }
+    
+    return { current, next };
 }
