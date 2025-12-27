@@ -45,6 +45,34 @@ export default function PracticeScreen() {
     const touchStartX = useRef<number>(0);
     const touchStartY = useRef<number>(0);
 
+    // Load saved progress on mount
+    useEffect(() => {
+        const savedProgress = localStorage.getItem('quran_progress');
+        if (savedProgress) {
+            try {
+                const { surahId, verseId, surahName, totalVerses } = JSON.parse(savedProgress);
+                if (surahId && verseId) {
+                    setCurrentSurahId(surahId);
+                    setCurrentVerseId(verseId);
+                    setCurrentSurah(surahName || 'Al-Fatiha');
+                    setTotalAyahs(totalVerses || 7);
+                }
+            } catch (e) {
+                console.error('Failed to load saved progress:', e);
+            }
+        }
+    }, []);
+
+    // Save progress when surah or verse changes
+    useEffect(() => {
+        localStorage.setItem('quran_progress', JSON.stringify({
+            surahId: currentSurahId,
+            verseId: currentVerseId,
+            surahName: currentSurah,
+            totalVerses: totalAyahs
+        }));
+    }, [currentSurahId, currentVerseId, currentSurah, totalAyahs]);
+
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
@@ -261,7 +289,7 @@ export default function PracticeScreen() {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 relative flex flex-col">
+            <main className="flex-1 relative flex flex-col overflow-hidden">
 
                 {/* 1. TABS MODE with Swipe Gesture Support */}
                 {viewMode === "tabs" && (
@@ -272,7 +300,7 @@ export default function PracticeScreen() {
                             </div>
                         ) : verseData && (
                             <div
-                                className="flex-1 flex flex-col min-h-0"
+                                className="flex-1 flex flex-col min-h-0 overflow-y-auto"
                                 onTouchStart={handleTouchStart}
                                 onTouchEnd={handleTouchEnd}
                             >

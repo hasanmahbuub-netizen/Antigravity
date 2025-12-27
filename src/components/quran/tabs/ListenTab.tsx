@@ -147,7 +147,7 @@ export default function ListenTab({ arabic, translation, audioUrl, surahId = 1, 
     };
 
     return (
-        <div className="flex-1 flex flex-col h-full overflow-y-auto px-6 pb-6">
+        <div className="flex flex-col px-6 pb-6">
             {/* Main Verse Display */}
             <div className="flex flex-col items-center justify-center p-6 text-center space-y-6">
                 <h1 className="font-arabic text-3xl md:text-5xl leading-loose text-arabic" dir="rtl">

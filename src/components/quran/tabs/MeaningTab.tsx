@@ -151,7 +151,7 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
     }, [surahId, verseId]);
 
     return (
-        <div className="flex-1 flex flex-col h-full overflow-y-auto p-6 space-y-6">
+        <div className="flex flex-col p-6 space-y-6">
             {/* English Translation Card */}
             <motion.section
                 initial={{ opacity: 0, y: 20 }}
