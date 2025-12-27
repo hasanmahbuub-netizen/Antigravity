@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { initializePushNotifications } from "@/lib/push-notifications";
 
 const MADHABS = [
     { id: 'Hanafi', name: 'Hanafi', description: 'Most followed in South Asia, Turkey' },
@@ -37,23 +38,51 @@ export default function SettingsPage() {
     const [arabicLevel, setArabicLevel] = useState('intermediate');
     const [dailyGoal, setDailyGoal] = useState(5);
 
-    // Load profile settings
+    // Notification settings state
+    const [prayerStart, setPrayerStart] = useState(true);
+    const [prayerEnding, setPrayerEnding] = useState(true);
+    const [duaReminders, setDuaReminders] = useState(true);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [enablingNotifications, setEnablingNotifications] = useState(false);
+
+    // Check notification permission on mount
+    useEffect(() => {
+        if ('Notification' in window) {
+            setNotificationsEnabled(Notification.permission === 'granted');
+        }
+    }, []);
+
+    // Load profile and notification settings
     useEffect(() => {
         async function loadProfile() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data } = await (supabase
+            // Load profile settings
+            const { data: profileData } = await (supabase
                 .from('profiles')
                 .select('madhab, language, arabic_level, daily_goal')
                 .eq('id', user.id)
                 .single() as any);
 
-            if (data) {
-                setMadhab(data.madhab || 'Hanafi');
-                setLanguage(data.language || 'en');
-                setArabicLevel(data.arabic_level || 'intermediate');
-                setDailyGoal(data.daily_goal || 5);
+            if (profileData) {
+                setMadhab(profileData.madhab || 'Hanafi');
+                setLanguage(profileData.language || 'en');
+                setArabicLevel(profileData.arabic_level || 'intermediate');
+                setDailyGoal(profileData.daily_goal || 5);
+            }
+
+            // Load notification settings
+            const { data: notifData } = await (supabase
+                .from('notification_settings')
+                .select('prayer_start, prayer_ending, dua_reminders')
+                .eq('user_id', user.id)
+                .single() as any);
+
+            if (notifData) {
+                setPrayerStart(notifData.prayer_start ?? true);
+                setPrayerEnding(notifData.prayer_ending ?? true);
+                setDuaReminders(notifData.dua_reminders ?? true);
             }
         }
         loadProfile();
@@ -209,47 +238,107 @@ export default function SettingsPage() {
                 {/* Notifications */}
                 <Section title="Notifications" icon={<Bell className="w-4 h-4" />}>
                     <div className="p-4 space-y-4">
-                        <div className="flex items-center justify-between">
+                        {/* Master Enable */}
+                        <div className="flex items-center justify-between pb-4 border-b border-border">
                             <div>
-                                <div className="font-semibold">Prayer Reminders</div>
-                                <div className="text-xs opacity-70">Get notified at prayer times & 30min warnings</div>
+                                <div className="font-semibold">Push Notifications</div>
+                                <div className="text-xs opacity-70">
+                                    {notificationsEnabled ? 'Enabled' : 'Receive prayer and dua reminders'}
+                                </div>
                             </div>
                             <button
                                 onClick={async () => {
-                                    if ('Notification' in window) {
-                                        const permission = await Notification.requestPermission();
-                                        if (permission === 'granted') {
-                                            alert("Prayer notifications enabled! ✅");
-                                        } else {
-                                            alert("Please enable notifications in your browser settings.");
+                                    if (notificationsEnabled) return;
+                                    setEnablingNotifications(true);
+                                    try {
+                                        const success = await initializePushNotifications();
+                                        setNotificationsEnabled(success);
+                                        if (success) {
+                                            // Get user timezone
+                                            const { data: { user } } = await supabase.auth.getUser();
+                                            if (user) {
+                                                await (supabase.from('notification_settings') as any).upsert({
+                                                    user_id: user.id,
+                                                    prayer_start: prayerStart,
+                                                    prayer_ending: prayerEnding,
+                                                    dua_reminders: duaReminders,
+                                                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                                    updated_at: new Date().toISOString()
+                                                });
+                                            }
                                         }
-                                    } else {
-                                        alert("Your browser doesn't support notifications.");
+                                    } catch (e) {
+                                        console.error('Failed to enable notifications:', e);
+                                    } finally {
+                                        setEnablingNotifications(false);
                                     }
                                 }}
-                                className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
+                                disabled={notificationsEnabled || enablingNotifications}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${notificationsEnabled
+                                    ? 'bg-green-500/20 text-green-500 cursor-default'
+                                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                    }`}
                             >
-                                Enable
+                                {enablingNotifications ? 'Enabling...' : notificationsEnabled ? '✓ Enabled' : 'Enable'}
                             </button>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="font-semibold">Daily Duas</div>
-                                <div className="text-xs opacity-70">Morning, afternoon & evening spiritual reminders</div>
-                            </div>
-                            <button
-                                onClick={async () => {
-                                    if ('Notification' in window && Notification.permission === 'granted') {
-                                        new Notification("Dua Notifications Enabled! 🌙", { body: "You'll receive contextual duas throughout the day." });
-                                    } else {
-                                        alert("Enable Prayer Reminders first to get dua notifications.");
-                                    }
-                                }}
-                                className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
-                            >
-                                Enable
-                            </button>
-                        </div>
+
+                        {/* Prayer Start Toggle */}
+                        <NotificationToggle
+                            label="Prayer Start Alerts"
+                            description="Get notified when each prayer time begins"
+                            enabled={prayerStart}
+                            disabled={!notificationsEnabled}
+                            onToggle={async (value) => {
+                                setPrayerStart(value);
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) {
+                                    await (supabase.from('notification_settings') as any).upsert({
+                                        user_id: user.id,
+                                        prayer_start: value,
+                                        updated_at: new Date().toISOString()
+                                    });
+                                }
+                            }}
+                        />
+
+                        {/* Prayer Ending Toggle */}
+                        <NotificationToggle
+                            label="20-Minute Warnings"
+                            description="Urgent reminder before prayer time ends"
+                            enabled={prayerEnding}
+                            disabled={!notificationsEnabled}
+                            onToggle={async (value) => {
+                                setPrayerEnding(value);
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) {
+                                    await (supabase.from('notification_settings') as any).upsert({
+                                        user_id: user.id,
+                                        prayer_ending: value,
+                                        updated_at: new Date().toISOString()
+                                    });
+                                }
+                            }}
+                        />
+
+                        {/* Dua Reminders Toggle */}
+                        <NotificationToggle
+                            label="Dua Reminders"
+                            description="Morning, midday, evening & night spiritual reminders"
+                            enabled={duaReminders}
+                            disabled={!notificationsEnabled}
+                            onToggle={async (value) => {
+                                setDuaReminders(value);
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) {
+                                    await (supabase.from('notification_settings') as any).upsert({
+                                        user_id: user.id,
+                                        dua_reminders: value,
+                                        updated_at: new Date().toISOString()
+                                    });
+                                }
+                            }}
+                        />
                     </div>
                 </Section>
 
@@ -300,3 +389,36 @@ function Section({ title, icon, children }: { title: string, icon?: React.ReactN
     );
 }
 
+function NotificationToggle({
+    label,
+    description,
+    enabled,
+    disabled,
+    onToggle
+}: {
+    label: string;
+    description: string;
+    enabled: boolean;
+    disabled: boolean;
+    onToggle: (value: boolean) => void;
+}) {
+    return (
+        <div className={`flex items-center justify-between ${disabled ? 'opacity-50' : ''}`}>
+            <div>
+                <div className="font-semibold">{label}</div>
+                <div className="text-xs opacity-70">{description}</div>
+            </div>
+            <button
+                onClick={() => !disabled && onToggle(!enabled)}
+                disabled={disabled}
+                className={`w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-muted/30'
+                    }`}
+            >
+                <span
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                />
+            </button>
+        </div>
+    );
+}

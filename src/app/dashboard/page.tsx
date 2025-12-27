@@ -9,7 +9,8 @@ import ZoneB_Fiqh from "@/components/dashboard/ZoneB_Fiqh";
 import AmbientOrb from "@/components/AmbientOrb";
 import { getSpiritualNudge, type SpiritualNudge } from "@/lib/agents/dua-agent";
 import { getNextPrayer, getCurrentPrayer, formatTimeUntil, type PrayerReminder, type CurrentPrayerInfo } from "@/lib/agents/namaz-agent";
-import { requestNotificationPermission, startNotificationScheduler } from "@/lib/notification-service";
+import { startNotificationScheduler, stopNotificationScheduler } from "@/lib/notificationScheduler";
+import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const [showNudges, setShowNudges] = useState(false);
@@ -26,11 +27,15 @@ export default function Dashboard() {
     else if (hour < 17) setGreeting("Good afternoon");
     else setGreeting("Good evening");
 
-    // Request notification permission and start scheduler
+    // Start notification scheduler with user ID
     async function initNotifications() {
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        startNotificationScheduler();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && 'Notification' in window && Notification.permission === 'granted') {
+          await startNotificationScheduler(user.id);
+        }
+      } catch (e) {
+        console.warn('Notification scheduler init skipped:', e);
       }
     }
     initNotifications();
@@ -57,7 +62,10 @@ export default function Dashboard() {
 
     // Refresh every minute for real-time updates
     const interval = setInterval(loadContext, 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      stopNotificationScheduler();
+    };
   }, []);
 
   return (

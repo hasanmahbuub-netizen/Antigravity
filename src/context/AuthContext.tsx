@@ -81,6 +81,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (event === 'SIGNED_IN') {
                 console.log('✅ [AUTH EVENT] User signed in:', session?.user?.email)
                 setUser(session?.user || null)
+
+                // Initialize push notifications on sign in
+                // Wrapped in try-catch to not break auth flow
+                try {
+                    import('@/lib/push-notifications').then(({ initializePushNotifications }) => {
+                        initializePushNotifications().then(success => {
+                            console.log('🔔 [PUSH] Notification setup:', success ? 'enabled' : 'skipped')
+                        }).catch(e => console.warn('Push setup skipped:', e))
+                    })
+                } catch (e) {
+                    console.warn('Push notification module not available')
+                }
             } else if (event === 'SIGNED_OUT') {
                 console.log('👋 [AUTH EVENT] User signed out')
                 setUser(null)
