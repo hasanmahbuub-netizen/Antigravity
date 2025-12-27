@@ -208,23 +208,48 @@ export default function SettingsPage() {
 
                 {/* Notifications */}
                 <Section title="Notifications" icon={<Bell className="w-4 h-4" />}>
-                    <div className="p-4 flex items-center justify-between">
-                        <div>
-                            <div className="font-semibold">Daily Nudges</div>
-                            <div className="text-xs opacity-70">Get caring reminders to keep your streak</div>
+                    <div className="p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="font-semibold">Prayer Reminders</div>
+                                <div className="text-xs opacity-70">Get notified at prayer times & 30min warnings</div>
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if ('Notification' in window) {
+                                        const permission = await Notification.requestPermission();
+                                        if (permission === 'granted') {
+                                            alert("Prayer notifications enabled! ✅");
+                                        } else {
+                                            alert("Please enable notifications in your browser settings.");
+                                        }
+                                    } else {
+                                        alert("Your browser doesn't support notifications.");
+                                    }
+                                }}
+                                className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
+                            >
+                                Enable
+                            </button>
                         </div>
-                        <button
-                            onClick={async () => {
-                                // In a real Expo app, get permissions and token here
-                                // For web demo, we'll just save a dummy token to test the backend logic
-                                const dummyToken = "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]";
-                                await (supabase.from('profiles') as any).update({ expo_push_token: dummyToken }).eq('id', (await supabase.auth.getUser()).data.user?.id);
-                                alert("Notifications enabled! (Simulated for Web)");
-                            }}
-                            className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
-                        >
-                            Enable
-                        </button>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="font-semibold">Daily Duas</div>
+                                <div className="text-xs opacity-70">Morning, afternoon & evening spiritual reminders</div>
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if ('Notification' in window && Notification.permission === 'granted') {
+                                        new Notification("Dua Notifications Enabled! 🌙", { body: "You'll receive contextual duas throughout the day." });
+                                    } else {
+                                        alert("Enable Prayer Reminders first to get dua notifications.");
+                                    }
+                                }}
+                                className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
+                            >
+                                Enable
+                            </button>
+                        </div>
                     </div>
                 </Section>
 

@@ -9,6 +9,7 @@ import ZoneB_Fiqh from "@/components/dashboard/ZoneB_Fiqh";
 import AmbientOrb from "@/components/AmbientOrb";
 import { getSpiritualNudge, type SpiritualNudge } from "@/lib/agents/dua-agent";
 import { getNextPrayer, getCurrentPrayer, formatTimeUntil, type PrayerReminder, type CurrentPrayerInfo } from "@/lib/agents/namaz-agent";
+import { requestNotificationPermission, startNotificationScheduler } from "@/lib/notification-service";
 
 export default function Dashboard() {
   const [showNudges, setShowNudges] = useState(false);
@@ -24,6 +25,15 @@ export default function Dashboard() {
     if (hour < 12) setGreeting("Good morning");
     else if (hour < 17) setGreeting("Good afternoon");
     else setGreeting("Good evening");
+
+    // Request notification permission and start scheduler
+    async function initNotifications() {
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        startNotificationScheduler();
+      }
+    }
+    initNotifications();
 
     // Fetch spiritual context
     async function loadContext() {
@@ -44,6 +54,10 @@ export default function Dashboard() {
     }
 
     loadContext();
+
+    // Refresh every minute for real-time updates
+    const interval = setInterval(loadContext, 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
