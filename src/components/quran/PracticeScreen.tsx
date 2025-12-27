@@ -261,7 +261,7 @@ export default function PracticeScreen() {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-hidden relative flex flex-col">
+            <main className="flex-1 relative flex flex-col">
 
                 {/* 1. TABS MODE with Swipe Gesture Support */}
                 {viewMode === "tabs" && (

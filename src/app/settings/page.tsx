@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, LogOut, Check, BookOpen, Globe, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Check, BookOpen, Globe, Target, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
@@ -203,6 +203,28 @@ export default function SettingsPage() {
                             <span>5 min</span>
                             <span>60 min</span>
                         </div>
+                    </div>
+                </Section>
+
+                {/* Notifications */}
+                <Section title="Notifications" icon={<Bell className="w-4 h-4" />}>
+                    <div className="p-4 flex items-center justify-between">
+                        <div>
+                            <div className="font-semibold">Daily Nudges</div>
+                            <div className="text-xs opacity-70">Get caring reminders to keep your streak</div>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                // In a real Expo app, get permissions and token here
+                                // For web demo, we'll just save a dummy token to test the backend logic
+                                const dummyToken = "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]";
+                                await (supabase.from('profiles') as any).update({ expo_push_token: dummyToken }).eq('id', (await supabase.auth.getUser()).data.user?.id);
+                                alert("Notifications enabled! (Simulated for Web)");
+                            }}
+                            className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/20 transition-colors"
+                        >
+                            Enable
+                        </button>
                     </div>
                 </Section>
 

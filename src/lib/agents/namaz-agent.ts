@@ -297,7 +297,7 @@ export interface CurrentPrayerInfo {
 export async function getCurrentPrayer(): Promise<CurrentPrayerInfo> {
     const times = await fetchPrayerTimes();
     const now = Date.now();
-    
+
     const prayerSequence: [string, PrayerTime, PrayerTime][] = [
         ['Fajr', times.fajr, times.sunrise],
         ['Dhuhr', times.dhuhr, times.asr],
@@ -305,20 +305,41 @@ export async function getCurrentPrayer(): Promise<CurrentPrayerInfo> {
         ['Maghrib', times.maghrib, times.isha],
         ['Isha', times.isha, times.fajr], // Isha until Fajr (next day)
     ];
-    
+
     let current: CurrentPrayerInfo['current'] = null;
     let next: CurrentPrayerInfo['next'] = null;
-    
+
+    // Check for "Pre-Fajr" case (Post-Midnight Isha)
+    // If we are before Fajr, we are technically in Isha of the previous day
+    if (now < times.fajr.timestamp) {
+        const minutesRemaining = Math.floor((times.fajr.timestamp - now) / 60000);
+        current = {
+            name: 'Isha',
+            arabicName: times.isha.arabicName,
+            startTime: 'Previous Day', // We don't have yesterday's Isha time, but it's active
+            minutesRemaining
+        };
+
+        next = {
+            name: 'Fajr',
+            arabicName: times.fajr.arabicName,
+            time: times.fajr.time,
+            minutesUntil: minutesRemaining // Same as remaining time invalidation
+        };
+
+        return { current, next };
+    }
+
     for (let i = 0; i < prayerSequence.length; i++) {
         const [name, startPrayer, endPrayer] = prayerSequence[i];
         const startTime = startPrayer.timestamp;
         let endTime = endPrayer.timestamp;
-        
+
         // Handle Isha to Fajr (crosses midnight)
         if (name === 'Isha' && endTime < startTime) {
             endTime += 24 * 60 * 60 * 1000; // Add 24 hours
         }
-        
+
         if (now >= startTime && now < endTime) {
             const minutesRemaining = Math.floor((endTime - now) / 60000);
             current = {
@@ -327,35 +348,50 @@ export async function getCurrentPrayer(): Promise<CurrentPrayerInfo> {
                 startTime: startPrayer.time,
                 minutesRemaining
             };
-            
+
             // Get next prayer
             const nextIndex = (i + 1) % prayerSequence.length;
             const [nextName, nextPrayer] = prayerSequence[nextIndex];
             let nextTime = nextPrayer.timestamp;
-            if (nextTime < now) nextTime += 24 * 60 * 60 * 1000;
-            
+
+            // Fix next prayer time logic - if next is earlier in day than now, it's tomorrow
+            if (nextTime <= now) {
+                nextTime += 24 * 60 * 60 * 1000;
+            }
+
             next = {
                 name: nextName,
                 arabicName: nextPrayer.arabicName,
                 time: nextPrayer.time,
                 minutesUntil: Math.floor((nextTime - now) / 60000)
             };
-            
+
             break;
         }
     }
-    
+
     // If no current prayer found, we're between Sunrise and Dhuhr (no prayer window)
     if (!current) {
-        // Find next prayer
-        const prayers = [times.dhuhr, times.asr, times.maghrib, times.isha, times.fajr];
-        for (const prayer of prayers) {
+        // Find next prayer - start searching from Dhuhr
+        const prayers: [string, PrayerTime][] = [
+            ['Dhuhr', times.dhuhr],
+            ['Asr', times.asr],
+            ['Maghrib', times.maghrib],
+            ['Isha', times.isha],
+            ['Fajr', times.fajr]
+        ];
+
+        for (const [name, prayer] of prayers) {
             let prayerTime = prayer.timestamp;
-            if (prayerTime < now) prayerTime += 24 * 60 * 60 * 1000;
-            
+
+            // If prayer time is passed, it must be tomorrow (e.g. looking for Fajr after Isha started)
+            if (prayerTime < now) {
+                prayerTime += 24 * 60 * 60 * 1000;
+            }
+
             if (prayerTime > now) {
                 next = {
-                    name: prayer.name,
+                    name: name,
                     arabicName: prayer.arabicName,
                     time: prayer.time,
                     minutesUntil: Math.floor((prayerTime - now) / 60000)
@@ -364,6 +400,6 @@ export async function getCurrentPrayer(): Promise<CurrentPrayerInfo> {
             }
         }
     }
-    
+
     return { current, next };
 }
