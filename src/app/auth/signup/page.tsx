@@ -28,9 +28,10 @@ export default function SignUpPage() {
 
             setSuccess(true)
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("❌ Exception:", err)
-            setError(err.message || "Signup failed")
+            const errorMessage = err instanceof Error ? err.message : "Signup failed";
+            setError(errorMessage)
             setLocalLoading(false)
         }
     }
@@ -99,8 +100,9 @@ export default function SignUpPage() {
                                 try {
                                     setLocalLoading(true)
                                     await signInWithGoogle()
-                                } catch (err: any) {
-                                    setError(err.message || "Google sign-in failed")
+                                } catch (err: unknown) {
+                                    const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+                                    setError(errorMessage)
                                     setLocalLoading(false)
                                 }
                             }}

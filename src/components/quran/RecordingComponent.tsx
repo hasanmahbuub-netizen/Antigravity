@@ -4,11 +4,21 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { Mic, Square, Play, RefreshCw } from 'lucide-react'
 
+interface TajweedFeedback {
+  score: number;
+  positives?: string[];
+  improvements?: string[];
+  details?: string;
+  accuracy?: number;
+  strengths?: string[];
+  encouragement?: string;
+}
+
 interface RecordingComponentProps {
   surahId: number
   ayahNumber: number
   verseText: string
-  onRecordingComplete: (feedback: any) => void
+  onRecordingComplete: (feedback: TajweedFeedback) => void
 }
 
 export function RecordingComponent({
@@ -20,7 +30,7 @@ export function RecordingComponent({
   const { user } = useAuth()
   const [isRecording, setIsRecording] = useState(false)
   const [duration, setDuration] = useState(0)
-  const [feedback, setFeedback] = useState<any>(null)
+  const [feedback, setFeedback] = useState<TajweedFeedback | null>(null)
   const [loading, setLoading] = useState(false)
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
 
@@ -108,9 +118,9 @@ export function RecordingComponent({
 
   const submitRecording = async (audioBlob: Blob) => {
     if (!user) {
-        // Allow trial without login or show warning, but for now stick to prompt
-        // Assuming user might be navigating freely. 
-        // Ideally we should check if user is logged in.
+      // Allow trial without login or show warning, but for now stick to prompt
+      // Assuming user might be navigating freely. 
+      // Ideally we should check if user is logged in.
     }
 
     setLoading(true)
@@ -161,29 +171,28 @@ export function RecordingComponent({
           )}
 
           <div className="flex flex-col gap-3">
-             <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                disabled={loading || isRecording}
-                className={`w-full h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200 ${
-                    isRecording 
-                    ? 'bg-red-500 text-white scale-95 ring-4 ring-offset-2 ring-red-500/30' 
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] shadow-lg shadow-primary/20'
+            <button
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onTouchStart={startRecording}
+              onTouchEnd={stopRecording}
+              disabled={loading || isRecording}
+              className={`w-full h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200 ${isRecording
+                  ? 'bg-red-500 text-white scale-95 ring-4 ring-offset-2 ring-red-500/30'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] shadow-lg shadow-primary/20'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-                {isRecording ? (
-                    <>
-                        <Square className="w-8 h-8 fill-current" />
-                        <span className="font-bold text-sm uppercase tracking-widest">Release to Stop</span>
-                    </>
-                ) : (
-                    <>
-                        <Mic className="w-8 h-8" />
-                        <span className="font-bold text-sm uppercase tracking-widest">Hold to Record</span>
-                    </>
-                )}
+              {isRecording ? (
+                <>
+                  <Square className="w-8 h-8 fill-current" />
+                  <span className="font-bold text-sm uppercase tracking-widest">Release to Stop</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-8 h-8" />
+                  <span className="font-bold text-sm uppercase tracking-widest">Hold to Record</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -196,12 +205,12 @@ export function RecordingComponent({
       ) : (
         <div className="bg-green-50/50 border border-green-200 p-6 rounded-2xl space-y-6">
           <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-green-900 flex items-center gap-2">
-                  <span>✨</span> Feedback
-              </h3>
-              <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
-                  Completed
-              </div>
+            <h3 className="font-bold text-lg text-green-900 flex items-center gap-2">
+              <span>✨</span> Feedback
+            </h3>
+            <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
+              Completed
+            </div>
           </div>
 
           {/* Playback */}
@@ -220,12 +229,12 @@ export function RecordingComponent({
           {/* Accuracy */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-xl border border-green-100 shadow-sm text-center">
-                <span className="block text-3xl font-bold text-green-600 mb-1">{feedback.accuracy || 0}%</span>
-                <span className="text-xs text-muted font-medium uppercase tracking-wider">Accuracy</span>
+              <span className="block text-3xl font-bold text-green-600 mb-1">{feedback.accuracy || 0}%</span>
+              <span className="text-xs text-muted font-medium uppercase tracking-wider">Accuracy</span>
             </div>
             <div className="bg-white p-4 rounded-xl border border-green-100 shadow-sm text-center flex flex-col items-center justify-center">
-                 <span className="text-2xl">🌟</span>
-                 <span className="text-xs text-muted font-medium uppercase tracking-wider mt-1">Excellent</span>
+              <span className="text-2xl">🌟</span>
+              <span className="text-xs text-muted font-medium uppercase tracking-wider mt-1">Excellent</span>
             </div>
           </div>
 
@@ -233,14 +242,14 @@ export function RecordingComponent({
           {feedback.strengths && feedback.strengths.length > 0 && (
             <div className="bg-white p-4 rounded-xl border border-green-100 shadow-sm">
               <p className="font-bold text-green-700 text-sm mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-xs">✓</span>
-                  Strong Points
+                <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-xs">✓</span>
+                Strong Points
               </p>
               <ul className="space-y-2">
                 {feedback.strengths.map((s: string, i: number) => (
                   <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 shrink-0" />
-                      {s}
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                    {s}
                   </li>
                 ))}
               </ul>
@@ -250,15 +259,15 @@ export function RecordingComponent({
           {/* Improvements */}
           {feedback.improvements && feedback.improvements.length > 0 && (
             <div className="bg-white p-4 rounded-xl border border-orange-100 shadow-sm">
-               <p className="font-bold text-orange-700 text-sm mb-3 flex items-center gap-2">
-                  <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-xs">!</span>
-                  To Improve
+              <p className="font-bold text-orange-700 text-sm mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-xs">!</span>
+                To Improve
               </p>
               <ul className="space-y-2">
                 {feedback.improvements.map((imp: string, i: number) => (
                   <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
-                      {imp}
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
+                    {imp}
                   </li>
                 ))}
               </ul>

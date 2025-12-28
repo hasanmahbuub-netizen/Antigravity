@@ -2,12 +2,19 @@
 
 import InlineRecording from "./InlineRecording";
 
+interface TajweedFeedback {
+    score: number;
+    positives: string[];
+    improvements: string[];
+    details: string;
+}
+
 interface PracticeTabProps {
     arabic: string;
     surahId: number;
     verseId: number;
     sheikhAudioUrl?: string;
-    onRecordingComplete?: (feedback: any) => void;
+    onRecordingComplete?: (feedback: TajweedFeedback) => void;
     onMarkComplete?: () => void;
 }
 

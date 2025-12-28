@@ -78,12 +78,28 @@ const TOPICS = [
     }
 ];
 
+// Fiqh structured answer type
+interface FiqhStructuredAnswer {
+    directAnswer: string;
+    reasoning: string;
+    otherSchools: { madhab: string; position: string }[];
+    citations: { source: string; reference: string; text: string }[];
+    answer?: string;
+    sources?: string;
+}
+
+interface FiqhApiResponse {
+    data?: FiqhStructuredAnswer;
+    madhab?: string;
+    success?: boolean;
+}
+
 function FiqhContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [viewState, setViewState] = useState<"input" | "loading" | "result">("input");
-    const [answer, setAnswer] = useState<any>(null);
+    const [answer, setAnswer] = useState<FiqhApiResponse | null>(null);
     const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
     const [recentQuestions, setRecentQuestions] = useState<string[]>([]);
 
@@ -110,7 +126,7 @@ function FiqhContent() {
                     .limit(2);
 
                 if (data) {
-                    setRecentQuestions(data.map((d: any) => d.question));
+                    setRecentQuestions(data.map((d: { question: string }) => d.question));
                 }
             } catch (err) {
                 console.error("Failed to fetch recent:", err);
@@ -133,7 +149,7 @@ function FiqhContent() {
                         .select('madhab')
                         .eq('id', session.user.id)
                         .single();
-                    madhab = (profile as any)?.madhab || 'hanafi';
+                    madhab = (profile as { madhab?: string } | null)?.madhab || 'hanafi';
                 }
 
                 const response = await fetch('/api/fiqh/ask', {
@@ -206,7 +222,7 @@ function FiqhContent() {
                 </header>
                 <AnswerView
                     question={query}
-                    answer={answer?.data || answer}
+                    answer={answer?.data ?? null}
                     madhab={answer?.madhab || 'Hanafi'}
                     onAskAnother={handleClear}
                 />
@@ -283,8 +299,8 @@ function FiqhContent() {
                                     <button
                                         onClick={() => setExpandedTopic(expandedTopic === topic.id ? null : topic.id)}
                                         className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${expandedTopic === topic.id
-                                                ? "bg-primary/5 border-primary/20"
-                                                : "bg-card border-border hover:border-primary/20"
+                                            ? "bg-primary/5 border-primary/20"
+                                            : "bg-card border-border hover:border-primary/20"
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">

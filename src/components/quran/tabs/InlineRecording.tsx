@@ -5,20 +5,20 @@ import { Mic, Square, Play, Pause, RotateCcw, CheckCircle, Loader2, Volume2, Spa
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedWaveform } from "@/components/Waveform";
 
-interface InlineRecordingProps {
-    arabic: string;
-    surahId: number;
-    verseId: number;
-    sheikhAudioUrl?: string;
-    onComplete?: (feedback: any) => void;
-    onMarkComplete?: () => void;
-}
-
 interface TajweedFeedback {
     score: number;
     positives: string[];
     improvements: string[];
     details: string;
+}
+
+interface InlineRecordingProps {
+    arabic: string;
+    surahId: number;
+    verseId: number;
+    sheikhAudioUrl?: string;
+    onComplete?: (feedback: TajweedFeedback) => void;
+    onMarkComplete?: () => void;
 }
 
 export default function InlineRecording({

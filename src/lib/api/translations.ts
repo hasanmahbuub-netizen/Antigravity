@@ -7,6 +7,11 @@ interface Translation {
     bangla?: string;
 }
 
+interface TranslationItem {
+    resource_id: number;
+    text: string;
+}
+
 /**
  * Fetch verse translations from Quran.com API
  * Resource IDs:
@@ -38,8 +43,8 @@ export async function fetchVerseTranslations(
         // Extract translations from response
         const translations = data.verse?.translations || [];
 
-        const englishTrans = translations.find((t: any) => t.resource_id === 20);
-        const banglaTrans = translations.find((t: any) => t.resource_id === 161);
+        const englishTrans = translations.find((t: TranslationItem) => t.resource_id === 20);
+        const banglaTrans = translations.find((t: TranslationItem) => t.resource_id === 161);
 
         const result = {
             english: stripHTML(englishTrans?.text || ''),

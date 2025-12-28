@@ -150,8 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('🎯 [SIGNIN] User state updated')
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
-        } catch (error: any) {
-            console.error('💥 [SIGNIN] Error caught:', error.message)
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('💥 Error:', errorMessage)
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
             throw error
         }
@@ -194,8 +195,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('📧 [SIGNUP] Confirmation email sent to:', email)
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
-        } catch (error: any) {
-            console.error('💥 [SIGNUP] Error caught:', error.message)
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('💥 [SIGNUP] Error caught:', errorMessage)
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
             throw error
         }
@@ -224,8 +226,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
             if (error) throw error
             console.log('✅ [GOOGLE SIGNIN] Auth redirect initiated')
-        } catch (error: any) {
-            console.error('💥 [GOOGLE SIGNIN] Error:', error.message)
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('💥 [GOOGLE SIGNIN] Error:', errorMessage)
             throw error
         }
     }
@@ -251,8 +254,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('🎯 [SIGNOUT] User state cleared')
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
-        } catch (error: any) {
-            console.error('💥 [SIGNOUT] Error caught:', error.message)
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('💥 [SIGNOUT] Error caught:', errorMessage)
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
             throw error
         }

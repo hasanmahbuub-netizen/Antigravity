@@ -32,9 +32,10 @@ function SignInForm() {
             console.log("📍 Redirecting to:", redirectTo)
             router.push(redirectTo)
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("❌ Exception:", err)
-            setError(err.message || "Login failed")
+            const errorMessage = err instanceof Error ? err.message : "Login failed";
+            setError(errorMessage)
             setLocalLoading(false)
         }
     }
@@ -73,8 +74,9 @@ function SignInForm() {
                                 try {
                                     setLocalLoading(true)
                                     await signInWithGoogle()
-                                } catch (err: any) {
-                                    setError(err.message || "Google sign-in failed")
+                                } catch (err: unknown) {
+                                    const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+                                    setError(errorMessage)
                                     setLocalLoading(false)
                                 }
                             }}
