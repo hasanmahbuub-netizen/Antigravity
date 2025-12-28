@@ -3,6 +3,8 @@
  * Fetches verse-by-verse understanding from quran-api
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 interface TafsirData {
     english: string;
     source: string;
@@ -101,7 +103,7 @@ async function fetchTranslationAsTafsir(
 export async function getTafsirCached(
     surahNumber: number,
     verseNumber: number,
-    supabase: any
+    supabase: SupabaseClient
 ): Promise<TafsirData | null> {
 
     // Check cache first
@@ -125,14 +127,16 @@ export async function getTafsirCached(
 
     // Cache for future use
     if (tafsir) {
-        await supabase.from('quran_tafsir').upsert({
-            surah_number: surahNumber,
-            verse_number: verseNumber,
-            tafsir_english: tafsir.english,
-            source: tafsir.source
-        }).catch(() => {
+        try {
+            await supabase.from('quran_tafsir').upsert({
+                surah_number: surahNumber,
+                verse_number: verseNumber,
+                tafsir_english: tafsir.english,
+                source: tafsir.source
+            });
+        } catch {
             // Ignore cache errors
-        });
+        }
     }
 
     return tafsir;

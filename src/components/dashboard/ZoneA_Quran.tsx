@@ -26,12 +26,12 @@ export default function ZoneA_Quran() {
                 if (!user) return;
 
                 // Fetch Latest Progress
-                const { data: progressData } = await (supabase
+                const { data: progressData } = await supabase
                     .from('quran_verse_progress')
                     .select('surah, ayah')
                     .eq('user_id', user.id)
                     .order('completed_at', { ascending: false })
-                    .limit(1) as any);
+                    .limit(1);
 
                 const progress = progressData?.[0] as { surah?: number; ayah?: number } | undefined;
                 const nextSurah = progress?.surah || 1;

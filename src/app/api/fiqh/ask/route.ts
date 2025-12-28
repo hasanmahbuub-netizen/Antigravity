@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
 
         if (user) {
             try {
-                const { data: profile } = await (supabase
+                const { data: profile } = await supabase
                     .from('profiles')
                     .select('madhab')
                     .eq('id', user.id)
-                    .single() as any)
+                    .single<{ madhab?: string }>()
 
                 if (profile?.madhab) {
                     madhab = profile.madhab
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
             sourceVerification: fiqhResponse!.sourceVerification
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('❌ Fiqh API error:', error)
 
         const fallback = getFallbackStructuredAnswer('general', 'Hanafi')

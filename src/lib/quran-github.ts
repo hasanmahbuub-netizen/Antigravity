@@ -45,6 +45,21 @@ export interface QuranVerse {
     audio_url?: string
 }
 
+// API response types
+interface ChapterApiResponse {
+    id: number;
+    name_arabic: string;
+    name_simple: string;
+    name_complex: string;
+    revelation_place: string;
+    verses_count: number;
+}
+
+interface VerseApiResponse {
+    verse_key: string;
+    text_uthmani: string;
+}
+
 /**
  * Fetch all 114 chapters from Quran.com API
  */
@@ -53,7 +68,7 @@ export async function fetchAllSurahs(): Promise<QuranSurah[]> {
         const response = await fetch(`${QURAN_API}/chapters`)
         const data = await response.json()
 
-        return data.chapters.map((chapter: any) => ({
+        return data.chapters.map((chapter: ChapterApiResponse) => ({
             id: chapter.id,
             name_arabic: chapter.name_arabic,
             name_english: chapter.name_simple,
@@ -84,7 +99,7 @@ export async function fetchSurahVerses(surahId: number): Promise<QuranVerse[]> {
         )
         const translationData = await translationResponse.json()
 
-        const verses: QuranVerse[] = arabicData.verses.map((verse: any, index: number) => {
+        const verses: QuranVerse[] = arabicData.verses.map((verse: VerseApiResponse, index: number) => {
             const verseNumber = verse.verse_key.split(':')[1]
             return {
                 surah: surahId,

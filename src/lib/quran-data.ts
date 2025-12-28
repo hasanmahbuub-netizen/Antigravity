@@ -24,6 +24,16 @@ export interface Verse {
     audio_url?: string;
 }
 
+// API response type for chapter data
+interface ChapterApiResponse {
+    id: number;
+    name_arabic: string;
+    name_simple: string;
+    name_complex: string;
+    revelation_place: string;
+    verses_count: number;
+}
+
 /**
  * Fetch all 114 surahs from Quran API
  */
@@ -36,7 +46,7 @@ export async function fetchAllSurahs(): Promise<Surah[]> {
 
         const data = await response.json();
 
-        return data.chapters.map((chapter: any) => ({
+        return data.chapters.map((chapter: ChapterApiResponse) => ({
             id: chapter.id,
             name_arabic: chapter.name_arabic,
             name_english: chapter.name_simple,

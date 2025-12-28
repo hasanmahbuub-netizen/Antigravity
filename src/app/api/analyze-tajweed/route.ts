@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transcribeArabic, normalizeArabic } from '@/lib/providers/whisper';
-import { calculateWER, werToAccuracy } from '@/lib/analysis/wer';
+import { calculateWER, werToAccuracy, type WERResult } from '@/lib/analysis/wer';
 
 /**
  * Phonetic Blueprint Architecture - Precision Tajweed Analysis
@@ -151,7 +151,7 @@ async function analyzeWithGemini(
     mimeType: string,
     expectedText: string,
     transcribedText: string,
-    wer: any,
+    wer: WERResult,
     verseKey: string
 ): Promise<TajweedAnalysis> {
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -211,7 +211,7 @@ async function analyzeWithGemini(
 function buildStrictPrompt(
     expectedText: string,
     transcribedText: string,
-    wer: any,
+    wer: WERResult,
     verseKey: string
 ): string {
     return `
@@ -262,7 +262,7 @@ If audio sounds rushed or unclear, deduct points. Output JSON only.
 /**
  * Parse Gemini response
  */
-function parseGeminiResponse(rawText: string, wer: any): TajweedAnalysis {
+function parseGeminiResponse(rawText: string, wer: WERResult): TajweedAnalysis {
     try {
         let cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
@@ -288,7 +288,7 @@ function parseGeminiResponse(rawText: string, wer: any): TajweedAnalysis {
 /**
  * Default analysis when AI fails
  */
-function getDefaultAnalysis(wer: any): TajweedAnalysis {
+function getDefaultAnalysis(wer: WERResult): TajweedAnalysis {
     const baseScore = wer.wer < 20 ? 30 : wer.wer < 50 ? 20 : 10;
     return {
         tajweedScore: baseScore,

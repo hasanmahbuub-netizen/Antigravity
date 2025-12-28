@@ -92,7 +92,7 @@ export default function RecordingView({ onCancel, onStop }: RecordingViewProps) 
                 mediaRecorder.start(100); // Collect data every 100ms
                 console.log('🎤 Recording started...');
 
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Microphone access denied:', err);
                 setError('Could not access microphone. Please allow microphone access and try again.');
             }

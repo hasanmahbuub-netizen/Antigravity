@@ -186,7 +186,8 @@ export default function PracticeScreen() {
         // Sync progress to Supabase
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-            await (supabase.from('quran_verse_progress') as any).insert({
+            // Type assertion needed - Supabase client lacks typed schema for this table
+            await (supabase.from('quran_verse_progress') as ReturnType<typeof supabase.from>).insert({
                 user_id: user.id,
                 surah: currentSurahId,
                 ayah: currentVerseId

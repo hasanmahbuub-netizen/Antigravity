@@ -22,6 +22,11 @@ interface Translations {
     bangla: string;
 }
 
+interface TranslationItem {
+    resource_id: number;
+    text: string;
+}
+
 export default function MeaningTab({ translation, arabic, surahId = 1, verseId = 1 }: MeaningTabProps) {
     const [translations, setTranslations] = useState<Translations>({ english: translation, bangla: '' });
     const [wordMeanings, setWordMeanings] = useState<WordMeaning[]>([]);
@@ -50,8 +55,8 @@ export default function MeaningTab({ translation, arabic, surahId = 1, verseId =
                     const data = await response.json();
                     const transArray = data.verse?.translations || [];
 
-                    const english = transArray.find((t: any) => t.resource_id === 20);
-                    const bangla = transArray.find((t: any) => t.resource_id === 161);
+                    const english = transArray.find((t: TranslationItem) => t.resource_id === 20);
+                    const bangla = transArray.find((t: TranslationItem) => t.resource_id === 161);
 
                     // Clean HTML tags
                     const cleanText = (text: string) => text?.replace(/<[^>]*>/g, '')?.trim() || '';

@@ -144,7 +144,7 @@ export interface FiqhStructuredAnswer {
  */
 export function parseFiqhResponse(rawText: string, madhab: string): FiqhStructuredAnswer {
   // Try multiple methods to extract JSON
-  let parsed: any = null;
+  let parsed: FiqhStructuredAnswer | null = null;
 
   // Method 1: Try direct parse after cleaning markdown
   let cleanText = rawText
@@ -159,14 +159,15 @@ export function parseFiqhResponse(rawText: string, madhab: string): FiqhStructur
   }
 
   try {
-    parsed = JSON.parse(cleanText);
+    const parsedResult = JSON.parse(cleanText) as FiqhStructuredAnswer;
+    parsed = parsedResult;
 
     // Check if directAnswer is itself a JSON string (double-wrapped)
-    if (typeof parsed.directAnswer === 'string' && parsed.directAnswer.includes('"directAnswer"')) {
+    if (parsed && typeof parsed.directAnswer === 'string' && parsed.directAnswer.includes('"directAnswer"')) {
       try {
         const innerMatch = parsed.directAnswer.match(/\{[\s\S]*\}/);
         if (innerMatch) {
-          const innerParsed = JSON.parse(innerMatch[0]);
+          const innerParsed = JSON.parse(innerMatch[0]) as FiqhStructuredAnswer;
           if (innerParsed.directAnswer) {
             parsed = innerParsed;
           }
@@ -207,7 +208,7 @@ export function parseFiqhResponse(rawText: string, madhab: string): FiqhStructur
 
     // Filter out user's madhab from otherSchools
     const filteredSchools = Array.isArray(parsed.otherSchools)
-      ? parsed.otherSchools.filter((s: any) =>
+      ? parsed.otherSchools.filter((s: { madhab?: string; position: string }) =>
         s.madhab?.toLowerCase() !== madhab.toLowerCase()
       )
       : [];
