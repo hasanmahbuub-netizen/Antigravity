@@ -205,10 +205,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
         console.log('🌐 [GOOGLE SIGNIN] Starting...')
         try {
+            // Use production URL from env var if available, otherwise use current origin
+            const redirectUrl = process.env.NEXT_PUBLIC_APP_URL
+                ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+                : `${window.location.origin}/auth/callback`;
+
+            console.log('📍 [GOOGLE SIGNIN] Redirect URL:', redirectUrl)
+
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: redirectUrl,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',

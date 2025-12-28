@@ -40,24 +40,20 @@ function SignInForm() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#050505] overflow-hidden relative px-4">
-            {/* Background Glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-full max-w-md relative z-10"
+                className="w-full max-w-md"
             >
-                <div className="bg-card/40 backdrop-blur-xl p-8 rounded-[32px] border border-white/10 shadow-2xl">
-                    <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
-                            <span className="text-3xl">📿</span>
+                <div className="glass-panel p-8 rounded-2xl">
+                    <div className="text-center mb-8">
+                        <div className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <span className="text-2xl">📿</span>
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Welcome Back</h1>
-                        <p className="text-muted-foreground">Sign in to continue your spiritual journey</p>
+                        <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+                        <p className="text-sm text-muted">Continue your spiritual journey</p>
                     </div>
 
                     {error && (
@@ -83,7 +79,7 @@ function SignInForm() {
                                 }
                             }}
                             disabled={localLoading}
-                            className="w-full h-14 rounded-2xl bg-white text-black hover:bg-white/90 disabled:opacity-50 flex items-center justify-center gap-3 font-semibold transition-all shadow-xl active:scale-[0.98]"
+                            className="w-full h-12 rounded-xl bg-white text-black hover:bg-white/90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium transition-all"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path
@@ -106,58 +102,52 @@ function SignInForm() {
                             Continue with Google
                         </button>
 
-                        <div className="relative py-4">
+                        <div className="relative py-3">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-white/5"></div>
+                                <div className="w-full border-t border-border"></div>
                             </div>
-                            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground/60">
-                                <span className="bg-[#0b0b0b] px-4 py-1 rounded-full border border-white/5 backdrop-blur-md">
-                                    or email access
+                            <div className="relative flex justify-center text-xs text-muted">
+                                <span className="bg-background px-3">
+                                    or
                                 </span>
                             </div>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div className="space-y-2">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-lg group-focus-within:bg-primary/10 transition-all opacity-0 group-focus-within:opacity-100" />
-                                    <div className="relative flex items-center">
-                                        <Mail className="absolute left-4 w-5 h-5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/[0.03] border border-white/5 focus:border-primary/50 focus:bg-white/[0.05] outline-none transition-all text-white placeholder:text-muted-foreground/30"
-                                            required
-                                            disabled={localLoading}
-                                            placeholder="Email Address"
-                                        />
-                                    </div>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                                        required
+                                        disabled={localLoading}
+                                        placeholder="Email Address"
+                                    />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-lg group-focus-within:bg-primary/10 transition-all opacity-0 group-focus-within:opacity-100" />
-                                    <div className="relative flex items-center">
-                                        <Lock className="absolute left-4 w-5 h-5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/[0.03] border border-white/5 focus:border-primary/50 focus:bg-white/[0.05] outline-none transition-all text-white placeholder:text-muted-foreground/30"
-                                            required
-                                            disabled={localLoading}
-                                            placeholder="Password"
-                                        />
-                                    </div>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full h-12 pl-10 pr-4 rounded-xl bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                                        required
+                                        disabled={localLoading}
+                                        placeholder="Password"
+                                    />
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={localLoading}
-                                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white disabled:opacity-50 flex items-center justify-center gap-2 font-bold transition-all shadow-lg shadow-primary/20 active:scale-[0.98] mt-2"
+                                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                             >
                                 {localLoading ? (
                                     <>
@@ -171,14 +161,12 @@ function SignInForm() {
                         </form>
                     </div>
 
-                    <div className="text-center mt-10">
-                        <p className="text-sm text-muted-foreground">
-                            Don't have an account yet?{" "}
-                            <Link href="/auth/signup" className="text-primary hover:text-primary/80 font-bold transition-colors">
-                                Create account
-                            </Link>
-                        </p>
-                    </div>
+                    <p className="text-center text-sm text-muted mt-6">
+                        Don't have an account?{" "}
+                        <Link href="/auth/signup" className="text-primary hover:underline font-medium">
+                            Create one
+                        </Link>
+                    </p>
                 </div>
             </motion.div>
         </div>
