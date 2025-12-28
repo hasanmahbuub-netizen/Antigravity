@@ -83,7 +83,8 @@ async function getUserLocation(): Promise<{ latitude: number; longitude: number 
  */
 function tryGeoLocation(): Promise<{ latitude: number; longitude: number } | null> {
     return new Promise((resolve) => {
-        if (!('geolocation' in navigator)) {
+        // Check if we're in browser environment
+        if (typeof window === 'undefined' || !('geolocation' in navigator)) {
             resolve(null);
             return;
         }
@@ -121,6 +122,9 @@ function tryGeoLocation(): Promise<{ latitude: number; longitude: number } | nul
  * Save location to localStorage for offline use
  */
 function saveLocation(location: { latitude: number; longitude: number }): void {
+    // Only save in browser environment
+    if (typeof window === 'undefined') return;
+
     try {
         const saved: SavedLocation = {
             latitude: location.latitude,
@@ -138,6 +142,9 @@ function saveLocation(location: { latitude: number; longitude: number }): void {
  * Get saved location from localStorage
  */
 function getSavedLocation(): SavedLocation | null {
+    // Only read from browser environment
+    if (typeof window === 'undefined') return null;
+
     try {
         const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
         if (!stored) return null;
