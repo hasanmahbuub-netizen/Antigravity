@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIP } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting check
+        const clientIP = getClientIP(request);
+        const rateLimitResult = checkRateLimit(clientIP, { maxRequests: 30, windowMs: 60 * 1000 });
+
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please wait before submitting again.' },
+                { status: 429, headers: { 'Retry-After': String(Math.ceil(rateLimitResult.resetInMs / 1000)) } }
+            );
+        }
+
         const formData = await request.formData()
         const audioFile = formData.get('audio') as Blob | null
         const surahStr = formData.get('surah') as string
@@ -20,7 +32,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Generate lightweight feedback (no heavy AI call)
+        // Generate practice mode feedback (encouraging, not AI-analyzed)
+        // Note: Full AI-based Tajweed analysis coming in future update
         const feedback = generateLightweightFeedback(verseText, surah, ayah)
 
         console.log('✅ Feedback generated:', feedback.score)
@@ -28,11 +41,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             feedback,
-            audioSize: audioFile?.size || 0
+            audioSize: audioFile?.size || 0,
+            practiceMode: true,  // Indicate this is practice feedback
+            disclaimer: 'This is practice mode feedback for encouragement. AI-powered Tajweed analysis coming soon.'
         })
 
-    } catch (error: any) {
-        console.error('❌ Quran analyze API error:', error)
+    } catch (error) {
+        console.error('❌ Quran analyze API error:', error instanceof Error ? error.message : error)
 
         // Return fallback feedback on error
         return NextResponse.json({
@@ -42,7 +57,9 @@ export async function POST(request: NextRequest) {
                 positives: ['Clear pronunciation', 'Good rhythm'],
                 improvements: ['Focus on proper elongation (Madd)'],
                 details: 'Keep practicing! Every recitation brings you closer to perfection.'
-            }
+            },
+            practiceMode: true,
+            disclaimer: 'Practice mode feedback'
         })
     }
 }

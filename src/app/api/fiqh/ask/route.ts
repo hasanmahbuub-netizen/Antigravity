@@ -3,22 +3,40 @@ import { createServerClient } from '@supabase/ssr'
 import { askGroqFiqh, FiqhResponse } from '@/lib/providers/groq'
 import { askOpenAIFiqh } from '@/lib/providers/openai'
 import { getFallbackStructuredAnswer } from '@/lib/prompts/fiqh-system'
+import { checkRateLimit, getClientIP, sanitizeInput, isValidQuestion } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
 
     try {
-        const body = await request.json()
-        const { question, madhab: requestMadhab } = body
+        // Rate limiting check
+        const clientIP = getClientIP(request);
+        const rateLimitResult = checkRateLimit(clientIP, { maxRequests: 20, windowMs: 60 * 1000 });
 
-        if (!question || question.trim().length < 3) {
+        if (!rateLimitResult.success) {
+            console.log(`⚠️ Rate limited: ${clientIP}`);
             return NextResponse.json(
-                { success: false, error: 'Please enter a valid question' },
+                { success: false, error: 'Too many requests. Please wait before asking another question.' },
+                { status: 429, headers: { 'Retry-After': String(Math.ceil(rateLimitResult.resetInMs / 1000)) } }
+            );
+        }
+
+        const body = await request.json()
+        const { question: rawQuestion, madhab: requestMadhab } = body
+
+        // Validate question
+        const validation = isValidQuestion(rawQuestion);
+        if (!validation.valid) {
+            return NextResponse.json(
+                { success: false, error: validation.error },
                 { status: 400 }
             )
         }
 
-        console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..."`)
+        // Sanitize input to prevent prompt injection
+        const question = sanitizeInput(rawQuestion, 1000);
+
+        console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..."`, { ip: clientIP })
 
         // Create Supabase client
         const supabase = createServerClient(
@@ -51,7 +69,8 @@ export async function POST(request: NextRequest) {
                     console.log(`✅ User madhab: ${madhab}`)
                 }
             } catch (e) {
-                console.log(`⚠️ Using default madhab: ${madhab}`)
+                console.warn(`⚠️ Failed to fetch user madhab:`, e);
+                // Continue with default madhab
             }
         }
 
@@ -82,8 +101,9 @@ export async function POST(request: NextRequest) {
                     cached: true,
                     timing: Date.now() - startTime
                 })
-            } catch {
-                // Bad cache, continue to fetch
+            } catch (parseError) {
+                console.warn('⚠️ Failed to parse cached answer:', parseError);
+                // Continue to fetch fresh answer
             }
         }
 
@@ -99,7 +119,7 @@ export async function POST(request: NextRequest) {
                 provider = 'groq';
                 console.log(`✅ Groq response (${Date.now() - startTime}ms)`)
             } catch (error) {
-                console.error('❌ Groq failed:', error)
+                console.error('❌ Groq failed:', error instanceof Error ? error.message : error);
             }
         }
 
@@ -199,7 +219,9 @@ export async function POST(request: NextRequest) {
                         hallucination_risk: fiqhResponse.sourceVerification?.hallucinationRisk,
                         confidence_level: fiqhResponse.sourceVerification?.confidenceLevel
                     });
-                } catch { }
+                } catch (cacheError) {
+                    console.warn('⚠️ Failed to cache Fiqh response:', cacheError);
+                }
             })();
         }
 
