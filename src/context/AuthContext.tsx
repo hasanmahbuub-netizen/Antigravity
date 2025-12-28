@@ -13,6 +13,7 @@ interface AuthContextType {
     loading: boolean
     signIn: (email: string, password: string) => Promise<void>
     signUp: (email: string, password: string, fullName: string) => Promise<void>
+    signInWithGoogle: () => Promise<void>
     signOut: () => Promise<void>
 }
 
@@ -200,6 +201,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    async function signInWithGoogle() {
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.log('🌐 [GOOGLE SIGNIN] Starting...')
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                },
+            })
+            if (error) throw error
+            console.log('✅ [GOOGLE SIGNIN] Auth redirect initiated')
+        } catch (error: any) {
+            console.error('💥 [GOOGLE SIGNIN] Error:', error.message)
+            throw error
+        }
+    }
+
     // ============================================
     // SIGN OUT - SIMPLE AND DIRECT
     // ============================================
@@ -233,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut
     }
 

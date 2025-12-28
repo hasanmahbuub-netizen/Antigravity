@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bell, Clock, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import ZoneA_Quran from "@/components/dashboard/ZoneA_Quran";
 import ZoneB_Fiqh from "@/components/dashboard/ZoneB_Fiqh";
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [prayerReminder, setPrayerReminder] = useState<PrayerReminder | null>(null);
   const [currentPrayerInfo, setCurrentPrayerInfo] = useState<CurrentPrayerInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Time-based greeting and fetch agents data
   useEffect(() => {
@@ -40,9 +42,26 @@ export default function Dashboard() {
     }
     initNotifications();
 
-    // Fetch spiritual context
+    // Fetch spiritual context and check profile
     async function loadContext() {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          // Check onboarding status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', user.id)
+            .single();
+
+          if (!profile || !profile.onboarding_completed) {
+            console.log("🚦 Onboarding not completed. Redirecting...");
+            router.push('/onboarding');
+            return;
+          }
+        }
+
         const spiritualNudge = getSpiritualNudge();
         setNudge(spiritualNudge);
 
@@ -52,7 +71,7 @@ export default function Dashboard() {
         const prayerInfo = await getCurrentPrayer();
         setCurrentPrayerInfo(prayerInfo);
       } catch (error) {
-        console.error("Failed to load spiritual context:", error);
+        console.error("Failed to load dashboard context:", error);
       } finally {
         setLoading(false);
       }
