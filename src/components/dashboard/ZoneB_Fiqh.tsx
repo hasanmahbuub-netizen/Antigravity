@@ -6,8 +6,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+// Type for Fiqh question preview (just id and question text)
+interface FiqhQuestionPreview {
+    id: string;
+    question: string;
+}
+
 export default function ZoneB_Fiqh() {
-    const [recentQuestions, setRecentQuestions] = useState<any[]>([]);
+    const [recentQuestions, setRecentQuestions] = useState<FiqhQuestionPreview[]>([]);
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState("");
     const router = useRouter();

@@ -21,8 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Development-only logging
 const isDev = process.env.NODE_ENV === 'development'
-const devLog = (...args: any[]) => isDev && console.log(...args)
-const devError = (...args: any[]) => isDev && console.error(...args)
+const devLog = (...args: unknown[]) => isDev && console.log(...args)
+const devError = (...args: unknown[]) => isDev && console.error(...args)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)

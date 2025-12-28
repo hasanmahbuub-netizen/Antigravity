@@ -26,6 +26,20 @@ const ARABIC_LEVELS = [
     { value: 'advanced', label: 'Advanced', desc: 'Fluent in Quranic Arabic' }
 ];
 
+// Type definitions for Supabase query results
+interface ProfileSettings {
+    madhab: string | null;
+    language: string | null;
+    arabic_level: string | null;
+    daily_goal: number | null;
+}
+
+interface NotificationSettingsData {
+    prayer_start: boolean | null;
+    prayer_ending: boolean | null;
+    dua_reminders: boolean | null;
+}
+
 export default function SettingsPage() {
     const router = useRouter();
     const [signingOut, setSigningOut] = useState(false);
@@ -59,11 +73,11 @@ export default function SettingsPage() {
             if (!user) return;
 
             // Load profile settings
-            const { data: profileData } = await (supabase
+            const { data: profileData } = await supabase
                 .from('profiles')
                 .select('madhab, language, arabic_level, daily_goal')
                 .eq('id', user.id)
-                .single() as any);
+                .single<ProfileSettings>();
 
             if (profileData) {
                 setMadhab(profileData.madhab || 'Hanafi');
@@ -73,11 +87,11 @@ export default function SettingsPage() {
             }
 
             // Load notification settings
-            const { data: notifData } = await (supabase
+            const { data: notifData } = await supabase
                 .from('notification_settings')
                 .select('prayer_start, prayer_ending, dua_reminders')
                 .eq('user_id', user.id)
-                .single() as any);
+                .single<NotificationSettingsData>();
 
             if (notifData) {
                 setPrayerStart(notifData.prayer_start ?? true);

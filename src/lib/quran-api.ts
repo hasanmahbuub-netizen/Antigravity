@@ -10,6 +10,13 @@ const TRANSLATION_IDS = {
     bangla: 161     // Muhiuddin Khan
 };
 
+// Type for translation objects from Quran.com API
+interface QuranTranslation {
+    id: number;
+    resource_id: number;
+    text: string;
+}
+
 export const quranApi = {
     /**
      * Fetch verse data with multiple translations
@@ -43,9 +50,9 @@ export const quranApi = {
             }
 
             // Extract translations
-            const translations = verse.translations || [];
-            const englishTrans = translations.find((t: any) => t.resource_id === TRANSLATION_IDS.english);
-            const banglaTrans = translations.find((t: any) => t.resource_id === TRANSLATION_IDS.bangla);
+            const translations: QuranTranslation[] = verse.translations || [];
+            const englishTrans = translations.find((t) => t.resource_id === TRANSLATION_IDS.english);
+            const banglaTrans = translations.find((t) => t.resource_id === TRANSLATION_IDS.bangla);
 
             console.log(`✅ Verse ${verseKey} loaded with translations`);
 

@@ -13,6 +13,13 @@ const getApiKey = () => process.env.GEMINI_API_KEY || "";
 // Re-export types for consumers
 export type { TajweedFeedback, FiqhAnswer } from "@/types/ai";
 
+// Response type for Fiqh consultation
+interface FiqhConsultResponse {
+    answer: string;
+    context: string;
+    differences: string;
+}
+
 export const aiService = {
     /**
      * Analyze user recitation against a target verse using Gemini.
@@ -64,7 +71,7 @@ export const aiService = {
     /**
      * Consult Fiqh knowledge base using Gemini.
      */
-    async consultFiqh(question: string, madhab: string = 'hanafi'): Promise<any> {
+    async consultFiqh(question: string, madhab: string = 'hanafi'): Promise<FiqhConsultResponse> {
         const API_KEY = getApiKey();
         if (!API_KEY) {
             console.warn("Gemini API Key missing. Falling back to mock.");
@@ -105,7 +112,7 @@ export const aiService = {
         };
     },
 
-    getMockFiqh(): any {
+    getMockFiqh(): FiqhConsultResponse {
         return {
             answer: "We are currently having trouble connecting to the AI Mufti. Please try again in a moment.",
             context: "Connection Error",

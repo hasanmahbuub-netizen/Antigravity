@@ -4,16 +4,31 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, Info, FileText } from "lucide-react";
 
+interface FiqhCitation {
+    source: string;
+    reference: string;
+    text: string;
+    verified?: boolean;
+}
+
+interface OtherMadhabPosition {
+    madhab: string;
+    position: string;
+}
+
 interface FiqhStructuredAnswer {
     directAnswer: string;
     reasoning: string;
-    otherSchools: Array<{ madhab: string; position: string }>;
-    citations: Array<{ source: string; reference: string; text: string }>;
+    otherSchools: OtherMadhabPosition[];
+    citations: FiqhCitation[];
+    // Legacy fields for backwards compatibility
+    answer?: string;
+    sources?: string;
 }
 
 interface AnswerViewProps {
     question: string;
-    answer: FiqhStructuredAnswer | any;
+    answer: FiqhStructuredAnswer | null;
     madhab: string;
     onAskAnother: () => void;
 }
@@ -88,7 +103,7 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
                     icon={<BookOpen className="w-5 h-5" />}
                 >
                     <div className="space-y-4">
-                        {otherSchools.map((school: any, idx: number) => (
+                        {otherSchools.map((school: OtherMadhabPosition, idx: number) => (
                             <div key={idx}>
                                 <h4 className="text-accent font-semibold mb-2">{school.madhab}</h4>
                                 <p className="text-foreground/80 leading-relaxed">{school.position}</p>
@@ -107,7 +122,7 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
                     icon={<FileText className="w-5 h-5" />}
                 >
                     <div className="space-y-3">
-                        {citations.map((citation: any, idx: number) => (
+                        {citations.map((citation: FiqhCitation, idx: number) => (
                             <div key={idx} className="bg-muted/5 p-4 rounded-lg border border-border/50">
                                 <div className="text-primary font-semibold mb-1">
                                     {citation.source}: {citation.reference}
