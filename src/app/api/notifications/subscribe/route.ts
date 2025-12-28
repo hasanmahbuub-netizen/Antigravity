@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Server-side Supabase client
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-loaded Supabase admin client (prevents build errors when env vars are missing)
+let supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+    if (!supabaseAdmin) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!url || !key) {
+            throw new Error('Missing Supabase credentials');
+        }
+
+        supabaseAdmin = createClient(url, key);
+    }
+    return supabaseAdmin;
+}
 
 interface PushSubscriptionJSON {
     endpoint: string;
@@ -33,7 +44,7 @@ export async function POST(request: NextRequest) {
 
         if (authHeader?.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
-            const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+            const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
             if (!error && user) {
                 userId = user.id;
             }
@@ -47,7 +58,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Upsert subscription (update if endpoint exists, insert otherwise)
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('notification_subscriptions')
             .upsert({
                 user_id: userId,
@@ -73,7 +84,7 @@ export async function POST(request: NextRequest) {
 
         // Initialize default notification settings if user is authenticated
         if (userId) {
-            await supabaseAdmin
+            await getSupabaseAdmin()
                 .from('notification_settings')
                 .upsert({
                     user_id: userId,
@@ -113,7 +124,7 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
             .from('notification_subscriptions')
             .update({ is_active: false })
             .eq('endpoint', endpoint);

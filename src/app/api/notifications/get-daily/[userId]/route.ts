@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { calculateDailyNotifications } from '@/lib/calculateNotificationTimes';
 
-// Server-side Supabase client
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-loaded Supabase admin client (prevents build errors when env vars are missing)
+let supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+    if (!supabaseAdmin) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!url || !key) {
+            throw new Error('Missing Supabase credentials');
+        }
+
+        supabaseAdmin = createClient(url, key);
+    }
+    return supabaseAdmin;
+}
 
 export async function GET(
     request: NextRequest,
@@ -23,7 +34,7 @@ export async function GET(
         }
 
         // Get user's notification settings
-        const { data: settings, error: settingsError } = await supabaseAdmin
+        const { data: settings, error: settingsError } = await getSupabaseAdmin()
             .from('notification_settings')
             .select('*')
             .eq('user_id', userId)
@@ -43,7 +54,7 @@ export async function GET(
         let madhab = 'Hanafi';
 
         if (!latitude || !longitude) {
-            const { data: profile } = await supabaseAdmin
+            const { data: profile } = await getSupabaseAdmin()
                 .from('profiles')
                 .select('madhab')
                 .eq('id', userId)
