@@ -38,6 +38,115 @@ export interface PrayerReminder {
 let cachedPrayerTimes: PrayerTimes | null = null;
 let cacheDate: string | null = null;
 
+// Location cache key
+const LOCATION_STORAGE_KEY = 'prayer_location';
+
+interface SavedLocation {
+    latitude: number;
+    longitude: number;
+    city?: string;
+    timestamp: number;
+}
+
+/**
+ * Get user's location with smart caching
+ * - Silently uses live location when GPS is on
+ * - Uses last saved location when GPS is off
+ * - Requests permission only once (first use)
+ */
+async function getUserLocation(): Promise<{ latitude: number; longitude: number }> {
+    // Try to get current location silently (no prompt if already granted)
+    const currentLocation = await tryGeoLocation();
+
+    if (currentLocation) {
+        // Save for offline use
+        saveLocation(currentLocation);
+        return currentLocation;
+    }
+
+    // GPS is off or denied, use last saved location
+    const saved = getSavedLocation();
+    if (saved) {
+        console.log('📍 Using saved location from', new Date(saved.timestamp).toLocaleString());
+        return { latitude: saved.latitude, longitude: saved.longitude };
+    }
+
+    // No saved location, fall back to Dhaka (Bangladesh default)
+    console.log('📍 Using fallback location: Dhaka');
+    return { latitude: 23.8103, longitude: 90.4125 };
+}
+
+/**
+ * Try to get current geolocation
+ * - Returns null if permission denied or timeout
+ * - Does NOT show prompt if permission already granted
+ */
+function tryGeoLocation(): Promise<{ latitude: number; longitude: number } | null> {
+    return new Promise((resolve) => {
+        if (!('geolocation' in navigator)) {
+            resolve(null);
+            return;
+        }
+
+        // Set timeout to avoid hanging
+        const timeout = setTimeout(() => {
+            resolve(null);
+        }, 5000); // 5 second timeout
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                clearTimeout(timeout);
+                console.log('📍 Got live location:', position.coords.latitude, position.coords.longitude);
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+            },
+            (error) => {
+                clearTimeout(timeout);
+                // Permission denied or location off - don't spam user with prompts
+                console.log('📍 Geolocation unavailable:', error.message);
+                resolve(null);
+            },
+            {
+                enableHighAccuracy: false, // Faster, less battery drain
+                timeout: 5000,
+                maximumAge: 10 * 60 * 1000, // Accept location up to 10 minutes old
+            }
+        );
+    });
+}
+
+/**
+ * Save location to localStorage for offline use
+ */
+function saveLocation(location: { latitude: number; longitude: number }): void {
+    try {
+        const saved: SavedLocation = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(saved));
+        console.log('💾 Location saved to localStorage');
+    } catch (e) {
+        // Ignore storage errors (privacy mode, quota exceeded, etc.)
+    }
+}
+
+/**
+ * Get saved location from localStorage
+ */
+function getSavedLocation(): SavedLocation | null {
+    try {
+        const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
+        if (!stored) return null;
+        return JSON.parse(stored);
+    } catch {
+        return null;
+    }
+}
+
 // Caring reminder messages for each prayer
 const PRAYER_MESSAGES = {
     fajr: [
@@ -76,7 +185,7 @@ function parseTimeToTimestamp(timeStr: string): number {
 
 /**
  * Fetch prayer times from Aladhan API
- * Uses geolocation if available, otherwise defaults to Dhaka
+ * Automatically uses current location when GPS is on, or last saved location
  * 
  * Calculation Methods:
  * 1 = University of Islamic Sciences, Karachi
@@ -85,12 +194,12 @@ function parseTimeToTimestamp(timeStr: string): number {
  * 4 = Umm Al-Qura University, Makkah
  * 5 = Egyptian General Authority of Survey
  */
-export async function fetchPrayerTimes(
-    latitude: number = 23.8103,  // Default: Dhaka
-    longitude: number = 90.4125,
-    method: number = 3  // Muslim World League - safe/moderate calculation
-): Promise<PrayerTimes> {
+export async function fetchPrayerTimes(): Promise<PrayerTimes> {
     const today = new Date().toISOString().split('T')[0];
+
+    // Get user's location (live or saved)
+    const location = await getUserLocation();
+    const method = 3; // Muslim World League - safe/moderate calculation
 
     // Return cached data if available for today
     if (cachedPrayerTimes && cacheDate === today) {
@@ -99,7 +208,7 @@ export async function fetchPrayerTimes(
 
     try {
         const response = await fetch(
-            `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=${method}`,
+            `https://api.aladhan.com/v1/timings?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}`,
             {
                 headers: { 'Accept': 'application/json' },
                 next: { revalidate: 3600 } // Cache for 1 hour in Next.js
