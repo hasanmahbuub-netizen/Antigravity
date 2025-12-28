@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env'
 
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
@@ -8,9 +9,18 @@ export async function middleware(request: NextRequest) {
         },
     })
 
+    const supabaseUrl = getSupabaseUrl();
+    const supabaseAnonKey = getSupabaseAnonKey();
+
+    // Skip auth check if Supabase is not configured
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn('⚠️ Supabase not configured, skipping auth middleware');
+        return response;
+    }
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {

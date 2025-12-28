@@ -4,6 +4,7 @@ import { askGroqFiqh, FiqhResponse } from '@/lib/providers/groq'
 import { askOpenAIFiqh } from '@/lib/providers/openai'
 import { getFallbackStructuredAnswer } from '@/lib/prompts/fiqh-system'
 import { checkRateLimit, getClientIP, sanitizeInput, isValidQuestion } from '@/lib/security'
+import { getSupabaseUrl, getSupabaseAnonKey, hasAIProvider, getAIApiKey } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
@@ -38,10 +39,21 @@ export async function POST(request: NextRequest) {
 
         console.log(`🤖 Fiqh Question: "${question.substring(0, 50)}..."`, { ip: clientIP })
 
-        // Create Supabase client
+        // Create Supabase client with validated env vars
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseAnonKey = getSupabaseAnonKey();
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.error('❌ Supabase not configured');
+            return NextResponse.json(
+                { success: false, error: 'Service temporarily unavailable' },
+                { status: 503 }
+            );
+        }
+
         const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            supabaseUrl,
+            supabaseAnonKey,
             {
                 cookies: {
                     getAll() { return request.cookies.getAll() },
