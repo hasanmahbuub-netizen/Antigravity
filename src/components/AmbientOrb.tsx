@@ -112,6 +112,14 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            drag="y"
+                            dragConstraints={{ top: 0 }}
+                            dragElastic={0.2}
+                            onDragEnd={(_, info) => {
+                                if (info.offset.y > 100 || info.velocity.y > 500) {
+                                    setIsExpanded(false);
+                                }
+                            }}
                         >
                             <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-xl overflow-hidden">
                                 {/* Handle */}
@@ -123,13 +131,13 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                 <div className="flex items-center justify-between px-6 pb-4">
                                     <div className="flex items-center gap-2">
                                         <Moon className="w-4 h-4 text-primary" />
-                                        <span className="text-xs font-bold uppercase tracking-widest text-muted">Spiritual Moment</span>
+                                        <span className="text-xs font-bold uppercase tracking-widest text-foreground/70">Spiritual Moment</span>
                                     </div>
                                     <button
                                         onClick={() => setIsExpanded(false)}
                                         className="w-8 h-8 rounded-full bg-muted/20 flex items-center justify-center hover:bg-muted/30 transition-colors"
                                     >
-                                        <X className="w-4 h-4 text-muted" />
+                                        <X className="w-4 h-4 text-foreground/70" />
                                     </button>
                                 </div>
 
@@ -145,7 +153,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                                     <p className="text-sm font-semibold text-green-600 dark:text-green-400">
                                                         {currentPrayer.current.name} Time
                                                     </p>
-                                                    <p className="text-xs text-muted">
+                                                    <p className="text-xs text-foreground/60">
                                                         {formatTimeUntil(currentPrayer.current.minutesRemaining)} remaining
                                                     </p>
                                                 </div>
@@ -164,7 +172,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-semibold text-foreground">{prayerReminder.prayer.name}</p>
-                                                    <p className="text-xs text-muted">
+                                                    <p className="text-xs text-foreground/60">
                                                         {prayerReminder.status === 'now'
                                                             ? 'Time now'
                                                             : prayerReminder.status === 'upcoming'
@@ -183,7 +191,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                 {/* Dua Section */}
                                 {nudge?.dua && (
                                     <div className="px-6 pb-6">
-                                        <p className="text-xs font-bold uppercase tracking-widest text-muted mb-3">Today's Dua</p>
+                                        <p className="text-xs font-bold uppercase tracking-widest text-foreground/60 mb-3">Today's Dua</p>
                                         <div className="p-4 rounded-2xl bg-card border border-border space-y-4">
                                             {/* Arabic */}
                                             <p className="text-2xl text-primary font-arabic text-center leading-loose" dir="rtl">
@@ -191,21 +199,21 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                             </p>
 
                                             {/* Transliteration */}
-                                            <p className="text-sm text-muted italic text-center">
+                                            <p className="text-sm text-foreground/70 italic text-center">
                                                 {nudge.dua.transliteration}
                                             </p>
 
                                             {/* Translation */}
-                                            <p className="text-sm text-foreground/80 text-center leading-relaxed">
+                                            <p className="text-sm text-foreground/90 text-center leading-relaxed">
                                                 "{nudge.dua.english}"
                                             </p>
 
                                             {/* Context */}
                                             <div className="pt-3 border-t border-border">
-                                                <p className="text-xs text-muted text-center">
+                                                <p className="text-xs text-foreground/60 text-center">
                                                     {nudge.dua.context}
                                                 </p>
-                                                <p className="text-[10px] text-muted/60 text-center mt-1">
+                                                <p className="text-[10px] text-foreground/40 text-center mt-1">
                                                     — {nudge.dua.source}
                                                 </p>
                                             </div>
@@ -214,7 +222,7 @@ export default function AmbientOrb({ className = "" }: AmbientOrbProps) {
                                 )}
 
                                 {/* Swipe hint */}
-                                <div className="flex items-center justify-center gap-2 pb-6 text-muted">
+                                <div className="flex items-center justify-center gap-2 pb-6 text-foreground/50">
                                     <ChevronUp className="w-4 h-4" />
                                     <span className="text-xs">Swipe down to close</span>
                                 </div>

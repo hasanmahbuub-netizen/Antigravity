@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const testimonials = [
     {
@@ -51,6 +52,30 @@ const testimonials = [
 export default function TransformationSection() {
     // Duplicate for seamless loop
     const allTestimonials = [...testimonials, ...testimonials];
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isPaused, setIsPaused] = useState(false);
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        let animationId: number;
+
+        const animate = () => {
+            if (!isPaused && container) {
+                // Smooth auto-scroll
+                if (container.scrollLeft >= container.scrollWidth / 2) {
+                    container.scrollLeft = 0;
+                } else {
+                    container.scrollLeft += 0.5; // Subtle float speed
+                }
+            }
+            animationId = requestAnimationFrame(animate);
+        };
+
+        animationId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animationId);
+    }, [isPaused]);
 
     return (
         <section className="relative w-full bg-[#FAFAF5] py-24 md:py-32 overflow-hidden">
@@ -73,21 +98,31 @@ export default function TransformationSection() {
                 </h2>
             </motion.div>
 
-            {/* CSS Marquee - Smooth Infinite Scroll */}
-            <div className="relative overflow-hidden">
+            {/* Interactive Scroll Container */}
+            <div className="relative w-full">
                 {/* Gradient Fades */}
-                <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#FAFAF5] to-transparent z-10 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#FAFAF5] to-transparent z-10 pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-8 md:w-32 bg-gradient-to-r from-[#FAFAF5] to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-8 md:w-32 bg-gradient-to-l from-[#FAFAF5] to-transparent z-10 pointer-events-none" />
 
-                {/* Scrolling Container */}
-                <div className="flex animate-testimonial-marquee hover:pause-animation">
+                {/* Scroller */}
+                <div
+                    ref={scrollRef}
+                    className="flex overflow-x-auto no-scrollbar pb-8 px-8 md:px-32 relative"
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    onTouchStart={() => setIsPaused(true)}
+                    onTouchEnd={() => setTimeout(() => setIsPaused(false), 2000)} // Resume after delay
+                    style={{ WebkitOverflowScrolling: 'touch' }}
+                >
                     {allTestimonials.map((testimonial, index) => (
                         <div
                             key={index}
                             className="flex-shrink-0 w-[320px] md:w-[380px] mx-3"
                         >
-                            {/* Card */}
-                            <div className="relative h-full p-6 rounded-2xl bg-white border border-[#E5E5E5] shadow-sm hover:shadow-lg hover:border-[#2D5F5D]/20 transition-all duration-300">
+                            <motion.div
+                                className="relative h-full p-6 rounded-2xl bg-white border border-[#E5E5E5] shadow-sm hover:shadow-lg hover:border-[#2D5F5D]/20 transition-all duration-300 select-none"
+                                whileHover={{ y: -5 }}
+                            >
                                 {/* Quote Icon */}
                                 <Quote className="w-8 h-8 text-[#2D5F5D]/20 mb-4" />
 
@@ -117,25 +152,11 @@ export default function TransformationSection() {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     ))}
                 </div>
             </div>
-
-            {/* CSS Keyframes for Marquee */}
-            <style jsx>{`
-                @keyframes testimonialMarquee {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                }
-                .animate-testimonial-marquee {
-                    animation: testimonialMarquee 20s linear infinite;
-                }
-                .animate-testimonial-marquee:hover {
-                    animation-play-state: paused;
-                }
-            `}</style>
         </section>
     );
 }

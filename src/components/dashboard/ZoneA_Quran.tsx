@@ -97,8 +97,18 @@ export default function ZoneA_Quran() {
                                     <div className="w-2 h-2 rounded-full bg-border" />
                                 </div>
 
+                                {/* Verse Headers - Improved Visibility */}
+                                <div className="space-y-1 mb-4 opacity-80">
+                                    <p className="font-arabic text-sm text-foreground/80 leading-loose">
+                                        أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ
+                                    </p>
+                                    <p className="font-arabic text-sm text-foreground/80 leading-loose">
+                                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                                    </p>
+                                </div>
+
                                 {/* Verse - Arabic Only */}
-                                <h1 className="font-arabic text-2xl md:text-3xl leading-loose text-arabic animate-in slide-in-from-bottom-2 duration-700">
+                                <h1 className="font-arabic text-2xl md:text-3xl leading-loose text-foreground animate-in slide-in-from-bottom-2 duration-700 drop-shadow-sm">
                                     {latestVerse?.arabic || "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"}
                                 </h1>
 

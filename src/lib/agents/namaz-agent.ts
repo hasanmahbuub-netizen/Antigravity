@@ -81,16 +81,37 @@ async function getUserLocation(): Promise<{ latitude: number; longitude: number 
  * - Returns null if permission denied or timeout
  * - Does NOT show prompt if permission already granted
  */
+/**
+ * Try to get current geolocation with permission awareness
+ * - Checks permission state BEFORE asking
+ * - Returns null immediately if denied/dismissed
+ * - Does NOT show prompt if permission already granted
+ */
 function tryGeoLocation(): Promise<{ latitude: number; longitude: number } | null> {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
         // Check if we're in browser environment
         if (typeof window === 'undefined' || !('geolocation' in navigator)) {
             resolve(null);
             return;
         }
 
+        try {
+            // Check permission status first if available
+            if ('permissions' in navigator) {
+                const permission = await navigator.permissions.query({ name: 'geolocation' });
+                if (permission.state === 'denied') {
+                    console.log('📍 Geolocation permission explicitly denied. Using fallback.');
+                    resolve(null);
+                    return;
+                }
+            }
+        } catch (e) {
+            // Permissions API not supported or error, proceed cautiously
+        }
+
         // Set timeout to avoid hanging
         const timeout = setTimeout(() => {
+            console.log('📍 Geolocation timed out.');
             resolve(null);
         }, 5000); // 5 second timeout
 
@@ -214,13 +235,18 @@ export async function fetchPrayerTimes(): Promise<PrayerTimes> {
     }
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
         const response = await fetch(
             `https://api.aladhan.com/v1/timings?latitude=${location.latitude}&longitude=${location.longitude}&method=${method}`,
             {
                 headers: { 'Accept': 'application/json' },
-                next: { revalidate: 3600 } // Cache for 1 hour in Next.js
+                next: { revalidate: 3600 }, // Cache for 1 hour in Next.js
+                signal: controller.signal
             }
         );
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             throw new Error('Prayer times API failed');
