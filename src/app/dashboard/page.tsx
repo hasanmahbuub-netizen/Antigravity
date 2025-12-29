@@ -123,11 +123,14 @@ export default function Dashboard() {
             <button
               onClick={() => setShowNudges(!showNudges)}
               className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary/30 transition-colors relative"
+              aria-label="Toggle spiritual nudges"
+              aria-expanded={showNudges}
+              aria-haspopup="true"
             >
-              <Bell className="w-4 h-4 text-muted" />
+              <Bell className="w-4 h-4 text-muted" aria-hidden="true" />
               {/* Notification dot */}
               {(nudge || prayerReminder) && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" aria-hidden="true" />
               )}
             </button>
 

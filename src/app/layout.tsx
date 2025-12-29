@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Naskh_Arabic, Crimson_Text, Scheherazade_New } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -66,10 +67,23 @@ export default function RootLayout({
           "antialiased min-h-screen font-sans text-foreground"
         )}
       >
+        {/* Skip to main content link for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none"
+        >
+          Skip to main content
+        </a>
+
         <AuthProvider>
-          {children}
+          <ErrorBoundary>
+            <main id="main-content" role="main">
+              {children}
+            </main>
+          </ErrorBoundary>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
