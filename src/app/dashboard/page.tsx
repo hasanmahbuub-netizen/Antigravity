@@ -113,7 +113,7 @@ export default function Dashboard() {
               )}
             </div>
           ) : (
-            <p className="text-xs text-muted">Continue your journey</p>
+            <p className="text-xs text-foreground/60">Your spiritual companion</p>
           )}
         </div>
 

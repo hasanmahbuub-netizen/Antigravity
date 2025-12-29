@@ -82,7 +82,7 @@ export default function ZoneA_Quran() {
                                     <p className="text-xs text-muted font-medium">Verse {latestVerse?.ayah || 1}</p>
                                 </div>
                                 <div className="px-3 py-1 rounded-full bg-muted/10 text-[10px] tracking-widest font-bold text-muted uppercase">
-                                    {latestVerse?.ayah === 1 && latestVerse?.surah === 1 ? "GET STARTED" : "CONTINUE PRACTICE"}
+                                    {latestVerse?.ayah === 1 && latestVerse?.surah === 1 ? "BEGIN" : "CONTINUE"}
                                 </div>
                             </div>
 
@@ -115,9 +115,9 @@ export default function ZoneA_Quran() {
 
                             {/* Bottom CTA */}
                             <div className="w-full">
-                                <div className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 group-hover:brightness-110 transition-all">
+                                <div className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary/20 group-hover:brightness-110 group-hover:scale-[1.02] transition-all duration-200">
                                     <Play className="w-4 h-4 fill-current" />
-                                    <span>Continue Practice</span>
+                                    <span>Continue</span>
                                 </div>
                             </div>
                         </>

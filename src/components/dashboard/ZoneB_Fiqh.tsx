@@ -53,8 +53,8 @@ export default function ZoneB_Fiqh() {
     return (
         <section className="h-full flex flex-col gap-3">
             {/* Heading */}
-            <h2 className="text-sm font-bold tracking-widest text-muted uppercase pl-1 font-sans shrink-0">
-                Ask a Question
+            <h2 className="text-sm font-bold tracking-widest text-foreground/70 uppercase pl-1 font-sans shrink-0">
+                Fiqh Q&A
             </h2>
 
             {/* Search Bar - Navigates to /fiqh on click */}
@@ -86,12 +86,12 @@ export default function ZoneB_Fiqh() {
                 </div>
             ) : recentQuestions.length > 0 ? (
                 <div className="flex-1 flex flex-col gap-2 overflow-y-auto no-scrollbar min-h-0">
-                    <p className="text-xs text-muted font-medium pl-1">Recent:</p>
+                    <p className="text-xs text-foreground/50 font-medium pl-1">Recent:</p>
                     {recentQuestions.map((q) => (
                         <Link
                             key={q.id}
                             href={`/fiqh?q=${encodeURIComponent(q.question)}`}
-                            className="p-3 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-primary/[0.02] transition-all flex items-start gap-2 group"
+                            className="p-3 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-primary/5 hover:scale-[1.01] transition-all duration-200 flex items-start gap-2 group"
                         >
                             <MessageCircle className="w-3.5 h-3.5 text-primary/40 mt-0.5 group-hover:text-primary transition-colors shrink-0" />
                             <p className="text-xs text-foreground font-medium line-clamp-1 leading-relaxed">
@@ -102,8 +102,8 @@ export default function ZoneB_Fiqh() {
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xs text-muted text-center">
-                        Type a question above to get started
+                    <p className="text-xs text-foreground/50 text-center">
+                        Ask any Islamic question
                     </p>
                 </div>
             )}

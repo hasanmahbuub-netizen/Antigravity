@@ -153,3 +153,72 @@ html {
 .link-underline:hover::after {
   width: 100%;
 }
+
+/* ============================================
+   BUTTER SMOOTH GLOBAL ENHANCEMENTS
+   ============================================ */
+
+/* Global transition defaults for interactive elements */
+button,
+a,
+[role="button"] {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* GPU acceleration for animated elements */
+.animate-in,
+[class*="animate-"],
+.transition-all {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Smoother hover states */
+button:active,
+a:active,
+[role="button"]:active {
+  transform: scale(0.98);
+}
+
+/* Premium motion blur on fast transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-blur {
+    filter: blur(0px);
+    transition: filter 0.1s ease;
+  }
+
+  .motion-blur:active {
+    filter: blur(0.5px);
+  }
+}
+
+/* Ultra-smooth page transitions */
+main,
+section,
+article {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) {
+
+  button:active,
+  a:active {
+    opacity: 0.8;
+  }
+}
