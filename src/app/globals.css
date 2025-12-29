@@ -7,8 +7,10 @@
   --teal-dark: #1A3B3A;
   --warm-gold: #E8C49A;
   --charcoal: #2B2B2B;
-  --warm-gray: #6B6B6B;
-  --light-gray: #9B9B9B;
+  --warm-gray: #5B5B5B;
+  /* Improved from 6B for better contrast */
+  --light-gray: #7B7B7B;
+  /* Improved from 9B */
   --cream: #F5F1E8;
   --off-white: #FAFAF5;
   --soft-gray-bg: #FAFAFA;
@@ -44,7 +46,8 @@
     --bg-main: var(--deep-navy);
     --surface: #1A2A3A;
     --text-primary: var(--cream);
-    --text-muted: #8F8F8F;
+    --text-muted: #A8A8A8;
+    /* Improved from 8F for better contrast */
     /* Primary is now warm-gold for better contrast in dark mode */
     --accent-primary: var(--warm-gold);
     --accent-secondary: var(--teal);

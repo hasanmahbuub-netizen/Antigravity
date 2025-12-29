@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BookX, Clock, Users, Smartphone, Headphones, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const problems = [
     {
@@ -45,6 +46,29 @@ const problems = [
 export default function ProblemSection() {
     // Duplicate cards for seamless loop
     const allProblems = [...problems, ...problems];
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isPaused, setIsPaused] = useState(false);
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        let animationId: number;
+
+        const animate = () => {
+            if (!isPaused && container) {
+                if (container.scrollLeft >= container.scrollWidth / 2) {
+                    container.scrollLeft = 0;
+                } else {
+                    container.scrollLeft += 0.6; // Smooth auto-scroll
+                }
+            }
+            animationId = requestAnimationFrame(animate);
+        };
+
+        animationId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animationId);
+    }, [isPaused]);
 
     return (
         <section className="relative w-full bg-gradient-to-b from-[#0A1628] to-[#0F1D32] py-24 md:py-32 overflow-hidden">
@@ -70,21 +94,32 @@ export default function ProblemSection() {
                 </p>
             </motion.div>
 
-            {/* CSS Marquee - Smooth Infinite Scroll */}
-            <div className="relative overflow-hidden">
+            {/* Interactive Scroll Container */}
+            <div className="relative w-full">
                 {/* Gradient Fades */}
-                <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0A1628] to-transparent z-10 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0F1D32] to-transparent z-10 pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-8 md:w-24 bg-gradient-to-r from-[#0A1628] to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-8 md:w-24 bg-gradient-to-l from-[#0F1D32] to-transparent z-10 pointer-events-none" />
 
                 {/* Scrolling Container */}
-                <div className="flex animate-marquee hover:pause-animation">
+                <div
+                    ref={scrollRef}
+                    className="flex overflow-x-auto no-scrollbar pb-4 px-6 md:px-24"
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    onTouchStart={() => setIsPaused(true)}
+                    onTouchEnd={() => setTimeout(() => setIsPaused(false), 2000)}
+                    style={{ WebkitOverflowScrolling: 'touch' }}
+                >
                     {allProblems.map((problem, index) => (
                         <div
                             key={index}
                             className="flex-shrink-0 w-[280px] md:w-[320px] mx-3"
                         >
                             {/* Glassmorphism Card */}
-                            <div className="relative h-full p-6 rounded-2xl border border-white/10 backdrop-blur-xl bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+                            <motion.div
+                                className="relative h-full p-6 rounded-2xl border border-white/10 backdrop-blur-xl bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group select-none"
+                                whileHover={{ y: -5 }}
+                            >
                                 {/* Icon */}
                                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5F5D] to-[#1A3B3A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <problem.icon className="w-6 h-6 text-[#E8C49A]" />
@@ -99,13 +134,13 @@ export default function ProblemSection() {
                                 </p>
 
                                 {/* Description */}
-                                <p className="text-sm text-white/50 leading-relaxed">
+                                <p className="text-sm text-white/60 leading-relaxed">
                                     {problem.description}
                                 </p>
 
                                 {/* Decorative Corner */}
                                 <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#2D5F5D]/20 to-transparent rounded-tr-2xl rounded-bl-[40px]" />
-                            </div>
+                            </motion.div>
                         </div>
                     ))}
                 </div>
@@ -119,26 +154,12 @@ export default function ProblemSection() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.3 }}
             >
-                <p className="text-[18px] text-white/60 mb-4">What you need is simple:</p>
+                <p className="text-[18px] text-white/70 mb-4">What you need is simple:</p>
                 <p className="font-serif text-[28px] md:text-[36px] text-[#E8C49A] italic">
                     Listen. Practice. Get feedback.
                 </p>
-                <p className="text-white/40 mt-2">Over and over, until it's perfect.</p>
+                <p className="text-white/50 mt-2">Over and over, until it's perfect.</p>
             </motion.div>
-
-            {/* CSS Keyframes for Marquee */}
-            <style jsx>{`
-                @keyframes marquee {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                }
-                .animate-marquee {
-                    animation: marquee 15s linear infinite;
-                }
-                .animate-marquee:hover {
-                    animation-play-state: paused;
-                }
-            `}</style>
         </section>
     );
 }
