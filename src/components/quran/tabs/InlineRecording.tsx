@@ -367,6 +367,20 @@ export default function InlineRecording({
                             <span className="text-sm font-bold text-amber-500 uppercase tracking-wide">AI Analysis</span>
                         </div>
 
+                        {/* Emotional Mashallah Header */}
+                        <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-2xl p-6 text-center space-y-2">
+                            <span className="text-3xl">{feedback.score >= 90 ? '🌟' : feedback.score >= 75 ? '✨' : feedback.score >= 60 ? '💪' : '🤲'}</span>
+                            <h2 className="font-arabic text-2xl text-primary font-bold">
+                                {feedback.score >= 90 ? 'ماشاء الله' : feedback.score >= 75 ? 'ماشاء الله' : feedback.score >= 60 ? 'جزاك الله خيرا' : 'بارك الله فيك'}
+                            </h2>
+                            <p className="text-sm text-foreground/70">
+                                {feedback.score >= 90 ? 'Excellent recitation! May Allah bless you.' :
+                                    feedback.score >= 75 ? 'Beautiful effort! Keep going.' :
+                                        feedback.score >= 60 ? 'Good progress! Practice makes perfect.' :
+                                            'Every attempt brings you closer to perfection.'}
+                            </p>
+                        </div>
+
                         {/* Score */}
                         <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl p-6 text-center">
                             <span className="text-5xl font-bold text-primary">{feedback.score}%</span>
