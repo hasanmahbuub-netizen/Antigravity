@@ -334,6 +334,32 @@ export default function PracticeScreen() {
                                         onMarkComplete={handleMarkComplete}
                                     />
                                 )}
+
+                                {/* Verse Navigation Footer - Now INSIDE scroll container */}
+                                <footer className="h-16 border-t border-border bg-background/80 backdrop-blur-sm px-4 flex items-center justify-between shrink-0 sticky bottom-0 mt-auto">
+                                    <button
+                                        onClick={handlePrevVerse}
+                                        disabled={currentVerseId === 1}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        aria-label="Go to previous verse"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+                                        <span>Prev</span>
+                                    </button>
+
+                                    <span className="text-xs text-foreground/60">
+                                        Verse {currentVerseId} of {totalAyahs}
+                                    </span>
+
+                                    <button
+                                        onClick={handleNextVerse}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-primary hover:opacity-80 transition-colors"
+                                        aria-label="Go to next verse"
+                                    >
+                                        <span>Next</span>
+                                        <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                </footer>
                             </div>
                         )}
                     </>
@@ -374,32 +400,6 @@ export default function PracticeScreen() {
                 {viewMode === "processing" && <ProcessingView />}
 
             </main>
-
-            {/* Verse Navigation Footer - Minimal */}
-            {viewMode === "tabs" && (
-                <footer className="h-16 border-t border-border bg-background/80 backdrop-blur-sm px-4 flex items-center justify-between shrink-0">
-                    <button
-                        onClick={handlePrevVerse}
-                        disabled={currentVerseId === 1}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                        <span>Prev</span>
-                    </button>
-
-                    <span className="text-xs text-muted">
-                        Verse {currentVerseId} of {totalAyahs}
-                    </span>
-
-                    <button
-                        onClick={handleNextVerse}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-primary hover:opacity-80 transition-colors"
-                    >
-                        <span>Next</span>
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-                </footer>
-            )}
 
             {/* MODALS */}
             {showCompletionModal && (
