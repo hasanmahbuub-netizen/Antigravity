@@ -24,6 +24,17 @@ export default function FeedbackView({
     verseNumber,
     teacherAudioUrl
 }: FeedbackViewProps) {
+    // Get emotional message based on score
+    const getEmotionalMessage = () => {
+        const score = feedback?.score || 0;
+        if (score >= 90) return { title: "ماشاء الله", subtitle: "Excellent recitation! May Allah bless you.", emoji: "🌟" };
+        if (score >= 75) return { title: "ماشاء الله", subtitle: "Beautiful effort! Keep going.", emoji: "✨" };
+        if (score >= 60) return { title: "جزاك الله خيرا", subtitle: "Good progress! Practice makes perfect.", emoji: "💪" };
+        return { title: "بارك الله فيك", subtitle: "Every attempt brings you closer to perfection.", emoji: "🤲" };
+    };
+
+    const emotionalMessage = getEmotionalMessage();
+
     const playTeacherAudio = () => {
         if (teacherAudioUrl) {
             new Audio(teacherAudioUrl).play();
@@ -36,10 +47,16 @@ export default function FeedbackView({
             animate={{ opacity: 1 }}
             className="flex-1 flex flex-col h-full overflow-hidden bg-background"
         >
-            {/* 1. Header (Context) */}
-            <header className="px-6 py-4 flex flex-col items-center border-b border-border/50 shrink-0">
-                <span className="text-sm font-bold font-english text-foreground">{surahName}</span>
-                <p className="text-xs text-muted font-mono mt-1">Verse {verseNumber}</p>
+            {/* 1. Emotional Header with Mashallah */}
+            <header className="px-6 py-6 flex flex-col items-center border-b border-border/50 shrink-0 bg-gradient-to-b from-primary/5 to-transparent">
+                <span className="text-3xl mb-2">{emotionalMessage.emoji}</span>
+                <h1 className="font-arabic text-2xl text-primary font-bold mb-1">{emotionalMessage.title}</h1>
+                <p className="text-sm text-foreground/70 text-center">{emotionalMessage.subtitle}</p>
+                <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-muted font-medium">{surahName}</span>
+                    <span className="text-muted">•</span>
+                    <span className="text-xs text-muted font-mono">Verse {verseNumber}</span>
+                </div>
             </header>
 
             {/* Scrollable Content */}
