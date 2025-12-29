@@ -38,14 +38,55 @@ export interface PrayerReminder {
 let cachedPrayerTimes: PrayerTimes | null = null;
 let cacheDate: string | null = null;
 
-// Location cache key
+// Storage keys
 const LOCATION_STORAGE_KEY = 'prayer_location';
+const PRAYER_TIMES_STORAGE_KEY = 'prayer_times_cache';
 
 interface SavedLocation {
     latitude: number;
     longitude: number;
     city?: string;
     timestamp: number;
+}
+
+/**
+ * Save prayer times to localStorage for offline/network-switch resilience
+ */
+function savePrayerTimesToStorage(times: PrayerTimes): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(PRAYER_TIMES_STORAGE_KEY, JSON.stringify({
+            times,
+            savedAt: Date.now()
+        }));
+        console.log('💾 Prayer times saved to localStorage');
+    } catch (e) {
+        // Ignore storage errors
+    }
+}
+
+/**
+ * Get cached prayer times from localStorage
+ * Returns null if cache is older than 24 hours or for a different date
+ */
+function getPrayerTimesFromStorage(): PrayerTimes | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const stored = localStorage.getItem(PRAYER_TIMES_STORAGE_KEY);
+        if (!stored) return null;
+
+        const { times, savedAt } = JSON.parse(stored);
+        const today = new Date().toISOString().split('T')[0];
+
+        // Check if cache is for today and less than 24h old
+        if (times.date === today && (Date.now() - savedAt) < 24 * 60 * 60 * 1000) {
+            console.log('📖 Using cached prayer times from localStorage');
+            return times;
+        }
+        return null;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -225,14 +266,22 @@ function parseTimeToTimestamp(timeStr: string): number {
 export async function fetchPrayerTimes(): Promise<PrayerTimes> {
     const today = new Date().toISOString().split('T')[0];
 
-    // Get user's location (live or saved)
-    const location = await getUserLocation();
-    const method = 3; // Muslim World League - safe/moderate calculation
-
-    // Return cached data if available for today
+    // 1. Return memory cache if available for today
     if (cachedPrayerTimes && cacheDate === today) {
         return cachedPrayerTimes;
     }
+
+    // 2. Check localStorage cache (survives page reloads and network switches)
+    const storedTimes = getPrayerTimesFromStorage();
+    if (storedTimes) {
+        cachedPrayerTimes = storedTimes;
+        cacheDate = today;
+        return storedTimes;
+    }
+
+    // 3. Get user's location (live or saved)
+    const location = await getUserLocation();
+    const method = 3; // Muslim World League - safe/moderate calculation
 
     try {
         const controller = new AbortController();
@@ -298,9 +347,10 @@ export async function fetchPrayerTimes(): Promise<PrayerTimes> {
             timezone: meta.timezone
         };
 
-        // Cache the result
+        // Cache the result (memory + localStorage)
         cachedPrayerTimes = prayerTimes;
         cacheDate = today;
+        savePrayerTimesToStorage(prayerTimes);
 
         return prayerTimes;
     } catch (error) {

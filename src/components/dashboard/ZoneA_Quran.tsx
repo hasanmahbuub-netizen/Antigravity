@@ -97,23 +97,18 @@ export default function ZoneA_Quran() {
                                     <div className="w-2 h-2 rounded-full bg-border" />
                                 </div>
 
-                                {/* Verse Headers - Improved Visibility */}
-                                <div className="space-y-1 mb-4 opacity-80">
-                                    <p className="font-arabic text-sm text-foreground/80 leading-loose">
+                                {/* Arabic Opening - Awuzu and Bismillah */}
+                                <div className="space-y-3 text-center">
+                                    <p className="font-arabic text-lg md:text-xl text-foreground/90 leading-loose">
                                         أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ
                                     </p>
-                                    <p className="font-arabic text-sm text-foreground/80 leading-loose">
+                                    <h1 className="font-arabic text-2xl md:text-3xl leading-loose text-foreground animate-in slide-in-from-bottom-2 duration-700 drop-shadow-sm">
                                         بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                                    </p>
+                                    </h1>
                                 </div>
 
-                                {/* Verse - Arabic Only */}
-                                <h1 className="font-arabic text-2xl md:text-3xl leading-loose text-foreground animate-in slide-in-from-bottom-2 duration-700 drop-shadow-sm">
-                                    {latestVerse?.arabic || "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"}
-                                </h1>
-
                                 {/* Tap to see meaning hint */}
-                                <p className="text-xs text-muted uppercase tracking-widest">
+                                <p className="text-xs text-foreground/60 uppercase tracking-widest mt-4">
                                     Tap anywhere to practice
                                 </p>
                             </div>

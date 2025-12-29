@@ -22,12 +22,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Time-based greeting and fetch agents data
+  // Islamic greeting (no time-based variation)
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good morning");
-    else if (hour < 17) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
+    setGreeting("Assalamu Alaikum");
 
     // Start notification scheduler with user ID
     async function initNotifications() {
