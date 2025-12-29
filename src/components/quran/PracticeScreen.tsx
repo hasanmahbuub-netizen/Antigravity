@@ -234,7 +234,7 @@ export default function PracticeScreen() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden relative">
+        <div className="flex flex-col min-h-screen bg-background text-foreground relative">
 
             {/* Top Header */}
             {viewMode !== "recording" && viewMode !== "processing" && viewMode !== "feedback" && (
@@ -290,7 +290,7 @@ export default function PracticeScreen() {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 relative flex flex-col overflow-hidden">
+            <main className="flex-1 relative flex flex-col">
 
                 {/* 1. TABS MODE with Swipe Gesture Support */}
                 {viewMode === "tabs" && (
@@ -301,7 +301,7 @@ export default function PracticeScreen() {
                             </div>
                         ) : verseData && (
                             <div
-                                className="flex-1 flex flex-col min-h-0 overflow-y-auto"
+                                className="flex flex-col"
                                 onTouchStart={handleTouchStart}
                                 onTouchEnd={handleTouchEnd}
                             >
