@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable static export for Capacitor mobile app
-  output: 'export',
-  trailingSlash: true,
-
   images: {
     remotePatterns: [
       {
@@ -12,8 +8,6 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    // Required for static export
-    unoptimized: true,
   },
   // Remove console logs in production for performance and security
   compiler: {
@@ -27,4 +21,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
 
