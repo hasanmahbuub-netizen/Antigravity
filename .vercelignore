@@ -1,0 +1,12 @@
+# Ignore large folders
+meek_app/
+node_modules/
+.git/
+.next/
+.turbo/
+
+# Temp files
+*.log
+check_clean.txt
+fetch_env.js
+vercel_env_dump.json
