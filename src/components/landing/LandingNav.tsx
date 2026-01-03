@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { LogIn, User } from "lucide-react";
 
@@ -18,9 +19,14 @@ export default function LandingNav() {
             <div className="max-w-6xl mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2">
-                    <span className="text-xl font-semibold text-[#F5F1E8]">
-                        Meek
-                    </span>
+                    <Image
+                        src="/logo.png"
+                        alt="Meek"
+                        width={80}
+                        height={32}
+                        className="h-8 w-auto"
+                        priority
+                    />
                 </Link>
 
                 {/* Auth Buttons */}

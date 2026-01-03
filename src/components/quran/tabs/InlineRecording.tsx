@@ -427,6 +427,14 @@ export default function InlineRecording({
                             </p>
                         )}
 
+                        {/* Beta Disclaimer */}
+                        <div className="flex items-center gap-2 px-4 py-3 bg-amber-50/50 border border-amber-200/50 rounded-xl">
+                            <span className="text-amber-600 text-xs">⚠️</span>
+                            <p className="text-[11px] text-amber-700/80 leading-relaxed">
+                                Beta: AI analysis is still being refined and may make mistakes. Always verify with a qualified teacher.
+                            </p>
+                        </div>
+
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <button
