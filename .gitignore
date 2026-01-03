@@ -42,3 +42,30 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# Temp/test files (never commit)
+*.log
+check*.txt
+key.txt
+url.txt
+gemini.txt
+vercel_env_dump.json
+
+# Flutter (separate project - do not include)
+meek_app/
+*.dart
+
+# Temp JS scripts
+apply_fix*.js
+confirm_*.js
+diagnose_*.js
+disable_*.js
+fix_*.js
+force_*.js
+monitor_*.js
+permanent_*.js
+set_vercel_env.js
+test_*.js
+update_vercel_env.js
+verify_*.js
+fetch_env.js
