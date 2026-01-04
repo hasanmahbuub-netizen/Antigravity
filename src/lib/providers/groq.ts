@@ -180,21 +180,36 @@ function buildUserPrompt(question: string, madhab: string): string {
     return `
 Question: "${question}"
 
-Provide a comprehensive educational answer following the JSON format.
+═══════════════════════════════════════════════════════════════
+MANDATORY: YOUR ANSWER MUST START WITH A CLEAR RULING
+═══════════════════════════════════════════════════════════════
 
-MANDATORY REQUIREMENTS:
-1. Direct answer from ${madhab} perspective (start with "In the ${madhab} school...")
-2. Detailed reasoning with VERIFIED evidence only
-3. Other madhabs only if positions differ and are DOCUMENTED
-4. Minimum 3 citations with specific, verifiable references
-5. Source verification assessment
-6. Confidence level (High/Medium/Low)
-7. NO hallucinated sources, Hadith references, or scholarly attributions
-8. If uncertain about a source, flag it as uncertain
+YOUR FIRST SENTENCE MUST USE ONE OF THESE FORMATS:
+- "In the ${madhab} school, [X] is PERMISSIBLE (halal) because..."
+- "In the ${madhab} school, [X] is PROHIBITED (haram) because..."
+- "In the ${madhab} school, [X] is MAKRUH (disliked) because..."
+- "In the ${madhab} school, [X] is OBLIGATORY (wajib/fard) because..."
+- "In the ${madhab} school, [X] is RECOMMENDED (mustahab/sunnah) because..."
 
-Do NOT invent citations. Only reference documented Islamic sources.
+BANNED ANSWERS - NEVER SAY THESE:
+❌ "This is addressed through examination of Quran and Hadith..." 
+❌ "The ${madhab} methodology prioritizes evidences..."
+❌ "Scholars have different opinions..." (give ruling FIRST!)
+❌ "Consult a scholar..."
+❌ "It depends on circumstances..." (give the ruling with conditions!)
 
-Output valid JSON only, no markdown formatting.
+YOUR ANSWER MUST INCLUDE:
+1. The clear ruling: halal/haram/permissible/makruh/obligatory
+2. At least ONE specific condition or exception
+3. At least ONE Quran verse OR hadith with Arabic text
+4. Practical guidance the user can follow TODAY
+
+EXAMPLES OF CORRECT ANSWERS:
+✅ "In the ${madhab} school, stock trading is PERMISSIBLE (halal) with conditions: (1) Company's business must be halal, (2) Debt below 33%, (3) Interest income below 5%..."
+✅ "In the ${madhab} school, keeping a dog as a pet is PROHIBITED unless for guarding, herding, or hunting purposes..."
+✅ "In the ${madhab} school, cryptocurrency is PERMISSIBLE with conditions: (1) No gambling/speculation, (2) Actual ownership..."
+
+Output valid, structured JSON. Make directAnswer at least 50 words with real substance including the ruling and conditions.
   `.trim();
 }
 
