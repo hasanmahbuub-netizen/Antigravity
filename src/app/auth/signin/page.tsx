@@ -1,20 +1,45 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Loader2, Mail, Lock } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 function SignInForm() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [localLoading, setLocalLoading] = useState(false)
     const [error, setError] = useState("")
+    const [isPrewarmed, setIsPrewarmed] = useState(false)
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { signIn, signInWithGoogle } = useAuth()
+    const { signIn, signInWithGoogle, user, loading } = useAuth()
+
+    // Pre-warm Supabase connection on mount - reduces login latency
+    useEffect(() => {
+        const prewarmConnection = async () => {
+            try {
+                // Light query to establish connection pool
+                await supabase.auth.getSession()
+                setIsPrewarmed(true)
+                console.log("✅ Supabase connection pre-warmed")
+            } catch (e) {
+                console.warn("Pre-warm failed:", e)
+            }
+        }
+        prewarmConnection()
+    }, [])
+
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (!loading && user) {
+            const redirectTo = searchParams.get('redirect') || '/dashboard'
+            router.push(redirectTo)
+        }
+    }, [user, loading, router, searchParams])
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
