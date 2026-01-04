@@ -326,6 +326,22 @@ export function getFallbackStructuredAnswer(question: string, madhab: string): F
     };
   }
 
+  // Stock Trading / Investment questions - COMMON QUESTION, NEEDS CLEAR ANSWER
+  if (lowerQ.includes('stock') || lowerQ.includes('shares') || lowerQ.includes('trading') || lowerQ.includes('invest') || lowerQ.includes('cryptocurrency') || lowerQ.includes('bitcoin') || lowerQ.includes('forex')) {
+    return {
+      directAnswer: 'In the ' + madhab + ' school, stock trading is PERMISSIBLE (halal) with specific conditions: (1) The company\'s primary business must be halal - not alcohol, gambling, pork, interest-based banking, or weapons. (2) The company should not have excessive debt (debt less than 33% of assets). (3) Interest-bearing income should be less than 5% of total revenue. (4) You must purify any interest income by donating that portion to charity. Day trading with speculation (gambling-like) is discouraged, but long-term investment is encouraged.',
+      reasoning: 'The permissibility is based on the principle that buying shares means owning a portion of a company - which is a form of partnership (musharakah). The Prophet (peace be upon him) engaged in trade and partnerships. However, certain industries are prohibited: riba (interest-based finance like conventional banks), alcohol, gambling, pork, and weapons. Many scholars have established screening criteria: (1) Primary halal business, (2) Debt-to-assets ratio below 33%, (3) Interest income below 5%. AAOIFI and scholars like Mufti Taqi Usmani have published detailed guidelines. For cryptocurrencies like Bitcoin, there is scholarly debate - some permit it as digital property/commodity, others prohibit due to speculation. The ' + madhab + ' approach emphasizes avoiding gharar (excessive uncertainty) and gambling-like speculation.',
+      otherSchools: [
+        { madhab: "Contemporary Scholars", position: "Organizations like AAOIFI have published specific halal stock screening criteria. Many Islamic index funds (like S&P Shariah Index) follow these guidelines. Cryptocurrency rulings vary - some scholars permit, others prohibit." }
+      ],
+      citations: [
+        { source: "Hadith", reference: "Sahih Bukhari", text: "The Prophet (peace be upon him) said: The truthful, trustworthy merchant will be with the prophets, the truthful, and the martyrs on the Day of Resurrection" },
+        { source: "Scholar", reference: "Mufti Taqi Usmani - Fiqh of Islamic Finance", text: "Stock ownership represents real ownership in a company and is permissible if the company\'s business is halal" },
+        { source: "Quran", reference: "Surah Al-Baqarah 2:275", text: "Allah has permitted trade and forbidden interest (riba)" }
+      ]
+    };
+  }
+
   // Patience/Sabr question
   if (lowerQ.includes('patience') || lowerQ.includes('sabr')) {
     return {
