@@ -367,6 +367,38 @@ export function getFallbackStructuredAnswer(question: string, madhab: string): F
     };
   }
 
+  // Zakat / Nisab questions - CRITICAL: This was failing!
+  if (lowerQ.includes('zakat') || lowerQ.includes('nisab') || lowerQ.includes('zakah') || lowerQ.includes('charity') || lowerQ.includes('2.5%') || lowerQ.includes('poor due')) {
+    return {
+      directAnswer: 'In the ' + madhab + ' school, the Nisab (minimum threshold for Zakat) is the value of 87.48 grams of gold OR 612.36 grams of silver. When your wealth exceeds this threshold for one lunar year, Zakat becomes OBLIGATORY (fard) at 2.5% annually. Using the silver standard is more common as it results in a lower threshold, meaning more people qualify to pay Zakat.',
+      reasoning: 'Nisab is based on the Prophet\'s hadith: "No Zakat is due on property mounting to less than five Uqiya (ounces of silver) and no Zakat is due on less than five camels..." (Sahih Bukhari). The gold Nisab equals 20 Dinars (87.48g gold), and silver equals 200 Dirhams (612.36g silver). ' + madhab + ' scholars generally recommend using the silver standard to help more poor people receive Zakat. Zakat is due on: cash, gold/silver, business inventory, stocks (at market value), and other tradeable assets. It is NOT due on personal items like your house, car, or clothes. The 2.5% rate applies to most assets, but agricultural produce has different rates (5-10%).',
+      otherSchools: [
+        { madhab: "Modern Application", position: "Today, you can calculate Nisab by checking current gold/silver prices. Silver Nisab is typically around $400-500 USD, while gold Nisab is around $5,000-6,000 USD depending on market prices." }
+      ],
+      citations: [
+        { source: "Hadith", reference: "Sahih Bukhari 1405", text: "No Zakat is due on less than five Uqiya (ounces) of silver" },
+        { source: "Hadith", reference: "Sunan Abu Dawud 1573", text: "The Prophet fixed Zakat at: one fortieth (2.5%) of gold and silver" },
+        { source: "Quran", reference: "Surah At-Tawbah 9:60", text: "إِنَّمَا الصَّدَقَاتُ لِلْفُقَرَاءِ وَالْمَسَاكِينِ - Zakat is only for the poor and needy..." }
+      ]
+    };
+  }
+
+  // Mortgage / Riba / Interest questions
+  if (lowerQ.includes('mortgage') || lowerQ.includes('interest') || lowerQ.includes('riba') || lowerQ.includes('loan') || lowerQ.includes('bank') || lowerQ.includes('credit')) {
+    return {
+      directAnswer: 'In the ' + madhab + ' school, conventional mortgages with interest (riba) are PROHIBITED (haram). Interest is one of the major sins in Islam. However, Islamic alternatives exist: (1) Murabaha - the bank buys the property and sells it to you at a markup, (2) Ijara - Islamic leasing, (3) Diminishing Musharakah - gradual ownership transfer. Some scholars permit conventional mortgages only in case of extreme necessity (darurah) where Islamic alternatives are unavailable.',
+      reasoning: 'The prohibition of riba is established by: Quran (2:275-279) "Allah has permitted trade and forbidden riba", and multiple hadith including "The Prophet cursed the one who consumes riba, the one who pays it, the one who writes it down, and the two witnesses to it" (Sahih Muslim). ' + madhab + ' scholars are unanimous that conventional interest-based mortgages are prohibited. However, there is scholarly discussion about: (1) The severe housing need in Western countries, (2) Whether renting is a viable long-term alternative. Some scholars like Yusuf al-Qaradawi have issued rulings allowing mortgages for primary residence under specific conditions of necessity, but this remains a minority position. The preferred approach is always to seek Islamic financing alternatives.',
+      otherSchools: [
+        { madhab: "Minority View", position: "Some scholars permit conventional mortgages for primary residence if: (1) No Islamic alternative available, (2) It's for necessity not luxury, (3) You intend to switch to Islamic financing when available." }
+      ],
+      citations: [
+        { source: "Quran", reference: "Surah Al-Baqarah 2:275", text: "وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا - Allah has permitted trade and forbidden riba (interest)" },
+        { source: "Quran", reference: "Surah Al-Baqarah 2:278-279", text: "Fear Allah and give up what remains of riba if you are believers. If you do not, then be warned of war from Allah and His Messenger" },
+        { source: "Hadith", reference: "Sahih Muslim 1598", text: "The Prophet cursed the one who consumes riba, the one who pays it, the one who writes it, and the two witnesses" }
+      ]
+    };
+  }
+
   // Patience/Sabr question
   if (lowerQ.includes('patience') || lowerQ.includes('sabr')) {
     return {
