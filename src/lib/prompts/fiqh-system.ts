@@ -141,15 +141,40 @@ export function buildFiqhPrompt(question: string, madhab: string): string {
 
 "${question}"
 
-REQUIREMENTS FOR YOUR RESPONSE:
-1. If they ask about a DUA - Include the ACTUAL Arabic dua with transliteration and meaning
-2. If they ask about a RULING - State it clearly with evidence
-3. If they ask about a VERSE - Quote the Arabic, transliteration, and translation
-4. If they ask about a HADITH - Quote the actual hadith text
-5. Start your directAnswer with "In the ${madhab} school..."
-6. Never be vague - provide specific, actionable content
+═══════════════════════════════════════════════════════════════
+MANDATORY REQUIREMENTS - YOU MUST FOLLOW ALL OF THESE
+═══════════════════════════════════════════════════════════════
 
-Output valid JSON only. No markdown wrapping.`;
+1. START with a CLEAR RULING - use one of these formats:
+   - "In the ${madhab} school, [X] is PERMISSIBLE (halal) because..."
+   - "In the ${madhab} school, [X] is PROHIBITED (haram) because..."
+   - "In the ${madhab} school, [X] is MAKRUH (disliked) because..."
+   - "In the ${madhab} school, [X] is OBLIGATORY (wajib/fard) because..."
+   - "In the ${madhab} school, [X] is RECOMMENDED (mustahab/sunnah) because..."
+
+2. NEVER GIVE A GENERIC ANSWER like:
+   - "This is addressed through examination of Quran and Hadith..." ❌ BANNED
+   - "The ${madhab} methodology prioritizes evidences..." ❌ BANNED
+   - "Scholars have different opinions..." ❌ BANNED (give the ruling first!)
+   - "You should consult a scholar..." ❌ BANNED
+
+3. ALWAYS INCLUDE:
+   - The specific ruling (halal/haram/permissible/obligatory)
+   - AT LEAST ONE specific condition or exception
+   - AT LEAST ONE Quran verse OR hadith with actual Arabic text
+   - Practical guidance the user can follow
+
+4. FOR ANY TOPIC YOU DON'T KNOW:
+   - Research using your training data to find the ${madhab} position
+   - If truly unknown, still give the closest analogical ruling
+   - NEVER return a generic "methodology" answer
+
+5. EXAMPLES OF GOOD ANSWERS:
+   - "In the ${madhab} school, keeping a dog as a pet is PROHIBITED unless for guarding, herding, or hunting..."
+   - "In the ${madhab} school, tattoos are PROHIBITED (haram) because the Prophet said..."
+   - "In the ${madhab} school, cryptocurrency trading is PERMISSIBLE with conditions: (1)..."
+
+Output valid JSON only. No markdown wrapping. Make the directAnswer at least 50 words with real substance.`;
 }
 
 export interface FiqhStructuredAnswer {
@@ -356,21 +381,14 @@ export function getFallbackStructuredAnswer(question: string, madhab: string): F
     };
   }
 
-  // Generic fallback - still provide substance
-  const madhabBooks = madhab.toLowerCase() === 'hanafi'
-    ? 'Al-Hidayah and Radd al-Muhtar'
-    : madhab.toLowerCase() === 'shafi'
-      ? 'Al-Umm and Minhaj al-Talibin'
-      : madhab.toLowerCase() === 'maliki'
-        ? 'Al-Muwatta and Risala'
-        : 'Al-Mughni and Zad al-Maad';
-
+  // Generic fallback - urge specific question instead of methodology answer
   return {
-    directAnswer: 'In the ' + madhab + ' school, this question is addressed through examination of the Quran, authentic Hadith, and scholarly consensus (ijma). The ' + madhab + ' methodology prioritizes specific evidences.',
-    reasoning: 'The ' + madhab + ' school approaches fiqh questions systematically: first examining relevant Quranic verses, then authentic hadith narrations, then scholarly consensus, and finally analogical reasoning (qiyas) where applicable. Classical ' + madhab + ' texts like ' + madhabBooks + ' contain detailed discussions on most fiqh issues.',
+    directAnswer: 'In the ' + madhab + ' school, I need more specific details to give you a clear halal/haram ruling. Please rephrase your question to be more specific. For example, instead of asking generally about "business," ask "Is dropshipping halal?" or "Is taking a bank loan for a house halal?" I will then provide you with the specific ' + madhab + ' ruling with evidence from Quran and Hadith.',
+    reasoning: 'The ' + madhab + ' school provides specific rulings for specific situations. General questions may have different answers depending on the exact circumstances. For example, buying and selling is halal, but selling alcohol is haram. Please provide: (1) The specific action you want to know about, (2) The context or purpose, (3) Any relevant details. I will then give you a clear ruling with evidence.',
     otherSchools: [],
     citations: [
-      { source: "Quran", reference: "Surah An-Nahl 16:43", text: "فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ - Ask the people of knowledge if you do not know" }
+      { source: "Quran", reference: "Surah Al-Baqarah 2:275", text: "وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا - Allah has permitted trade and forbidden interest" },
+      { source: "Hadith", reference: "Sahih Muslim", text: "What is halal is clear and what is haram is clear, and between them are doubtful matters" }
     ]
   };
 }
