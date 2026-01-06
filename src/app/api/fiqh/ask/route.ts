@@ -88,36 +88,38 @@ export async function POST(request: NextRequest) {
 
         console.log(`📚 Using madhab: ${madhab}`)
 
-        // Check cache first
-        const { data: cached } = await supabase
-            .from('fiqh_questions')
-            .select('answer, created_at')
-            .ilike('question', question.trim())
-            .eq('madhab', madhab)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
+        // ⚠️ CACHE DISABLED TEMPORARILY - was returning old bad answers
+        // TODO: Clear cache and re-enable after fixing prompts
+        // const { data: cached } = await supabase
+        //     .from('fiqh_questions')
+        //     .select('answer, created_at')
+        //     .ilike('question', question.trim())
+        //     .eq('madhab', madhab)
+        //     .order('created_at', { ascending: false })
+        //     .limit(1)
+        //     .maybeSingle()
+        //
+        // if (cached?.answer) {
+        //     console.log(`✅ Cache hit (${Date.now() - startTime}ms)`)
+        //     try {
+        //         const parsedAnswer = typeof cached.answer === 'string'
+        //             ? JSON.parse(cached.answer)
+        //             : cached.answer
+        //
+        //         return NextResponse.json({
+        //             success: true,
+        //             data: parsedAnswer,
+        //             madhab,
+        //             provider: 'cache',
+        //             cached: true,
+        //             timing: Date.now() - startTime
+        //         })
+        //     } catch (parseError) {
+        //         console.warn('⚠️ Failed to parse cached answer:', parseError);
+        //     }
+        // }
 
-        if (cached?.answer) {
-            console.log(`✅ Cache hit (${Date.now() - startTime}ms)`)
-            try {
-                const parsedAnswer = typeof cached.answer === 'string'
-                    ? JSON.parse(cached.answer)
-                    : cached.answer
-
-                return NextResponse.json({
-                    success: true,
-                    data: parsedAnswer,
-                    madhab,
-                    provider: 'cache',
-                    cached: true,
-                    timing: Date.now() - startTime
-                })
-            } catch (parseError) {
-                console.warn('⚠️ Failed to parse cached answer:', parseError);
-                // Continue to fetch fresh answer
-            }
-        }
+        console.log('🔄 Fetching fresh AI response (cache disabled)...')
 
         // API FALLBACK CHAIN: Groq → Gemini → OpenAI → Static
         let fiqhResponse: FiqhResponse | null = null;
