@@ -367,8 +367,8 @@ export function getFallbackStructuredAnswer(question: string, madhab: string): F
     };
   }
 
-  // Zakat / Nisab questions - CRITICAL: This was failing!
-  if (lowerQ.includes('zakat') || lowerQ.includes('nisab') || lowerQ.includes('zakah') || lowerQ.includes('charity') || lowerQ.includes('2.5%') || lowerQ.includes('poor due')) {
+  // Zakat / Nisab questions - CRITICAL: Extended pattern matching
+  if (lowerQ.includes('zakat') || lowerQ.includes('nisab') || lowerQ.includes('zakah') || lowerQ.includes('charity') || lowerQ.includes('2.5%') || lowerQ.includes('poor due') || lowerQ.includes('threshold') || lowerQ.includes('minimum wealth')) {
     return {
       directAnswer: 'In the ' + madhab + ' school, the Nisab (minimum threshold for Zakat) is the value of 87.48 grams of gold OR 612.36 grams of silver. When your wealth exceeds this threshold for one lunar year, Zakat becomes OBLIGATORY (fard) at 2.5% annually. Using the silver standard is more common as it results in a lower threshold, meaning more people qualify to pay Zakat.',
       reasoning: 'Nisab is based on the Prophet\'s hadith: "No Zakat is due on property mounting to less than five Uqiya (ounces of silver) and no Zakat is due on less than five camels..." (Sahih Bukhari). The gold Nisab equals 20 Dinars (87.48g gold), and silver equals 200 Dirhams (612.36g silver). ' + madhab + ' scholars generally recommend using the silver standard to help more poor people receive Zakat. Zakat is due on: cash, gold/silver, business inventory, stocks (at market value), and other tradeable assets. It is NOT due on personal items like your house, car, or clothes. The 2.5% rate applies to most assets, but agricultural produce has different rates (5-10%).',
@@ -413,14 +413,47 @@ export function getFallbackStructuredAnswer(question: string, madhab: string): F
     };
   }
 
-  // Generic fallback - urge specific question instead of methodology answer
+  // Dropshipping / E-commerce questions
+  if (lowerQ.includes('dropship') || lowerQ.includes('ecommerce') || lowerQ.includes('e-commerce') || lowerQ.includes('online sell') || lowerQ.includes('amazon') || lowerQ.includes('shopify')) {
+    return {
+      directAnswer: 'In the ' + madhab + ' school, dropshipping is PERMISSIBLE (halal) with specific conditions: (1) You must own or have legal possession of the item before selling - many scholars consider having a binding agreement with the supplier sufficient. (2) The product must be halal - no alcohol, pork, gambling items, inappropriate content. (3) Full transparency with buyers about shipping times and product details. (4) No deception about quality or origin. The key principle is that Islam permits trade (tijara) as long as it is honest and the items are halal.',
+      reasoning: 'The permissibility is based on the Quran verse "Allah has permitted trade" (2:275) and the hadith that the Prophet engaged in trade. The main concern in dropshipping is the hadith "Do not sell what you do not have" - however, most contemporary scholars permit dropshipping because: (1) You have a binding contract with the supplier, (2) The item exists even if not in your physical possession, (3) This is similar to the concept of Salam (advance payment) contracts. Scholars like the Fiqh Council and Mufti Taqi Usmani have permitted this form of trade with the conditions mentioned.',
+      otherSchools: [
+        { madhab: "Contemporary Scholars", position: "Most permit dropshipping with conditions: halal products, transparent dealings, binding supplier agreement. Some stricter scholars require physical possession first." }
+      ],
+      citations: [
+        { source: "Quran", reference: "Surah Al-Baqarah 2:275", text: "Allah has permitted trade and forbidden riba" },
+        { source: "Hadith", reference: "Sunan Abu Dawud", text: "Do not sell what you do not have" },
+        { source: "Scholar", reference: "Contemporary Fiqh Council", text: "Online selling with binding supplier contracts is permissible" }
+      ]
+    };
+  }
+
+  // Work / Job / Employment questions
+  if (lowerQ.includes('work') || lowerQ.includes('job') || lowerQ.includes('employ') || lowerQ.includes('career') || lowerQ.includes('profession') || lowerQ.includes('haram job') || lowerQ.includes('halal job')) {
+    return {
+      directAnswer: 'In the ' + madhab + ' school, working in banks or conventional financial institutions that deal with interest (riba) is PROHIBITED (haram) for positions that directly involve interest transactions. However, support roles like IT, cleaning, or security are disputed - some scholars permit them while others prohibit. The ruling depends on your direct involvement: writing interest contracts, calculating interest, or processing riba transactions is clearly haram. Working in halal departments of mixed institutions is more debatable.',
+      reasoning: 'The prohibition is based on the hadith: "The Prophet cursed the one who consumes riba, the one who pays it, the one who writes it, and the two witnesses to it" (Sahih Muslim). This includes those who facilitate riba transactions. However, scholars distinguish between: (1) Direct haram work - writing loans, calculating interest (clearly haram), (2) Indirect support - IT, security, cleaning (disputed - some permit as the sin is on those who transact), (3) Halal departments - Islamic banking divisions in conventional banks (generally permitted). The safest path is to seek employment that doesn\'t involve any facilitation of haram.',
+      otherSchools: [
+        { madhab: "Practical Guidance", position: "If currently in such a job, seek alternatives while working. The income earned should be purified by giving extra charity. Prioritize finding halal employment." }
+      ],
+      citations: [
+        { source: "Hadith", reference: "Sahih Muslim 1598", text: "The Prophet cursed the one who consumes riba, pays it, writes it, and witnesses it" },
+        { source: "Quran", reference: "Surah Al-Baqarah 2:278-279", text: "Fear Allah and give up what remains of riba if you are believers" },
+        { source: "Scholar", reference: "Ibn Qudamah - Al-Mughni", text: "Any assistance in sin is itself sinful based on 'Do not cooperate in sin'" }
+      ]
+    };
+  }
+
+  // Generic fallback - NOW GIVES A REAL ANSWER ATTEMPT instead of asking to rephrase
   return {
-    directAnswer: 'In the ' + madhab + ' school, I need more specific details to give you a clear halal/haram ruling. Please rephrase your question to be more specific. For example, instead of asking generally about "business," ask "Is dropshipping halal?" or "Is taking a bank loan for a house halal?" I will then provide you with the specific ' + madhab + ' ruling with evidence from Quran and Hadith.',
-    reasoning: 'The ' + madhab + ' school provides specific rulings for specific situations. General questions may have different answers depending on the exact circumstances. For example, buying and selling is halal, but selling alcohol is haram. Please provide: (1) The specific action you want to know about, (2) The context or purpose, (3) Any relevant details. I will then give you a clear ruling with evidence.',
+    directAnswer: 'In the ' + madhab + ' school, your question touches on a topic where the ruling depends on specific circumstances. Generally, Islam follows the principle that everything is PERMISSIBLE (halal) unless there is specific evidence making it prohibited. The Quran states: "He has explained to you in detail what is forbidden to you" (6:119). If an action does not fall under clearly prohibited categories (shirk, riba, zina, gambling, intoxicants, fraud, harm to others), then it is likely permissible with conditions of moderation and good intention.',
+    reasoning: 'The ' + madhab + ' school follows the principle of original permissibility (al-asl fil-ashya al-ibaha) - meaning things are halal by default unless proven otherwise. This is based on the Quran verse "It is He who created for you all that is on earth" (2:29). The prohibited categories are: (1) Shirk - associating partners with Allah, (2) Riba - interest/usury, (3) Zina - unlawful sexual relations, (4) Khamr - intoxicants, (5) Maysir - gambling, (6) Consuming haram - pork, blood, carrion, (7) Dhulm - oppression/injustice. If your question doesn\'t clearly fall into these, the likely ruling is permissible with conditions.',
     otherSchools: [],
     citations: [
-      { source: "Quran", reference: "Surah Al-Baqarah 2:275", text: "وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا - Allah has permitted trade and forbidden interest" },
-      { source: "Hadith", reference: "Sahih Muslim", text: "What is halal is clear and what is haram is clear, and between them are doubtful matters" }
+      { source: "Quran", reference: "Surah Al-An'am 6:119", text: "He has explained to you in detail what is forbidden to you" },
+      { source: "Quran", reference: "Surah Al-Baqarah 2:29", text: "It is He who created for you all that is on earth" },
+      { source: "Hadith", reference: "Tirmidhi", text: "What Allah made lawful is lawful, what He made unlawful is unlawful, and what He was silent about is pardoned" }
     ]
   };
 }
