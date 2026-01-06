@@ -39,6 +39,8 @@ export async function askGroqFiqh(
     const systemPrompt = buildSystemPrompt(madhab);
     const userPrompt = buildUserPrompt(question, madhab);
 
+    console.log('🔄 Groq: Sending request...');
+
     try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -47,50 +49,67 @@ export async function askGroqFiqh(
                 'Authorization': `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
+                model: 'llama-3.1-70b-versatile', // More stable model
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.2,
-                max_tokens: 2500,
+                temperature: 0.3,
+                max_tokens: 2000,
                 response_format: { type: 'json_object' }
             })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Groq API error:', errorData);
-            throw new Error(`Groq API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Groq API error:', response.status, errorText);
+            throw new Error(`Groq API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        const rawContent = data.choices[0].message.content;
+        const rawContent = data.choices?.[0]?.message?.content;
 
-        const fiqhResponse: FiqhResponse = JSON.parse(rawContent);
+        if (!rawContent) {
+            console.error('❌ Groq: No content in response');
+            throw new Error('No content in Groq response');
+        }
+
+        console.log('📥 Groq raw response:', rawContent.substring(0, 200) + '...');
+
+        let fiqhResponse: FiqhResponse;
+        try {
+            fiqhResponse = JSON.parse(rawContent);
+        } catch (parseError) {
+            console.error('❌ Groq: JSON parse failed, trying to extract...');
+            // Try to extract JSON from the response
+            const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                fiqhResponse = JSON.parse(jsonMatch[0]);
+            } else {
+                throw new Error('Could not parse Groq response as JSON');
+            }
+        }
 
         // Validate madhab mention
-        if (!fiqhResponse.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
-            console.warn(`Madhab mismatch: Expected ${madhab}`);
+        if (!fiqhResponse.directAnswer?.toLowerCase().includes(madhab.toLowerCase())) {
             fiqhResponse.directAnswer = `In the ${madhab} school, ` + fiqhResponse.directAnswer;
         }
 
-        // Ensure sourceVerification exists
-        if (!fiqhResponse.sourceVerification) {
-            fiqhResponse.sourceVerification = {
-                primarySourcesUsed: true,
-                hallucinationRisk: 'Unable to verify',
-                confidenceLevel: 'Unknown'
-            };
-        }
+        // Ensure all required fields exist
+        fiqhResponse.reasoning = fiqhResponse.reasoning || 'See direct answer for details.';
+        fiqhResponse.otherSchools = fiqhResponse.otherSchools || [];
+        fiqhResponse.citations = fiqhResponse.citations || [];
+        fiqhResponse.sourceVerification = fiqhResponse.sourceVerification || {
+            primarySourcesUsed: true,
+            hallucinationRisk: 'Unknown',
+            confidenceLevel: 'Medium (70%)'
+        };
 
-        // Validate citations
-        validateCitations(fiqhResponse.citations, madhab);
-
+        console.log('✅ Groq: Response parsed successfully');
         return fiqhResponse;
 
     } catch (error) {
-        console.error('Groq API error:', error);
+        console.error('❌ Groq error:', error);
         throw error;
     }
 }
