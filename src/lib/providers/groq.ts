@@ -41,6 +41,10 @@ export async function askGroqFiqh(
 
     console.log('🔄 Groq: Sending request...');
 
+    // Add 10 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -55,10 +59,13 @@ export async function askGroqFiqh(
                     { role: 'user', content: userPrompt }
                 ],
                 temperature: 0.3,
-                max_tokens: 2000,
+                max_tokens: 800, // Reduced for faster responses
                 response_format: { type: 'json_object' }
-            })
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorText = await response.text();
