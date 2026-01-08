@@ -12,19 +12,21 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: true, // Enable for debugging
-    // Handle back button behavior
-    backgroundColor: '#0A1628'
+    webContentsDebuggingEnabled: true,
+    backgroundColor: '#0A1628',
+    // Append user agent for cookie handling
+    appendUserAgent: 'MeekApp/1.0'
   },
   plugins: {
-    // Keyboard configuration
     Keyboard: {
       resize: 'body',
       style: 'dark'
+    },
+    CapacitorCookies: {
+      enabled: true
     }
   }
 };
 
 export default config;
-
 

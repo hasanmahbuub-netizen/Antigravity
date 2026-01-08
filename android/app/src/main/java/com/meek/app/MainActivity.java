@@ -1,8 +1,10 @@
 package com.meek.app;
 
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -31,6 +33,21 @@ public class MainActivity extends BridgeActivity {
                 }, 
                 PERMISSION_REQUEST_CODE);
         }
+        
+        // Enable cookie and session persistence
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(getBridge().getWebView(), true);
+        
+        // Configure WebView for session persistence
+        WebView webView = getBridge().getWebView();
+        if (webView != null) {
+            WebSettings settings = webView.getSettings();
+            settings.setDomStorageEnabled(true);           // Enable localStorage
+            settings.setDatabaseEnabled(true);              // Enable database storage
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT); // Use cache
+            settings.setAppCacheEnabled(true);              // Enable app cache
+        }
     }
     
     @Override
@@ -48,5 +65,12 @@ public class MainActivity extends BridgeActivity {
                 mPermissionRequest = null;
             }
         }
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Flush cookies when app goes to background
+        CookieManager.getInstance().flush();
     }
 }
