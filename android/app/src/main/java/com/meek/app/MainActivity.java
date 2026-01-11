@@ -46,7 +46,6 @@ public class MainActivity extends BridgeActivity {
             settings.setDomStorageEnabled(true);           // Enable localStorage
             settings.setDatabaseEnabled(true);              // Enable database storage
             settings.setCacheMode(WebSettings.LOAD_DEFAULT); // Use cache
-            settings.setAppCacheEnabled(true);              // Enable app cache
         }
     }
     
@@ -68,7 +67,7 @@ public class MainActivity extends BridgeActivity {
     }
     
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         // Flush cookies when app goes to background
         CookieManager.getInstance().flush();
