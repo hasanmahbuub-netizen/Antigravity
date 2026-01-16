@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Naskh_Arabic, Crimson_Text, Scheherazade_New } from "next/font/google";
+import { Inter, Noto_Naskh_Arabic, Crimson_Text, Scheherazade_New, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -25,6 +25,12 @@ const scheherazadeNew = Scheherazade_New({
   weight: ["400", "700"],
   variable: "--font-arabic-display",
   subsets: ["arabic"],
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  weight: "400",
+  variable: "--font-display",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -64,6 +70,7 @@ export default function RootLayout({
           notoNaskhArabic.variable,
           crimsonText.variable,
           scheherazadeNew.variable,
+          dmSerifDisplay.variable,
           "antialiased min-h-screen font-sans text-foreground"
         )}
       >

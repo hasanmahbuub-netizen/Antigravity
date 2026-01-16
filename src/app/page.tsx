@@ -10,6 +10,7 @@ import PricingSection from "@/components/landing/PricingSection";
 import FAQSection from "@/components/landing/FAQSection";
 import TransformationSection from "@/components/landing/TransformationSection";
 import CTASection from "@/components/landing/CTASection";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
     return (
@@ -43,6 +44,9 @@ export default function LandingPage() {
 
             {/* 9. Final CTA - Strong Call to Action */}
             <CTASection />
+
+            {/* 10. Footer with Download & Social Links */}
+            <LandingFooter />
         </main>
     );
 }
