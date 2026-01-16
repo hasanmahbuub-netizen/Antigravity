@@ -53,7 +53,7 @@ export async function askGroqFiqh(
                 'Authorization': `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'mixtral-8x7b-32768', // Fast model for quick responses
+                model: 'llama-3.3-70b-versatile', // Most reliable model for instruction following
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
