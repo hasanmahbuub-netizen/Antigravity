@@ -45,7 +45,10 @@ public class MainActivity extends BridgeActivity {
             WebSettings settings = webView.getSettings();
             settings.setDomStorageEnabled(true);           // Enable localStorage
             settings.setDatabaseEnabled(true);              // Enable database storage
-            settings.setCacheMode(WebSettings.LOAD_DEFAULT); // Use cache
+            settings.setCacheMode(WebSettings.LOAD_NO_CACHE); // Force fresh content from server
+            
+            // Clear any existing cache
+            webView.clearCache(true);
         }
     }
     
