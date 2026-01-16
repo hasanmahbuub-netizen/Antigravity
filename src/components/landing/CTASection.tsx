@@ -69,7 +69,7 @@ export default function CTASection() {
                             whileHover={{ scale: 1.02 }}
                         >
                             <Download className="w-5 h-5" />
-                            Download Android App
+                            Download Meek (for Android)
                         </motion.button>
                     </Link>
                 </div>
