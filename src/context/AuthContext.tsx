@@ -207,11 +207,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
         console.log('🌐 [GOOGLE SIGNIN] Starting...')
         try {
-            // Use production URL from env var if available, otherwise use current origin
-            const redirectUrl = process.env.NEXT_PUBLIC_APP_URL
-                ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
-                : `${window.location.origin}/auth/callback`;
+            // Detect if we're in the mobile app via user agent
+            const isMobileApp = typeof window !== 'undefined' &&
+                navigator.userAgent.includes('MeekApp');
 
+            // Use mobile callback for app, regular callback for web
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+            const callbackPath = isMobileApp ? '/auth/callback/mobile' : '/auth/callback';
+            const redirectUrl = `${baseUrl}${callbackPath}`;
+
+            console.log('📍 [GOOGLE SIGNIN] Mobile app:', isMobileApp)
             console.log('📍 [GOOGLE SIGNIN] Redirect URL:', redirectUrl)
 
             const { data, error } = await supabase.auth.signInWithOAuth({
