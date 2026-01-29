@@ -19,7 +19,7 @@ const TikTokIcon = () => (
     </svg>
 );
 
-const APK_DOWNLOAD_URL = "https://github.com/hasanmahbuub-netizen/Antigravity/actions/runs/21071950174/artifacts/5156049622";
+const APK_DOWNLOAD_URL = "https://github.com/hasanmahbuub-netizen/Antigravity/actions/runs/21492494593/artifacts/5309224219";
 
 const socialLinks = [
     { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61586337013377", icon: Facebook },
@@ -63,9 +63,7 @@ export default function LandingFooter() {
 
                         {/* Download Button - Blue with Golden Hover */}
                         <Link
-                            href={APK_DOWNLOAD_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href="/download"
                             className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#E8C49A] text-white hover:text-[#0A1628] font-medium rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(232,196,154,0.3)]"
                         >
                             <Download className="w-4 h-4" />

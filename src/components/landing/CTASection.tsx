@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Download, Globe } from "lucide-react";
 
-const APK_DOWNLOAD_URL = "https://github.com/hasanmahbuub-netizen/Antigravity/actions/runs/21071950174/artifacts/5156049622";
-
 export default function CTASection() {
     return (
         <section id="get-started" className="relative w-full bg-gradient-to-b from-[#1A1A1A] to-[#0A1628] py-32 overflow-hidden">
@@ -63,7 +61,7 @@ export default function CTASection() {
                     </Link>
 
                     {/* Secondary: Download APK */}
-                    <Link href={APK_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                    <Link href="/download">
                         <motion.button
                             className="flex items-center gap-3 bg-[#1E3A5F]/60 text-white/90 hover:text-[#0A1628] font-medium px-8 py-4 rounded-full border border-[#1E3A5F] transition-all duration-300 hover:bg-[#E8C49A] hover:border-[#E8C49A] hover:shadow-[0_0_25px_rgba(232,196,154,0.3)]"
                             whileHover={{ scale: 1.02 }}
