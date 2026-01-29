@@ -55,6 +55,7 @@ export const viewport: Viewport = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import CapacitorInit from "@/components/CapacitorInit";
 
 export default function RootLayout({
   children,
@@ -83,6 +84,7 @@ export default function RootLayout({
         </a>
 
         <AuthProvider>
+          <CapacitorInit />
           <ErrorBoundary>
             <main id="main-content" role="main">
               {children}
