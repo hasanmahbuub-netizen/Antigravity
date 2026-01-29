@@ -14,45 +14,44 @@ import android.content.pm.PackageManager;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
-    
+
     private static final int PERMISSION_REQUEST_CODE = 1001;
     private PermissionRequest mPermissionRequest;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Request audio permission on app start if not granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, 
-                new String[]{
-                    Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.MODIFY_AUDIO_SETTINGS
-                }, 
-                PERMISSION_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {
+                            Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.MODIFY_AUDIO_SETTINGS
+                    },
+                    PERMISSION_REQUEST_CODE);
         }
-        
+
         // Enable cookie and session persistence
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(getBridge().getWebView(), true);
-        
+
         // Configure WebView for session persistence and FRESH content
         WebView webView = getBridge().getWebView();
         if (webView != null) {
             WebSettings settings = webView.getSettings();
-            settings.setDomStorageEnabled(true);           // Enable localStorage
-            settings.setDatabaseEnabled(true);              // Enable database storage
+            settings.setDomStorageEnabled(true); // Enable localStorage
+            settings.setDatabaseEnabled(true); // Enable database storage
             settings.setCacheMode(WebSettings.LOAD_NO_CACHE); // Force fresh content from server
-            settings.setAppCacheEnabled(false);             // Disable app cache completely
-            
+
             // CRITICAL: Clear ALL cached data to ensure fresh Fiqh responses
-            webView.clearCache(true);       // Clear browser cache
-            webView.clearFormData();        // Clear form data
-            webView.clearHistory();         // Clear navigation history
-            
+            webView.clearCache(true); // Clear browser cache
+            webView.clearFormData(); // Clear form data
+            webView.clearHistory(); // Clear navigation history
+
             // Clear WebView databases (where old responses might be stored)
             try {
                 getApplicationContext().deleteDatabase("webview.db");
@@ -62,13 +61,14 @@ public class MainActivity extends BridgeActivity {
             }
         }
     }
-    
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            // Handle permission result - Capacitor handles WebView permissions automatically
+            // Handle permission result - Capacitor handles WebView permissions
+            // automatically
             if (mPermissionRequest != null) {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mPermissionRequest.grant(mPermissionRequest.getResources());
@@ -79,7 +79,7 @@ public class MainActivity extends BridgeActivity {
             }
         }
     }
-    
+
     @Override
     public void onPause() {
         super.onPause();
