@@ -39,16 +39,27 @@ public class MainActivity extends BridgeActivity {
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(getBridge().getWebView(), true);
         
-        // Configure WebView for session persistence
+        // Configure WebView for session persistence and FRESH content
         WebView webView = getBridge().getWebView();
         if (webView != null) {
             WebSettings settings = webView.getSettings();
             settings.setDomStorageEnabled(true);           // Enable localStorage
             settings.setDatabaseEnabled(true);              // Enable database storage
             settings.setCacheMode(WebSettings.LOAD_NO_CACHE); // Force fresh content from server
+            settings.setAppCacheEnabled(false);             // Disable app cache completely
             
-            // Clear any existing cache
-            webView.clearCache(true);
+            // CRITICAL: Clear ALL cached data to ensure fresh Fiqh responses
+            webView.clearCache(true);       // Clear browser cache
+            webView.clearFormData();        // Clear form data
+            webView.clearHistory();         // Clear navigation history
+            
+            // Clear WebView databases (where old responses might be stored)
+            try {
+                getApplicationContext().deleteDatabase("webview.db");
+                getApplicationContext().deleteDatabase("webviewCache.db");
+            } catch (Exception e) {
+                // Ignore if databases don't exist
+            }
         }
     }
     

@@ -5,14 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Meek',
   webDir: 'android-web',
   server: {
-    // Start directly at signin - skip landing page for mobile app
-    url: 'https://meek-zeta.vercel.app/auth/signin',
+    // Load the webapp - let the web handle routing
+    url: 'https://meek-zeta.vercel.app',
     cleartext: false
   },
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: true,
+    webContentsDebuggingEnabled: false, // Disable for production
     backgroundColor: '#0A1628',
     // Append user agent for cookie handling
     appendUserAgent: 'MeekApp/1.0'
@@ -24,6 +24,10 @@ const config: CapacitorConfig = {
     },
     CapacitorCookies: {
       enabled: true
+    },
+    Browser: {
+      // OAuth will open in Chrome Custom Tabs
+      // and return via deep link
     }
   }
 };

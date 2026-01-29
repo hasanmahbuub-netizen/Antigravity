@@ -16,6 +16,31 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
 });
 
+// Fetch event - CRITICAL: Force network-first for all API calls
+// This ensures the app always gets fresh data from the server
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // Always fetch API calls fresh - NEVER cache these
+    if (url.pathname.startsWith('/api/')) {
+        console.log('[SW] Network-first for API:', url.pathname);
+        event.respondWith(
+            fetch(event.request)
+                .catch((error) => {
+                    console.error('[SW] API fetch failed:', error);
+                    // Return error response instead of cached data
+                    return new Response(JSON.stringify({ error: 'Network error' }), {
+                        status: 503,
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                })
+        );
+        return;
+    }
+
+    // For non-API requests, use default behavior (network with cache fallback)
+});
+
 // Push event - for server-sent push (optional, backup)
 self.addEventListener('push', (event) => {
     console.log('[SW] Push received:', event);
