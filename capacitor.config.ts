@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Meek',
   webDir: 'android-web',
   server: {
-    // Load the webapp - let the web handle routing
-    url: 'https://meek-zeta.vercel.app',
+    // Start at login page for mobile app
+    url: 'https://meek-zeta.vercel.app/auth/signin',
     cleartext: false
   },
   android: {
