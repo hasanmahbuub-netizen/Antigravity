@@ -208,18 +208,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('🌐 [GOOGLE SIGNIN] Starting...')
         try {
             // Detect if we're in the mobile app via user agent
-            const isMobileApp = typeof window !== 'undefined' &&
-                navigator.userAgent.includes('MeekApp');
+            const userAgent = typeof window !== 'undefined' ? navigator.userAgent : '';
+            const isMobileApp = userAgent.includes('MeekApp');
 
-            // Use mobile callback for app, regular callback for web
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-            const callbackPath = isMobileApp ? '/auth/callback/mobile' : '/auth/callback';
-            const redirectUrl = `${baseUrl}${callbackPath}`;
+            console.log('📱 [GOOGLE SIGNIN] User Agent:', userAgent);
+            console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobileApp);
 
-            console.log('📍 [GOOGLE SIGNIN] Mobile app:', isMobileApp)
+            // IMPORTANT: For mobile app, ALWAYS use the mobile callback with explicit domain
+            // This ensures Supabase redirects to the correct callback that returns to the app
+            let redirectUrl: string;
+            if (isMobileApp) {
+                // Hardcoded for reliability - this MUST match what's in Supabase dashboard
+                redirectUrl = 'https://meek-zeta.vercel.app/auth/callback/mobile';
+            } else {
+                // Web: use origin or env var
+                const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+                redirectUrl = `${baseUrl}/auth/callback`;
+            }
+
             console.log('📍 [GOOGLE SIGNIN] Redirect URL:', redirectUrl)
 
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
