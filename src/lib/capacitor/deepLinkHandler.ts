@@ -3,7 +3,7 @@
  * 
  * This module handles deep links from OAuth callbacks.
  * When the user completes Google Sign-In in Chrome, the callback
- * redirects to com.meek.app://auth?tokens... which this handler catches.
+ * redirects to meek://auth-callback?tokens... which this handler catches.
  */
 
 import { App, URLOpenListenerEvent } from '@capacitor/app';
@@ -52,11 +52,11 @@ export async function initDeepLinkHandler(router: { push: (url: string) => void 
 async function handleDeepLink(url: string, router: { push: (url: string) => void }) {
     try {
         // Parse the URL
-        // Format: com.meek.app://auth?access_token=xxx&refresh_token=xxx&next=/dashboard
+        // Format: meek://auth-callback?access_token=xxx&refresh_token=xxx&next=/dashboard
         const urlObj = new URL(url);
 
-        // Check if this is an auth callback
-        if (urlObj.host === 'auth' || urlObj.pathname === '/auth') {
+        // Check if this is an auth callback (meek://auth-callback)
+        if (urlObj.host === 'auth-callback' || urlObj.pathname.includes('auth-callback') || urlObj.protocol === 'meek:') {
             console.log('📱 [DEEP LINK] Processing auth callback...');
 
             const accessToken = urlObj.searchParams.get('access_token');

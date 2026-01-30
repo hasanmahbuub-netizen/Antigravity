@@ -22,20 +22,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep link for OAuth callback - allows external browser to return -->
-            <intent-filter android:autoVerify="true">
+            <!-- Deep link for OAuth callback - meek://auth-callback -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.meek.app" android:host="auth" />
+                <data android:scheme="meek" android:host="auth-callback" />
             </intent-filter>
 
-            <!-- Universal link for meek-zeta.vercel.app -->
-            <intent-filter android:autoVerify="true">
+            <!-- Alternate deep link with com.meek.app scheme -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="meek-zeta.vercel.app" android:pathPrefix="/auth/callback" />
+                <data android:scheme="com.meek.app" />
             </intent-filter>
 
         </activity>

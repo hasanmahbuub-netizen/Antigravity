@@ -45,9 +45,9 @@ export async function GET(request: NextRequest) {
             const accessToken = data.session.access_token
             const refreshToken = data.session.refresh_token
 
-            // Redirect to mobile app via deep link with tokens
-            // The app will then use these tokens to restore the session
-            const deepLink = `com.meek.app://auth?access_token=${accessToken}&refresh_token=${refreshToken}&next=${encodeURIComponent(next)}`
+            // Redirect to mobile app via deep link: meek://auth-callback
+            // Tokens are URL-encoded for safe transmission
+            const deepLink = `meek://auth-callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&next=${encodeURIComponent(next)}`
 
             console.log('📱 [MOBILE OAUTH] Deep link redirect:', deepLink.substring(0, 50) + '...')
 

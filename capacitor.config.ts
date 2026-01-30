@@ -27,7 +27,10 @@ const config: CapacitorConfig = {
     },
     Browser: {
       // OAuth will open in Chrome Custom Tabs
-      // and return via deep link
+    },
+    App: {
+      // Deep link handling for OAuth callback
+      // This tells Capacitor to listen for app://auth-callback URLs
     }
   }
 };
