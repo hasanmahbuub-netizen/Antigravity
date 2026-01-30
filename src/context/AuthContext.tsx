@@ -214,17 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('📱 [GOOGLE SIGNIN] User Agent:', userAgent);
             console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobileApp);
 
-            // IMPORTANT: For mobile app, ALWAYS use the mobile callback with explicit domain
-            // This ensures Supabase redirects to the correct callback that returns to the app
-            let redirectUrl: string;
-            if (isMobileApp) {
-                // Hardcoded for reliability - this MUST match what's in Supabase dashboard
-                redirectUrl = 'https://meek-zeta.vercel.app/auth/callback/mobile';
-            } else {
-                // Web: use origin or env var
-                const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-                redirectUrl = `${baseUrl}/auth/callback`;
-            }
+            // SIMPLIFIED: Use the SAME callback for both mobile and web
+            // Key insight: When OAuth happens IN the WebView (not Chrome), 
+            // the session cookies stay in the WebView - no deep links needed!
+            // The callback URL just needs to be in Supabase's whitelist
+            const redirectUrl = 'https://meek-zeta.vercel.app/auth/callback';
 
             console.log('📍 [GOOGLE SIGNIN] Redirect URL:', redirectUrl)
 
