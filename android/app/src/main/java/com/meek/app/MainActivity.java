@@ -59,26 +59,6 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception e) {
                 // Ignore if databases don't exist
             }
-
-            // CRITICAL: Set WebViewClient to keep ALL navigation in WebView
-            // This prevents OAuth URLs from opening in external Chrome browser
-            webView.setWebViewClient(new android.webkit.WebViewClient() {
-                @Override
-                public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
-                    String url = request.getUrl().toString();
-                    
-                    // Log the URL for debugging
-                    android.util.Log.d("MeekOAuth", "Loading URL: " + url);
-                    
-                    // Allow ALL URLs to load in WebView, including:
-                    // - accounts.google.com (Google OAuth)
-                    // - meek-zeta.vercel.app (our app)
-                    // - supabase URLs (auth service)
-                    // This keeps the session in the same context!
-                    view.loadUrl(url);
-                    return true;
-                }
-            });
         }
     }
 
