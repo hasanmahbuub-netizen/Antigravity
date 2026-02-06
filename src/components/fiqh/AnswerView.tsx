@@ -82,11 +82,11 @@ export default function AnswerView({ question, answer, madhab, onAskAnother }: A
                 </div>
             </div>
 
-            {/* Beta Disclaimer */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-amber-50/50 border border-amber-200/50 rounded-xl">
-                <span className="text-amber-600 text-xs">⚠️</span>
-                <p className="text-[11px] text-amber-700/80 leading-relaxed">
-                    Beta: AI-generated answers may contain errors. Always verify with a qualified scholar.
+            {/* Scholar Verification Notice */}
+            <div className="flex items-center gap-2 px-4 py-3 bg-primary/5 border border-primary/10 rounded-xl">
+                <span className="text-primary text-xs">📚</span>
+                <p className="text-[11px] text-muted leading-relaxed">
+                    AI-assisted answer. For personal rulings, please consult a qualified scholar.
                 </p>
             </div>
 

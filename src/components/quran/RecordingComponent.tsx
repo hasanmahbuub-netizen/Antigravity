@@ -132,7 +132,9 @@ export function RecordingComponent({
       if (user?.id) formData.append('userId', user.id)
       formData.append('verseText', verseText)
 
-      const response = await fetch('/api/quran/analyze', {
+      // Use absolute URL for Android WebView compatibility
+      const { buildApiUrl } = await import('@/lib/api-url');
+      const response = await fetch(buildApiUrl('/api/quran/analyze'), {
         method: 'POST',
         body: formData,
       })
@@ -178,8 +180,8 @@ export function RecordingComponent({
               onTouchEnd={stopRecording}
               disabled={loading || isRecording}
               className={`w-full h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200 ${isRecording
-                  ? 'bg-red-500 text-white scale-95 ring-4 ring-offset-2 ring-red-500/30'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] shadow-lg shadow-primary/20'
+                ? 'bg-red-500 text-white scale-95 ring-4 ring-offset-2 ring-red-500/30'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] shadow-lg shadow-primary/20'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isRecording ? (

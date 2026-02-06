@@ -150,8 +150,9 @@ export default function PracticeScreen() {
             formData.append('surah', currentSurahId.toString());
             formData.append('ayah', currentVerseId.toString());
 
-            // Call the analyze API
-            const response = await fetch('/api/quran/analyze', {
+            // Call the analyze API - using absolute URL for Android WebView
+            const { buildApiUrl } = await import('@/lib/api-url');
+            const response = await fetch(buildApiUrl('/api/quran/analyze'), {
                 method: 'POST',
                 headers: {
                     ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })

@@ -181,7 +181,8 @@ export async function registerPushSubscription(): Promise<PushSubscription | nul
  */
 export async function sendSubscriptionToServer(subscription: PushSubscription): Promise<boolean> {
     try {
-        const response = await fetch('/api/notifications/subscribe', {
+        const { buildApiUrl } = await import('./api-url');
+        const response = await fetch(buildApiUrl('/api/notifications/subscribe'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription.toJSON())
