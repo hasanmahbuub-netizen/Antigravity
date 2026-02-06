@@ -152,7 +152,13 @@ function FiqhContent() {
                     madhab = (profile as { madhab?: string } | null)?.madhab || 'hanafi';
                 }
 
-                const response = await fetch('/api/fiqh/ask', {
+                // CRITICAL FIX: Use absolute URL for API call
+                // WebView might resolve relative URLs to localhost, failing connection
+                const baseUrl = window.location.origin.includes('localhost') && window.navigator.userAgent.includes('MeekApp')
+                    ? 'https://meek-zeta.vercel.app' // Force production URL in Capacitor Dev
+                    : ''; // Browser/Production Web handles relative fine, or absolute if needed
+
+                const response = await fetch(`${baseUrl}/api/fiqh/ask`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
