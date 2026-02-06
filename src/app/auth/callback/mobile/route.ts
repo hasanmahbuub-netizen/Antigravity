@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
             console.log('📱 [MOBILE OAUTH] Deep link redirect:', deepLink.substring(0, 50) + '...')
 
             // Return HTML page that redirects to deep link
-            // This is more reliable than a direct redirect for deep links
+            // Using both meek:// and intent:// for maximum compatibility
+            const intentUrl = `intent://auth-callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&next=${encodeURIComponent(next)}#Intent;scheme=meek;package=com.meek.app;end`;
+
             const html = `
 <!DOCTYPE html>
 <html>
@@ -88,26 +90,44 @@ export async function GET(request: NextRequest) {
         }
         h1 { font-size: 24px; margin-bottom: 10px; }
         p { color: #B8B8B8; font-size: 14px; }
-        a { color: #E8C49A; text-decoration: none; margin-top: 20px; display: inline-block; }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #E8C49A;
+            color: #0A1628;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
     </style>
-</head>
 </head>
 <body>
     <div class="spinner"></div>
     <h1>Opening Meek App...</h1>
-    <p>Authentication successful. Returning to app.</p>
+    <p>Authentication successful!</p>
     
-    <!-- Primary Action Button -->
+    <!-- Visible fallback button -->
     <a href="${deepLink}" class="button">Open App</a>
 
     <script>
-        // Try to open the app immediately
-        window.location.href = "${deepLink}";
+        // Method 1: Try Android intent (most reliable for Chrome Custom Tabs)
+        var intentUrl = "${intentUrl}";
         
-        // Fallback: reload the deep link after a short delay to force intent
+        // Method 2: Standard deep link
+        var deepLink = "${deepLink}";
+        
+        // Try intent first (works better in Chrome Custom Tabs)
+        try {
+            window.location.replace(intentUrl);
+        } catch(e) {
+            console.log("Intent failed, trying deep link");
+        }
+        
+        // Fallback to standard deep link after short delay
         setTimeout(function() {
-            window.location.href = "${deepLink}";
-        }, 500);
+            window.location.replace(deepLink);
+        }, 300);
     </script>
 </body>
 </html>
