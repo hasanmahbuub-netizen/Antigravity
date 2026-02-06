@@ -1,37 +1,28 @@
 /**
  * API URL Helper Utility
- * Ensures all API calls use the correct base URL for both web and mobile contexts
+ * 
+ * BULLETPROOF APPROACH: Always use absolute production URL
+ * This works for:
+ * - Web (same-origin, so absolute URL is fine)
+ * - Android WebView (needs absolute URL to hit Vercel backend)
+ * - SSR (returns production URL)
  */
+
+const PRODUCTION_URL = 'https://meek-zeta.vercel.app';
 
 /**
- * Get the base URL for API calls
- * - In production web: empty (relative URLs work fine)
- * - In Capacitor/Android WebView: use full production URL
+ * Build a full API URL - ALWAYS returns absolute production URL
+ * @param path - The API path, e.g., '/api/fiqh/ask'
+ * @returns Full absolute URL
  */
-export function getApiBaseUrl(): string {
-    if (typeof window === 'undefined') {
-        return ''; // Server-side, relative URLs are fine
-    }
-
-    // Check if running in Android/Capacitor WebView
-    const userAgent = navigator.userAgent || '';
-    const isMobileApp = userAgent.includes('MeekApp');
-
-    // If in mobile app or origin is localhost (development on actual device)
-    if (isMobileApp || window.location.origin.includes('localhost') || window.location.origin.includes('capacitor://')) {
-        return 'https://meek-zeta.vercel.app';
-    }
-
-    // Standard web or production environment
-    return '';
+export function buildApiUrl(path: string): string {
+    return `${PRODUCTION_URL}${path}`;
 }
 
 /**
- * Build a full API URL
- * @param path - The API path, e.g., '/api/fiqh/ask'
- * @returns Full URL with appropriate base
+ * Get the base URL for API calls
+ * @deprecated Use buildApiUrl() instead
  */
-export function buildApiUrl(path: string): string {
-    const baseUrl = getApiBaseUrl();
-    return `${baseUrl}${path}`;
+export function getApiBaseUrl(): string {
+    return PRODUCTION_URL;
 }
