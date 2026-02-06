@@ -207,15 +207,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
         console.log('🌐 [GOOGLE SIGNIN] Starting...')
         try {
-            // Detect if we're in the mobile app via user agent
-            const userAgent = typeof window !== 'undefined' ? navigator.userAgent : '';
-            const isMobileApp = userAgent.includes('MeekApp');
+            // Detect if we're in the mobile app
+            const { isMobileApp } = await import('@/lib/isMobile');
+            const isMobile = isMobileApp();
 
-            console.log('📱 [GOOGLE SIGNIN] User Agent:', userAgent);
-            console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobileApp);
+            console.log('📱 [GOOGLE SIGNIN] User Agent:', typeof window !== 'undefined' ? navigator.userAgent : '');
+            console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobile);
 
             // Web: standard flow
-            if (!isMobileApp) {
+            if (!isMobile) {
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {

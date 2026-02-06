@@ -20,23 +20,23 @@ export default function CapacitorInit() {
         // Only run on client and only once
         if (typeof window === 'undefined' || initialized.current) return;
 
-        // Check if we're in the Capacitor app (MeekApp user agent)
-        const isMobileApp = navigator.userAgent.includes('MeekApp');
+        // Check if we're in the Capacitor app
+        import('@/lib/isMobile').then(({ isMobileApp }) => {
+            if (isMobileApp()) {
+                console.log('📱 [CAPACITOR] Running in mobile app, initializing...');
+                initialized.current = true;
 
-        if (isMobileApp) {
-            console.log('📱 [CAPACITOR] Running in mobile app, initializing...');
-            initialized.current = true;
-
-            // Initialize deep link handler
-            initDeepLinkHandler({
-                push: (url: string) => {
-                    console.log('📱 [CAPACITOR] Navigating to:', url);
-                    router.push(url);
-                }
-            });
-        } else {
-            console.log('🌐 [CAPACITOR] Running in browser, skipping Capacitor init');
-        }
+                // Initialize deep link handler
+                initDeepLinkHandler({
+                    push: (url: string) => {
+                        console.log('📱 [CAPACITOR] Navigating to:', url);
+                        router.push(url);
+                    }
+                });
+            } else {
+                console.log('🌐 [CAPACITOR] Running in browser, skipping Capacitor init');
+            }
+        });
     }, [router]);
 
     // This component doesn't render anything
