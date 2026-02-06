@@ -19,6 +19,10 @@ interface FiqhResponse {
 /**
  * Query OpenAI GPT-4o-mini for Fiqh answers
  */
+/**
+ * Query OpenAI GPT-4o-mini for Fiqh answers
+ * Includes robust retry logic and error handling
+ */
 export async function askOpenAIFiqh(
     question: string,
     madhab: string
@@ -33,56 +37,90 @@ export async function askOpenAIFiqh(
     const systemPrompt = buildOpenAISystemPrompt(madhab);
     const userPrompt = buildOpenAIUserPrompt(question, madhab);
 
-    try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                temperature: 0.3,
-                max_tokens: 2000,
-                response_format: { type: 'json_object' }
-            })
-        });
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    const INITIAL_BACKOFF = 1000; // 1 second
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('OpenAI API error:', errorData);
-            throw new Error(`OpenAI API error: ${response.status}`);
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+        try {
+            if (attempt > 1) {
+                console.log(`🔄 OpenAI: Retry attempt ${attempt}/${MAX_RETRIES}...`);
+            }
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 2000,
+                    response_format: { type: 'json_object' }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('OpenAI API error:', errorData);
+
+                // Don't retry on 400 client errors (bad request)
+                if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+                    throw new Error(`OpenAI API Client Error: ${response.status}`);
+                }
+                throw new Error(`OpenAI API Server Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const rawContent = data.choices[0].message.content;
+
+            const fiqhResponse: FiqhResponse = JSON.parse(rawContent);
+
+            // Validate madhab mention
+            if (!fiqhResponse.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
+                fiqhResponse.directAnswer = `In the ${madhab} school, ` + fiqhResponse.directAnswer;
+            }
+
+            // Ensure sourceVerification exists
+            if (!fiqhResponse.sourceVerification) {
+                fiqhResponse.sourceVerification = {
+                    primarySourcesUsed: true,
+                    hallucinationRisk: 'Medium - GPT fallback',
+                    confidenceLevel: 'Medium (70%)'
+                };
+            }
+
+            return fiqhResponse;
+
+        } catch (error: any) {
+            clearTimeout(timeoutId);
+            lastError = error;
+            console.warn(`⚠️ OpenAI attempt ${attempt} failed:`, error.message);
+
+            // Calculate backoff with jitter
+            const backoff = INITIAL_BACKOFF * Math.pow(2, attempt - 1) + Math.random() * 500;
+
+            if (attempt < MAX_RETRIES) {
+                await new Promise(resolve => setTimeout(resolve, backoff));
+            }
         }
-
-        const data = await response.json();
-        const rawContent = data.choices[0].message.content;
-
-        const fiqhResponse: FiqhResponse = JSON.parse(rawContent);
-
-        // Validate madhab mention
-        if (!fiqhResponse.directAnswer.toLowerCase().includes(madhab.toLowerCase())) {
-            fiqhResponse.directAnswer = `In the ${madhab} school, ` + fiqhResponse.directAnswer;
-        }
-
-        // Ensure sourceVerification exists
-        if (!fiqhResponse.sourceVerification) {
-            fiqhResponse.sourceVerification = {
-                primarySourcesUsed: true,
-                hallucinationRisk: 'Medium - GPT fallback',
-                confidenceLevel: 'Medium (70%)'
-            };
-        }
-
-        return fiqhResponse;
-
-    } catch (error) {
-        console.error('OpenAI API error:', error);
-        throw error;
     }
+
+    console.error('❌ OpenAI: All retries failed');
+    throw lastError;
 }
 
 function buildOpenAISystemPrompt(madhab: string): string {

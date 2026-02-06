@@ -214,26 +214,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('📱 [GOOGLE SIGNIN] User Agent:', userAgent);
             console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobileApp);
 
-            // SIMPLIFIED: Use the SAME callback for both mobile and web
-            // Key insight: When OAuth happens IN the WebView (not Chrome), 
-            // the session cookies stay in the WebView - no deep links needed!
-            // The callback URL just needs to be in Supabase's whitelist
-            const redirectUrl = 'https://meek-zeta.vercel.app/auth/callback';
+            // Web: standard flow
+            if (!isMobileApp) {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                    },
+                })
+                if (error) throw error
+                return
+            }
 
-            console.log('📍 [GOOGLE SIGNIN] Redirect URL:', redirectUrl)
-
-            const { error } = await supabase.auth.signInWithOAuth({
+            // Mobile: Use Capacitor Browser with deep link return
+            // 1. Get the OAuth URL without redirecting
+            console.log('📱 [GOOGLE SIGNIN] Getting OAuth URL for mobile...');
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: redirectUrl,
+                    redirectTo: 'https://meek-zeta.vercel.app/auth/callback/mobile',
+                    skipBrowserRedirect: true,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
                     },
                 },
             })
+
             if (error) throw error
-            console.log('✅ [GOOGLE SIGNIN] Auth redirect initiated')
+            if (!data?.url) throw new Error('No OAuth URL returned');
+
+            // 2. Open in In-App Browser
+            // The callback will redirect to meek://auth-callback which the app listens for
+            console.log('📱 [GOOGLE SIGNIN] Opening Browser:', data.url);
+
+            // Import dynamically to avoid SSR issues
+            const { Browser } = await import('@capacitor/browser');
+
+            await Browser.open({
+                url: data.url,
+                windowName: '_self', // Tries to open in same window if possible
+                presentationStyle: 'popover' // iOS approach
+            });
+
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error('💥 [GOOGLE SIGNIN] Error:', errorMessage)

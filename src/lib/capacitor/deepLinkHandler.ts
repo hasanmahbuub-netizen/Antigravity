@@ -59,6 +59,17 @@ async function handleDeepLink(url: string, router: { push: (url: string) => void
         if (urlObj.host === 'auth-callback' || urlObj.pathname.includes('auth-callback') || urlObj.protocol === 'meek:') {
             console.log('📱 [DEEP LINK] Processing auth callback...');
 
+            // CLOSE THE BROWSER OVERLAY!
+            // This is critical - otherwise user is stuck in the browser view
+            try {
+                // Import dynamically to avoid SSR issues
+                const { Browser } = await import('@capacitor/browser');
+                await Browser.close();
+                console.log('📱 [DEEP LINK] Browser closed');
+            } catch (e) {
+                console.warn('📱 [DEEP LINK] Could not close browser (might already be closed)', e);
+            }
+
             const accessToken = urlObj.searchParams.get('access_token');
             const refreshToken = urlObj.searchParams.get('refresh_token');
             const next = urlObj.searchParams.get('next') || '/dashboard';

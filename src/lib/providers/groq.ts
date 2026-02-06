@@ -25,6 +25,10 @@ interface FiqhResponse {
 /**
  * Main function to query Groq for Fiqh answers
  */
+/**
+ * Main function to query Groq for Fiqh answers
+ * Includes robust retry logic and error handling
+ */
 export async function askGroqFiqh(
     question: string,
     madhab: string
@@ -41,84 +45,106 @@ export async function askGroqFiqh(
 
     console.log('🔄 Groq: Sending request...');
 
-    // Add 10 second timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    const INITIAL_BACKOFF = 1000; // 1 second
 
-    try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile', // Most reliable model for instruction following
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                temperature: 0.3,
-                max_tokens: 800, // Reduced for faster responses
-                response_format: { type: 'json_object' }
-            }),
-            signal: controller.signal
-        });
+    let lastError: any;
 
-        clearTimeout(timeoutId);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Groq API error:', response.status, errorText);
-            throw new Error(`Groq API error: ${response.status} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content;
-
-        if (!rawContent) {
-            console.error('❌ Groq: No content in response');
-            throw new Error('No content in Groq response');
-        }
-
-        console.log('📥 Groq raw response:', rawContent.substring(0, 200) + '...');
-
-        let fiqhResponse: FiqhResponse;
         try {
-            fiqhResponse = JSON.parse(rawContent);
-        } catch (parseError) {
-            console.error('❌ Groq: JSON parse failed, trying to extract...');
-            // Try to extract JSON from the response
-            const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                fiqhResponse = JSON.parse(jsonMatch[0]);
-            } else {
-                throw new Error('Could not parse Groq response as JSON');
+            if (attempt > 1) {
+                console.log(`🔄 Groq: Retry attempt ${attempt}/${MAX_RETRIES}...`);
+            }
+
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 800,
+                    response_format: { type: 'json_object' }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                // Don't retry on 400 client errors (bad request)
+                if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+                    throw new Error(`Groq API Client Error: ${response.status} - ${errorText}`);
+                }
+                throw new Error(`Groq API Server Error: ${response.status} - ${errorText}`);
+            }
+
+            const data = await response.json();
+            const rawContent = data.choices?.[0]?.message?.content;
+
+            if (!rawContent) {
+                throw new Error('No content in Groq response');
+            }
+
+            console.log('📥 Groq raw response:', rawContent.substring(0, 200) + '...');
+
+            let fiqhResponse: FiqhResponse;
+            try {
+                fiqhResponse = JSON.parse(rawContent);
+            } catch (parseError) {
+                console.error('❌ Groq: JSON parse failed, trying to extract...');
+                const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    fiqhResponse = JSON.parse(jsonMatch[0]);
+                } else {
+                    throw new Error('Could not parse Groq response as JSON');
+                }
+            }
+
+            // Post-processing
+            if (!fiqhResponse.directAnswer?.toLowerCase().includes(madhab.toLowerCase())) {
+                fiqhResponse.directAnswer = `In the ${madhab} school, ` + fiqhResponse.directAnswer;
+            }
+
+            fiqhResponse.reasoning = fiqhResponse.reasoning || 'See direct answer for details.';
+            fiqhResponse.otherSchools = fiqhResponse.otherSchools || [];
+            fiqhResponse.citations = fiqhResponse.citations || [];
+            fiqhResponse.sourceVerification = fiqhResponse.sourceVerification || {
+                primarySourcesUsed: true,
+                hallucinationRisk: 'Unknown',
+                confidenceLevel: 'Medium (70%)'
+            };
+
+            console.log('✅ Groq: Response parsed successfully');
+            return fiqhResponse;
+
+        } catch (error: any) {
+            clearTimeout(timeoutId);
+            lastError = error;
+            console.warn(`⚠️ Groq attempt ${attempt} failed:`, error.message);
+
+            // Calculate backoff with jitter
+            const backoff = INITIAL_BACKOFF * Math.pow(2, attempt - 1) + Math.random() * 500;
+
+            if (attempt < MAX_RETRIES) {
+                await new Promise(resolve => setTimeout(resolve, backoff));
             }
         }
-
-        // Validate madhab mention
-        if (!fiqhResponse.directAnswer?.toLowerCase().includes(madhab.toLowerCase())) {
-            fiqhResponse.directAnswer = `In the ${madhab} school, ` + fiqhResponse.directAnswer;
-        }
-
-        // Ensure all required fields exist
-        fiqhResponse.reasoning = fiqhResponse.reasoning || 'See direct answer for details.';
-        fiqhResponse.otherSchools = fiqhResponse.otherSchools || [];
-        fiqhResponse.citations = fiqhResponse.citations || [];
-        fiqhResponse.sourceVerification = fiqhResponse.sourceVerification || {
-            primarySourcesUsed: true,
-            hallucinationRisk: 'Unknown',
-            confidenceLevel: 'Medium (70%)'
-        };
-
-        console.log('✅ Groq: Response parsed successfully');
-        return fiqhResponse;
-
-    } catch (error) {
-        console.error('❌ Groq error:', error);
-        throw error;
     }
+
+    console.error('❌ Groq: All retries failed');
+    throw lastError;
 }
 
 /**

@@ -91,18 +91,23 @@ export async function GET(request: NextRequest) {
         a { color: #E8C49A; text-decoration: none; margin-top: 20px; display: inline-block; }
     </style>
 </head>
+</head>
 <body>
     <div class="spinner"></div>
     <h1>Opening Meek App...</h1>
-    <p>If the app doesn't open automatically, <a href="${deepLink}">tap here</a></p>
+    <p>Authentication successful. Returning to app.</p>
+    
+    <!-- Primary Action Button -->
+    <a href="${deepLink}" class="button">Open App</a>
+
     <script>
         // Try to open the app immediately
         window.location.href = "${deepLink}";
         
-        // Fallback: if still on this page after 2 seconds, show manual link more prominently
+        // Fallback: reload the deep link after a short delay to force intent
         setTimeout(function() {
-            document.querySelector('p').innerHTML = 'App not opening? <a href="${deepLink}">Tap here to open Meek</a>';
-        }, 2000);
+            window.location.href = "${deepLink}";
+        }, 500);
     </script>
 </body>
 </html>
