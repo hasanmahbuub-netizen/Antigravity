@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, RotateCcw, CheckCircle, ChevronRight, Volume2, Info } from "lucide-react";
+import { Play, RotateCcw, CheckCircle, ChevronRight, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TajweedFeedback } from "@/lib/ai-service";
 
@@ -82,7 +82,7 @@ export default function FeedbackView({
 
                 {/* 3. Teacher's Version */}
                 <section className="space-y-3">
-                    <h3 className="text-xs font-bold tracking-widest text-muted uppercase">Teacher's Version</h3>
+                    <h3 className="text-xs font-bold tracking-widest text-muted uppercase">Teacher&apos;s Version</h3>
                     <div className="bg-card/50 border border-border rounded-2xl p-4 flex items-center gap-4">
                         <button
                             onClick={playTeacherAudio}

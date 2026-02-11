@@ -11,7 +11,7 @@ import PracticeTab from "./tabs/PracticeTab";
 
 import { quranApi } from "@/lib/quran-api";
 import type { TajweedFeedback } from "@/lib/ai-service";
-import { ALL_114_SURAHS, getSurahById } from "@/lib/surah-list";
+
 
 // New Views
 import RecordingView from "./views/RecordingView";
@@ -19,13 +19,11 @@ import ProcessingView from "./views/ProcessingView";
 import FeedbackView from "./views/FeedbackView";
 import VerseCompletedModal from "./modals/VerseCompletedModal";
 import SurahSelectorModal from "./modals/SurahSelector";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 type Tab = "listen" | "meaning" | "practice";
 type ViewMode = "tabs" | "recording" | "processing" | "feedback";
 
-// Use all 114 surahs from the surah list
-const SURAHS = ALL_114_SURAHS;
 
 export default function PracticeScreen() {
     const [activeTab, setActiveTab] = useState<Tab>("listen");
@@ -130,9 +128,7 @@ export default function PracticeScreen() {
         fetchData();
     }, [currentSurahId, currentVerseId]);
 
-    const handleStartRecording = () => {
-        setViewMode("recording");
-    };
+
 
     const handleStopRecording = async (audioBlob: Blob | null) => {
         setViewMode("processing");
