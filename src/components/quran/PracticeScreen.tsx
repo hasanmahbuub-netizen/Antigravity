@@ -10,7 +10,7 @@ import MeaningTab from "./tabs/MeaningTab";
 import PracticeTab from "./tabs/PracticeTab";
 
 import { quranApi } from "@/lib/quran-api";
-import type { TajweedFeedback } from "@/types/ai";
+import type { TajweedFeedback } from "@/lib/ai-service";
 import { ALL_114_SURAHS, getSurahById } from "@/lib/surah-list";
 
 // New Views
@@ -139,9 +139,6 @@ export default function PracticeScreen() {
         setFeedback(null);
 
         try {
-            // Get session for API authentication
-            const { data: { session } } = await supabase.auth.getSession();
-
             // Create form data for API call
             const formData = new FormData();
             if (audioBlob) {
@@ -150,13 +147,10 @@ export default function PracticeScreen() {
             formData.append('surah', currentSurahId.toString());
             formData.append('ayah', currentVerseId.toString());
 
-            // Call the analyze API - using absolute URL for Android WebView
-            const { buildApiUrl } = await import('@/lib/api-url');
-            const response = await fetch(buildApiUrl('/api/quran/analyze'), {
+            // Use fetchWithAuth for resilient API calls
+            const { fetchWithAuth } = await import('@/lib/fetchWithAuth');
+            const response = await fetchWithAuth('/api/quran/analyze', {
                 method: 'POST',
-                headers: {
-                    ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
-                },
                 body: formData
             });
 

@@ -98,7 +98,7 @@ export async function GET(
     } catch (error) {
         console.error('Get daily notifications error:', error);
         return NextResponse.json(
-            { error: 'Failed to get notifications', details: String(error) },
+            { error: 'Failed to get notifications' },
             { status: 500 }
         );
     }

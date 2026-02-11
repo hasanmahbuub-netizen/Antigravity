@@ -5,13 +5,29 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { TajweedFeedback, FiqhAnswer } from "@/types/ai";
 
-// Use server-side environment variable only (never NEXT_PUBLIC_)
-const getApiKey = () => process.env.GEMINI_API_KEY || "";
+// Types previously in types/ai.ts — inlined here as the canonical source
+export interface TajweedFeedback {
+    score: number;
+    positives?: string[];
+    improvements?: string[];
+    details?: string;
+    accuracy?: number;
+    strengths?: string[];
+    encouragement?: string;
+}
 
-// Re-export types for consumers
-export type { TajweedFeedback, FiqhAnswer } from "@/types/ai";
+export interface FiqhAnswer {
+    answer: string;
+    context: string;
+    differences: string;
+}
+
+const API_KEY = process.env.GEMINI_API_KEY || '';
+// Singleton — reuse across all calls instead of re-creating per request
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+
+
 
 // Response type for Fiqh consultation
 interface FiqhConsultResponse {
@@ -25,14 +41,12 @@ export const aiService = {
      * Analyze user recitation against a target verse using Gemini.
      */
     async analyzeRecitation(audioBlob: Blob | null, surah: number, ayah: number): Promise<TajweedFeedback> {
-        const API_KEY = getApiKey();
-        if (!API_KEY) {
+        if (!genAI) {
             console.warn("Gemini API Key missing. Falling back to mock.");
             return this.getMockTajweed();
         }
 
         try {
-            const genAI = new GoogleGenerativeAI(API_KEY);
             const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const prompt = `
@@ -72,14 +86,12 @@ export const aiService = {
      * Consult Fiqh knowledge base using Gemini.
      */
     async consultFiqh(question: string, madhab: string = 'hanafi'): Promise<FiqhConsultResponse> {
-        const API_KEY = getApiKey();
-        if (!API_KEY) {
+        if (!genAI) {
             console.warn("Gemini API Key missing. Falling back to mock.");
             return this.getMockFiqh();
         }
 
         try {
-            const genAI = new GoogleGenerativeAI(API_KEY);
             const model = genAI.getGenerativeModel({
                 model: "gemini-2.0-flash",
                 systemInstruction: `You are an expert Islamic Jurist (Mufti) specializing in the ${madhab} Madhab. 

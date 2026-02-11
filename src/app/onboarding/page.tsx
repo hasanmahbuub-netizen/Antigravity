@@ -5,24 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Globe, Target, ArrowRight, Check } from 'lucide-react';
-
-const MADHABS = [
-    { id: 'Hanafi', name: 'Hanafi', description: 'Most followed in South Asia, Turkey' },
-    { id: 'Shafi\'i', name: "Shafi'i", description: 'Common in SE Asia, East Africa' },
-    { id: 'Maliki', name: 'Maliki', description: 'Predominant in North & West Africa' },
-    { id: 'Hanbali', name: 'Hanbali', description: 'Followed in Saudi Arabia' }
-];
-
-const ARABIC_LEVELS = [
-    { value: 'beginner', label: 'Beginner', desc: 'Learning to read Arabic', emoji: '🌱' },
-    { value: 'intermediate', label: 'Intermediate', desc: 'Can read with some fluency', emoji: '📖' },
-    { value: 'advanced', label: 'Advanced', desc: 'Fluent in Quranic Arabic', emoji: '⭐' }
-];
-
-const LANGUAGES = [
-    { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
-    { code: 'bn', name: 'Bangla', native: 'বাংলা', flag: '🇧🇩' }
-];
+import { MADHABS, ARABIC_LEVELS, LANGUAGES } from '@/lib/constants';
 
 export default function OnboardingPage() {
     const [step, setStep] = useState(1);
@@ -31,8 +14,6 @@ export default function OnboardingPage() {
     const [language, setLanguage] = useState('en');
     const [saving, setSaving] = useState(false);
     const router = useRouter();
-
-    const totalSteps = 3;
 
     const handleComplete = async () => {
         setSaving(true);
@@ -48,7 +29,7 @@ export default function OnboardingPage() {
                     onboarding_completed: true,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
-                });
+                } as never);
             }
 
             router.push('/dashboard');
@@ -107,8 +88,8 @@ export default function OnboardingPage() {
                                         key={m.id}
                                         onClick={() => setMadhab(m.id)}
                                         className={`p-4 rounded-xl text-left transition-all ${madhab === m.id
-                                                ? 'bg-primary text-primary-foreground ring-2 ring-primary'
-                                                : 'bg-muted/10 text-foreground hover:bg-muted/20'
+                                            ? 'bg-primary text-primary-foreground ring-2 ring-primary'
+                                            : 'bg-muted/10 text-foreground hover:bg-muted/20'
                                             }`}
                                     >
                                         <div className="flex items-center justify-between mb-1">
@@ -150,8 +131,8 @@ export default function OnboardingPage() {
                                         key={level.value}
                                         onClick={() => setArabicLevel(level.value)}
                                         className={`w-full p-4 rounded-xl text-left transition-all ${arabicLevel === level.value
-                                                ? 'bg-primary text-primary-foreground ring-2 ring-primary'
-                                                : 'bg-muted/10 text-foreground hover:bg-muted/20'
+                                            ? 'bg-primary text-primary-foreground ring-2 ring-primary'
+                                            : 'bg-muted/10 text-foreground hover:bg-muted/20'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -203,8 +184,8 @@ export default function OnboardingPage() {
                                         key={lang.code}
                                         onClick={() => setLanguage(lang.code)}
                                         className={`w-full p-4 rounded-xl text-left transition-all ${language === lang.code
-                                                ? 'bg-accent text-accent-foreground ring-2 ring-accent'
-                                                : 'bg-muted/10 text-foreground hover:bg-muted/20'
+                                            ? 'bg-accent text-accent-foreground ring-2 ring-accent'
+                                            : 'bg-muted/10 text-foreground hover:bg-muted/20'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">

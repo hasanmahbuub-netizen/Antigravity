@@ -152,14 +152,11 @@ function FiqhContent() {
                     madhab = (profile as { madhab?: string } | null)?.madhab || 'hanafi';
                 }
 
-                // Use centralized API URL helper for Android WebView compatibility
-                const { buildApiUrl } = await import('@/lib/api-url');
-                const response = await fetch(buildApiUrl('/api/fiqh/ask'), {
+                // Use fetchWithAuth for resilient API calls
+                const { fetchWithAuth } = await import('@/lib/fetchWithAuth');
+                const response = await fetchWithAuth('/api/fiqh/ask', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question: q, madhab })
                 });
 

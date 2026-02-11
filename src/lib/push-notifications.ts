@@ -164,7 +164,7 @@ export async function registerPushSubscription(): Promise<PushSubscription | nul
             // Subscribe to push
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource
             });
             console.log('Push subscription created:', subscription);
         }
@@ -181,8 +181,8 @@ export async function registerPushSubscription(): Promise<PushSubscription | nul
  */
 export async function sendSubscriptionToServer(subscription: PushSubscription): Promise<boolean> {
     try {
-        const { buildApiUrl } = await import('./api-url');
-        const response = await fetch(buildApiUrl('/api/notifications/subscribe'), {
+        const { fetchWithAuth } = await import('./fetchWithAuth');
+        const response = await fetchWithAuth('/api/notifications/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription.toJSON())

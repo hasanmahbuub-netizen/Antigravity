@@ -7,24 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { initializePushNotifications } from "@/lib/push-notifications";
-
-const MADHABS = [
-    { id: 'Hanafi', name: 'Hanafi', description: 'Most followed in South Asia, Turkey' },
-    { id: 'Shafi\'i', name: "Shafi'i", description: 'Common in SE Asia, East Africa' },
-    { id: 'Maliki', name: 'Maliki', description: 'Predominant in North & West Africa' },
-    { id: 'Hanbali', name: 'Hanbali', description: 'Followed in Saudi Arabia' }
-];
-
-const LANGUAGES = [
-    { code: 'en', name: 'English', native: 'English' },
-    { code: 'bn', name: 'Bangla', native: 'বাংলা' }
-];
-
-const ARABIC_LEVELS = [
-    { value: 'beginner', label: 'Beginner', desc: 'Learning to read Arabic' },
-    { value: 'intermediate', label: 'Intermediate', desc: 'Can read with some fluency' },
-    { value: 'advanced', label: 'Advanced', desc: 'Fluent in Quranic Arabic' }
-];
+import { MADHABS, ARABIC_LEVELS, LANGUAGES } from '@/lib/constants';
 
 // Type definitions for Supabase query results
 interface ProfileSettings {
@@ -108,14 +91,14 @@ export default function SettingsPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            await (supabase.from('profiles') as any).upsert({
+            await supabase.from('profiles').upsert({
                 id: user.id,
                 madhab,
                 language,
                 arabic_level: arabicLevel,
                 daily_goal: dailyGoal,
                 updated_at: new Date().toISOString()
-            });
+            } as never);
 
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2000);
@@ -271,14 +254,14 @@ export default function SettingsPage() {
                                             // Get user timezone
                                             const { data: { user } } = await supabase.auth.getUser();
                                             if (user) {
-                                                await (supabase.from('notification_settings') as any).upsert({
+                                                await supabase.from('notification_settings').upsert({
                                                     user_id: user.id,
                                                     prayer_start: prayerStart,
                                                     prayer_ending: prayerEnding,
                                                     dua_reminders: duaReminders,
                                                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                                                     updated_at: new Date().toISOString()
-                                                });
+                                                } as never);
                                             }
                                         }
                                     } catch (e) {
@@ -307,11 +290,11 @@ export default function SettingsPage() {
                                 setPrayerStart(value);
                                 const { data: { user } } = await supabase.auth.getUser();
                                 if (user) {
-                                    await (supabase.from('notification_settings') as any).upsert({
+                                    await supabase.from('notification_settings').upsert({
                                         user_id: user.id,
                                         prayer_start: value,
                                         updated_at: new Date().toISOString()
-                                    });
+                                    } as never);
                                 }
                             }}
                         />
@@ -326,11 +309,11 @@ export default function SettingsPage() {
                                 setPrayerEnding(value);
                                 const { data: { user } } = await supabase.auth.getUser();
                                 if (user) {
-                                    await (supabase.from('notification_settings') as any).upsert({
+                                    await supabase.from('notification_settings').upsert({
                                         user_id: user.id,
                                         prayer_ending: value,
                                         updated_at: new Date().toISOString()
-                                    });
+                                    } as never);
                                 }
                             }}
                         />
@@ -345,11 +328,11 @@ export default function SettingsPage() {
                                 setDuaReminders(value);
                                 const { data: { user } } = await supabase.auth.getUser();
                                 if (user) {
-                                    await (supabase.from('notification_settings') as any).upsert({
+                                    await supabase.from('notification_settings').upsert({
                                         user_id: user.id,
                                         dua_reminders: value,
                                         updated_at: new Date().toISOString()
-                                    });
+                                    } as never);
                                 }
                             }}
                         />

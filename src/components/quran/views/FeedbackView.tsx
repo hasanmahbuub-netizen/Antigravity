@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Play, RotateCcw, CheckCircle, ChevronRight, Volume2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TajweedFeedback } from "@/types/ai";
+import type { TajweedFeedback } from "@/lib/ai-service";
 
 interface FeedbackViewProps {
     onRetry: () => void;
@@ -113,7 +113,7 @@ export default function FeedbackView({
 
                     <div className="space-y-3">
                         {/* Positives */}
-                        {feedback?.positives.map((pos, i) => (
+                        {feedback?.positives?.map((pos, i) => (
                             <div key={i} className="flex gap-3 items-start">
                                 <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                                 <div>
@@ -123,7 +123,7 @@ export default function FeedbackView({
                         ))}
 
                         {/* Improvements */}
-                        {feedback?.improvements.map((imp, i) => (
+                        {feedback?.improvements?.map((imp, i) => (
                             <div key={i} className="bg-orange-50/50 border border-orange-100 rounded-xl p-4 mt-4 space-y-3">
                                 <div className="flex items-center gap-2 text-orange-700 font-bold text-xs uppercase tracking-widest">
                                     <Info className="w-4 h-4" />

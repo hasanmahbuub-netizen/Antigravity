@@ -15,7 +15,6 @@ interface FiqhQuestionPreview {
 export default function ZoneB_Fiqh() {
     const [recentQuestions, setRecentQuestions] = useState<FiqhQuestionPreview[]>([]);
     const [loading, setLoading] = useState(true);
-    const [query, setQuery] = useState("");
     const router = useRouter();
 
     useEffect(() => {
@@ -42,13 +41,6 @@ export default function ZoneB_Fiqh() {
 
         fetchFiqhHistory();
     }, []);
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (query.trim()) {
-            router.push(`/fiqh?q=${encodeURIComponent(query.trim())}`);
-        }
-    };
 
     return (
         <section className="h-full flex flex-col gap-3">

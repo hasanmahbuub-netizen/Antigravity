@@ -14,8 +14,8 @@ export function isMobileApp(): boolean {
     const hasCapacitor = window.Capacitor !== undefined;
 
     // Check 3: Android Context
-    const isAndoidWebView = navigator.userAgent.includes('Android');
+    const isAndroidWebView = navigator.userAgent.includes('Android');
 
     // Primary check: Explicit User Agent OR Capacitor Bridge present
-    return hasMeekAgent || (hasCapacitor && isAndoidWebView);
+    return hasMeekAgent || (hasCapacitor && isAndroidWebView);
 }

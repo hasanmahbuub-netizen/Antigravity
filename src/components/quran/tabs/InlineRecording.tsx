@@ -143,9 +143,9 @@ export default function InlineRecording({
             formData.append('ayah', verseId.toString());
             formData.append('verseText', arabic);
 
-            // Use absolute URL for Android WebView compatibility
-            const { buildApiUrl } = await import('@/lib/api-url');
-            const response = await fetch(buildApiUrl('/api/quran/analyze'), {
+            // Use fetchWithAuth for resilient API calls
+            const { fetchWithAuth } = await import('@/lib/fetchWithAuth');
+            const response = await fetchWithAuth('/api/quran/analyze', {
                 method: 'POST',
                 body: formData
             });

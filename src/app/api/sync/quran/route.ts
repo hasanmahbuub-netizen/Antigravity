@@ -6,13 +6,25 @@ export async function POST(request: NextRequest) {
         // Check for admin authorization
         const authHeader = request.headers.get('authorization')
         const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        const expectedSecret = process.env.ADMIN_SECRET
 
-        if (!authHeader?.includes(expectedKey?.slice(0, 20) || 'service')) {
-            // Check for simple admin password
+        let authorized = false;
+
+        // Method 1: Authorization header contains service role key prefix
+        if (expectedKey && authHeader?.includes(expectedKey.slice(0, 20))) {
+            authorized = true;
+        }
+
+        // Method 2: Admin secret in request body
+        if (!authorized) {
             const body = await request.json().catch(() => ({}))
-            if (body.secret !== 'MEEK-sync-2024') {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            if (expectedSecret && body.secret === expectedSecret) {
+                authorized = true;
             }
+        }
+
+        if (!authorized) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const url = new URL(request.url)
@@ -40,24 +52,9 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error('Sync error:', error)
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Sync failed' },
+            { error: 'Sync failed' },
             { status: 500 }
         )
     }
-}
-
-export async function GET(request: NextRequest) {
-    return NextResponse.json({
-        message: 'Quran sync endpoint',
-        usage: {
-            method: 'POST',
-            body: { secret: 'MEEK-sync-2024' },
-            params: {
-                'type=surahs': 'Sync only surahs',
-                'type=verses': 'Sync only verses',
-                'type=all': 'Sync everything (default)'
-            }
-        }
-    })
 }
 

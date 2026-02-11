@@ -4,7 +4,7 @@ import { askGroqFiqh, FiqhResponse } from '@/lib/providers/groq'
 import { askOpenAIFiqh } from '@/lib/providers/openai'
 import { getFallbackStructuredAnswer } from '@/lib/prompts/fiqh-system'
 import { checkRateLimit, getClientIP, sanitizeInput, isValidQuestion } from '@/lib/security'
-import { getSupabaseUrl, getSupabaseAnonKey, hasAIProvider, getAIApiKey } from '@/lib/env'
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
                 console.log(`📤 [2] Trying Gemini 2.0 Flash...`)
 
                 const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

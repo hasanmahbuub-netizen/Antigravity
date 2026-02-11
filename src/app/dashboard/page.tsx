@@ -25,13 +25,13 @@ export default function Dashboard() {
   // Islamic greeting (no time-based variation)
   useEffect(() => {
     setGreeting("Assalamu Alaikum");
+    let mounted = true;
 
-    // Start notification scheduler with user ID
+    // Start notification scheduler (self-contained, no server dependency)
     async function initNotifications() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && 'Notification' in window && Notification.permission === 'granted') {
-          await startNotificationScheduler(user.id);
+        if ('Notification' in window) {
+          await startNotificationScheduler();
         }
       } catch (e) {
         console.warn('Notification scheduler init skipped:', e);
@@ -41,6 +41,7 @@ export default function Dashboard() {
 
     // Fetch spiritual context and check profile
     async function loadContext() {
+      if (!mounted) return;
       try {
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -50,7 +51,7 @@ export default function Dashboard() {
             .from('profiles')
             .select('onboarding_completed')
             .eq('id', user.id)
-            .single();
+            .single<{ onboarding_completed: boolean | null }>();
 
           if (!profile || !profile.onboarding_completed) {
             console.log("🚦 Onboarding not completed. Redirecting...");
@@ -60,17 +61,17 @@ export default function Dashboard() {
         }
 
         const spiritualNudge = getSpiritualNudge();
-        setNudge(spiritualNudge);
+        if (mounted) setNudge(spiritualNudge);
 
         const nextPrayer = await getNextPrayer();
-        setPrayerReminder(nextPrayer);
+        if (mounted) setPrayerReminder(nextPrayer);
 
         const prayerInfo = await getCurrentPrayer();
-        setCurrentPrayerInfo(prayerInfo);
+        if (mounted) setCurrentPrayerInfo(prayerInfo);
       } catch (error) {
         console.error("Failed to load dashboard context:", error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
@@ -79,10 +80,11 @@ export default function Dashboard() {
     // Refresh every minute for real-time updates
     const interval = setInterval(loadContext, 60 * 1000);
     return () => {
+      mounted = false;
       clearInterval(interval);
       stopNotificationScheduler();
     };
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] gap-4 overflow-hidden">

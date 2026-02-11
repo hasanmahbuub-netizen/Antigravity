@@ -4,10 +4,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
-// ============================================
-// SUPER SIMPLE AUTH CONTEXT - NO COMPLEXITY
-// ============================================
-
 interface AuthContextType {
     user: User | null
     loading: boolean
@@ -19,203 +15,137 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Development-only logging
-const isDev = process.env.NODE_ENV === 'development'
-const devLog = (...args: unknown[]) => isDev && console.log(...args)
-const devError = (...args: unknown[]) => isDev && console.error(...args)
-
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
-    devLog('🏗️ [AUTH CONTEXT] Component mounting...')
-
     // ============================================
-    // INITIALIZATION - RUNS ONCE ON MOUNT
+    // INITIALIZATION — runs once on mount
     // ============================================
     useEffect(() => {
-        console.log('🔐 [INIT STEP 1] useEffect triggered')
-
         let mounted = true
 
         async function initialize() {
-            console.log('🔐 [INIT STEP 2] Starting initialization')
-
             try {
-                console.log('🔐 [INIT STEP 3] Calling getSession')
+                // Try to get existing session
                 const { data: { session }, error } = await supabase.auth.getSession()
-                console.log('🔐 [INIT STEP 4] getSession returned')
 
-                if (!mounted) {
-                    console.log('🔐 [INIT] Component unmounted, skipping')
-                    return
-                }
+                if (!mounted) return
 
                 if (error) {
-                    console.error('❌ [INIT] Error:', error.message)
+                    console.error('❌ [AUTH] Init error:', error.message)
                     setUser(null)
                 } else if (session?.user) {
-                    console.log('✅ [INIT] Found session:', session.user.email)
+                    console.log('✅ [AUTH] Session found:', session.user.email)
                     setUser(session.user)
                 } else {
-                    console.log('ℹ️ [INIT] No session found')
+                    console.log('ℹ️ [AUTH] No session')
                     setUser(null)
                 }
             } catch (err) {
-                console.error('💥 [INIT] Unexpected error:', err)
+                console.error('💥 [AUTH] Init failed:', err)
                 setUser(null)
             } finally {
-                if (mounted) {
-                    console.log('🔐 [INIT STEP 5] Setting loading = false')
-                    setLoading(false)
-                    console.log('🏁 [INIT] Complete')
-                }
+                if (mounted) setLoading(false)
             }
         }
 
         initialize()
 
-        // Setup auth listener AFTER init
-        console.log('🔐 [INIT] Setting up auth listener')
+        // Auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('🔄 [AUTH EVENT]', event)
-            if (event === 'SIGNED_IN') {
-                console.log('✅ [AUTH EVENT] User signed in:', session?.user?.email)
+            console.log('🔄 [AUTH]', event, session?.user?.email || 'none')
+
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 setUser(session?.user || null)
 
-                // Initialize push notifications on sign in
-                // Wrapped in try-catch to not break auth flow
-                try {
+                // Initialize push notifications (non-blocking)
+                if (event === 'SIGNED_IN') {
                     import('@/lib/push-notifications').then(({ initializePushNotifications }) => {
-                        initializePushNotifications().then(success => {
-                            console.log('🔔 [PUSH] Notification setup:', success ? 'enabled' : 'skipped')
-                        }).catch(e => console.warn('Push setup skipped:', e))
-                    })
-                } catch (e) {
-                    console.warn('Push notification module not available')
+                        initializePushNotifications().catch(() => { })
+                    }).catch(() => { })
                 }
             } else if (event === 'SIGNED_OUT') {
-                console.log('👋 [AUTH EVENT] User signed out')
                 setUser(null)
             }
         })
 
+        // Session recovery on app resume (important for mobile WebView)
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === 'visible') {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (session?.user) {
+                        setUser(session.user)
+                        // Also try to refresh if close to expiry
+                        const expiresAt = session.expires_at || 0
+                        const now = Math.floor(Date.now() / 1000)
+                        if (expiresAt - now < 300) {
+                            // Less than 5 min to expiry, refresh
+                            await supabase.auth.refreshSession()
+                        }
+                    }
+                } catch {
+                    // Silent — don't disrupt user
+                }
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+
         return () => {
-            console.log('🧹 [CLEANUP] Unmounting auth context')
             mounted = false
             subscription.unsubscribe()
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
         }
     }, [])
 
     // ============================================
-    // SIGN IN - SIMPLE AND DIRECT
+    // SIGN IN — email/password
     // ============================================
     async function signIn(email: string, password: string) {
-        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.log('🔑 [SIGNIN] Starting...')
-        console.log('📧 [SIGNIN] Email:', email)
+        const result = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password
+        })
 
-        try {
-            console.log('📡 [SIGNIN] Calling signInWithPassword...')
-            const startTime = Date.now()
-
-            const result = await supabase.auth.signInWithPassword({
-                email: email.trim(),
-                password: password
-            })
-
-            const duration = Date.now() - startTime
-            console.log(`⏱️ [SIGNIN] API call took ${duration}ms`)
-            console.log('📦 [SIGNIN] Result:', {
-                hasUser: !!result.data?.user,
-                hasSession: !!result.data?.session,
-                hasError: !!result.error
-            })
-
-            if (result.error) {
-                console.error('❌ [SIGNIN] Auth error:', result.error.message)
-                throw new Error(result.error.message)
-            }
-
-            if (!result.data.session) {
-                console.error('❌ [SIGNIN] No session in response')
-                throw new Error('No session created')
-            }
-
-            console.log('✅ [SIGNIN] Success!')
-            console.log('👤 [SIGNIN] User:', result.data.user.email)
-
-            // Set user immediately (listener will also fire, but that's OK)
-            setUser(result.data.user)
-            console.log('🎯 [SIGNIN] User state updated')
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('💥 Error:', errorMessage)
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-            throw error
+        if (result.error) {
+            throw new Error(result.error.message)
         }
+
+        if (!result.data.session) {
+            throw new Error('No session created')
+        }
+
+        setUser(result.data.user)
     }
 
     // ============================================
-    // SIGN UP - SIMPLE AND DIRECT
+    // SIGN UP — email/password
     // ============================================
     async function signUp(email: string, password: string, fullName: string) {
-        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.log('📝 [SIGNUP] Starting...')
-        console.log('📧 [SIGNUP] Email:', email)
-        console.log('👤 [SIGNUP] Name:', fullName)
-
-        try {
-            console.log('📡 [SIGNUP] Calling signUp...')
-
-            const result = await supabase.auth.signUp({
-                email: email.trim(),
-                password: password,
-                options: {
-                    data: {
-                        full_name: fullName
-                    }
-                }
-            })
-
-            console.log('📦 [SIGNUP] Result:', {
-                hasUser: !!result.data?.user,
-                hasSession: !!result.data?.session,
-                hasError: !!result.error
-            })
-
-            if (result.error) {
-                console.error('❌ [SIGNUP] Error:', result.error.message)
-                throw new Error(result.error.message)
+        const result = await supabase.auth.signUp({
+            email: email.trim(),
+            password: password,
+            options: {
+                data: { full_name: fullName }
             }
+        })
 
-            console.log('✅ [SIGNUP] Success!')
-            console.log('📧 [SIGNUP] Confirmation email sent to:', email)
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('💥 [SIGNUP] Error caught:', errorMessage)
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-            throw error
+        if (result.error) {
+            throw new Error(result.error.message)
         }
     }
 
+    // ============================================
+    // GOOGLE SIGN IN — handles both web and mobile
+    // ============================================
     async function signInWithGoogle() {
-        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.log('🌐 [GOOGLE SIGNIN] Starting...')
         try {
-            // Detect if we're in the mobile app
-            const { isMobileApp } = await import('@/lib/isMobile');
-            const isMobile = isMobileApp();
+            const { isMobileApp } = await import('@/lib/isMobile')
+            const isMobile = isMobileApp()
 
-            console.log('📱 [GOOGLE SIGNIN] User Agent:', typeof window !== 'undefined' ? navigator.userAgent : '');
-            console.log('📱 [GOOGLE SIGNIN] Is Mobile App:', isMobile);
-
-            // Web: standard flow
             if (!isMobile) {
+                // Web: standard OAuth flow — redirects in same browser
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
@@ -230,13 +160,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return
             }
 
-            // Mobile: Use Capacitor Browser with deep link return
-            // 1. Get the OAuth URL without redirecting
-            console.log('📱 [GOOGLE SIGNIN] Getting OAuth URL for mobile...');
+            // Mobile: Chrome Custom Tab flow
+            // 1. Get OAuth URL without redirecting the WebView
+            console.log('📱 [AUTH] Starting mobile Google Sign-In...')
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://meek-zeta.vercel.app/auth/callback/mobile',
+                    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://meek-zeta.vercel.app'}/auth/callback/mobile`,
                     skipBrowserRedirect: true,
                     queryParams: {
                         access_type: 'offline',
@@ -246,70 +176,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
 
             if (error) throw error
-            if (!data?.url) throw new Error('No OAuth URL returned');
+            if (!data?.url) throw new Error('No OAuth URL returned')
 
-            // 2. Open in In-App Browser
-            // The callback will redirect to meek://auth-callback which the app listens for
-            console.log('📱 [GOOGLE SIGNIN] Opening Browser:', data.url);
+            // 2. Open in Chrome Custom Tab
+            const { Browser } = await import('@capacitor/browser')
 
-            // Import dynamically to avoid SSR issues
-            const { Browser } = await import('@capacitor/browser');
+            // Listen for browser closed event (fallback if deep link fails)
+            Browser.addListener('browserFinished', async () => {
+                console.log('📱 [AUTH] Chrome Custom Tab closed, checking session...')
+                // Give a moment for deep link handler to process
+                await new Promise(r => setTimeout(r, 1000))
+                const { data: { session } } = await supabase.auth.getSession()
+                if (session?.user) {
+                    console.log('✅ [AUTH] Session found after browser close')
+                    setUser(session.user)
+                }
+            })
 
             await Browser.open({
                 url: data.url,
-                windowName: '_self', // Tries to open in same window if possible
-                presentationStyle: 'popover' // iOS approach
-            });
+                presentationStyle: 'popover'
+            })
 
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('💥 [GOOGLE SIGNIN] Error:', errorMessage)
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+            console.error('❌ [AUTH] Google Sign-In error:', errorMessage)
             throw error
         }
     }
 
     // ============================================
-    // SIGN OUT - SIMPLE AND DIRECT
+    // SIGN OUT
     // ============================================
     async function signOut() {
-        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.log('👋 [SIGNOUT] Starting...')
-
-        try {
-            console.log('📡 [SIGNOUT] Calling signOut...')
-            const { error } = await supabase.auth.signOut()
-
-            if (error) {
-                console.error('❌ [SIGNOUT] Error:', error.message)
-                throw error
-            }
-
-            console.log('✅ [SIGNOUT] Success')
-            setUser(null)
-            console.log('🎯 [SIGNOUT] User state cleared')
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('💥 [SIGNOUT] Error caught:', errorMessage)
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-            throw error
-        }
+        const { error } = await supabase.auth.signOut()
+        if (error) throw error
+        setUser(null)
     }
-
-    const value = {
-        user,
-        loading,
-        signIn,
-        signUp,
-        signInWithGoogle,
-        signOut
-    }
-
-    console.log('🎨 [RENDER] AuthProvider rendering, user:', user?.email || 'null', 'loading:', loading)
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut }}>
             {children}
         </AuthContext.Provider>
     )
@@ -322,4 +228,3 @@ export function useAuth() {
     }
     return context
 }
-

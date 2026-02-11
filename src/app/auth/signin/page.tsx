@@ -13,24 +13,15 @@ function SignInForm() {
     const [password, setPassword] = useState("")
     const [localLoading, setLocalLoading] = useState(false)
     const [error, setError] = useState("")
-    const [isPrewarmed, setIsPrewarmed] = useState(false)
     const router = useRouter()
     const searchParams = useSearchParams()
     const { signIn, signInWithGoogle, user, loading } = useAuth()
 
     // Pre-warm Supabase connection on mount - reduces login latency
     useEffect(() => {
-        const prewarmConnection = async () => {
-            try {
-                // Light query to establish connection pool
-                await supabase.auth.getSession()
-                setIsPrewarmed(true)
-                console.log("✅ Supabase connection pre-warmed")
-            } catch (e) {
-                console.warn("Pre-warm failed:", e)
-            }
-        }
-        prewarmConnection()
+        supabase.auth.getSession().catch(() => {
+            // Silent — prewarm is best-effort
+        })
     }, [])
 
     // Auto-redirect if already logged in

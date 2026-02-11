@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // Use the service role key for admin operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const ALL_SURAHS = [
     { id: 1, name_arabic: "الفاتحة", name_english: "Al-Fatiha", revelation_place: "makkah", total_verses: 7 },
@@ -125,7 +125,8 @@ const ALL_SURAHS = [
 export async function GET(request: NextRequest) {
     // Check for admin secret
     const adminSecret = request.nextUrl.searchParams.get('secret')
-    if (adminSecret !== 'MEEK-setup-2024') {
+    const expectedSecret = process.env.ADMIN_SECRET
+    if (!expectedSecret || adminSecret !== expectedSecret) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

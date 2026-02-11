@@ -50,12 +50,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // If no auth, try to get from cookie
-        if (!userId) {
-            const cookieHeader = request.headers.get('cookie');
-            // Parse supabase auth cookie if present
-            // For now, we'll allow anonymous subscriptions for testing
-        }
+
 
         // Upsert subscription (update if endpoint exists, insert otherwise)
         const { data, error } = await getSupabaseAdmin()
@@ -91,7 +86,7 @@ export async function POST(request: NextRequest) {
                     prayer_start: true,
                     prayer_ending: true,
                     dua_reminders: true,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    timezone: 'UTC', // Client should send actual timezone; default to UTC
                     updated_at: new Date().toISOString()
                 }, {
                     onConflict: 'user_id'
