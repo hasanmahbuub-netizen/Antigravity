@@ -50,7 +50,15 @@ function SignInForm() {
 
         } catch (err: unknown) {
             console.error("❌ Exception:", err)
-            const errorMessage = err instanceof Error ? err.message : "Login failed";
+            const rawError = err instanceof Error ? err.message : "Login failed";
+            // Humanize common errors
+            let errorMessage = rawError;
+            if (rawError.includes("Network") || rawError.includes("fetch")) {
+                errorMessage = "We couldn't reach the server. Please check your internet connection.";
+            } else if (rawError.includes("Invalid login")) {
+                errorMessage = "Incorrect email or password. Please try again.";
+            }
+
             setError(errorMessage)
             setLocalLoading(false)
         }
@@ -91,7 +99,11 @@ function SignInForm() {
                                     setLocalLoading(true)
                                     await signInWithGoogle()
                                 } catch (err: unknown) {
-                                    const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+                                    const rawError = err instanceof Error ? err.message : "Google sign-in failed";
+                                    let errorMessage = rawError;
+                                    if (rawError.includes("Network") || rawError.includes("fetch")) {
+                                        errorMessage = "Unable to connect to Google. Please check your internet.";
+                                    }
                                     setError(errorMessage)
                                     setLocalLoading(false)
                                 }

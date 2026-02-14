@@ -30,7 +30,15 @@ export default function SignUpPage() {
 
         } catch (err: unknown) {
             console.error("❌ Exception:", err)
-            const errorMessage = err instanceof Error ? err.message : "Signup failed";
+            const rawError = err instanceof Error ? err.message : "Signup failed";
+            // Humanize common errors
+            let errorMessage = rawError;
+            if (rawError.includes("Network") || rawError.includes("fetch")) {
+                errorMessage = "We couldn't reach the server. Please check your internet connection.";
+            } else if (rawError.includes("already registered")) {
+                errorMessage = "This email is already in use. Please sign in instead.";
+            }
+
             setError(errorMessage)
             setLocalLoading(false)
         }
@@ -101,7 +109,11 @@ export default function SignUpPage() {
                                     setLocalLoading(true)
                                     await signInWithGoogle()
                                 } catch (err: unknown) {
-                                    const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";
+                                    const rawError = err instanceof Error ? err.message : "Google sign-in failed";
+                                    let errorMessage = rawError;
+                                    if (rawError.includes("Network") || rawError.includes("fetch")) {
+                                        errorMessage = "Unable to connect to Google. Please check your internet.";
+                                    }
                                     setError(errorMessage)
                                     setLocalLoading(false)
                                 }

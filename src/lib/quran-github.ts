@@ -190,7 +190,7 @@ export async function syncVersesToDatabase(surahIds?: number[]): Promise<{ succe
 
                 // Rate limiting - wait 200ms between requests
                 await new Promise(resolve => setTimeout(resolve, 200))
-            } catch (surahError) {
+            } catch (_surahError) {
                 console.warn(`⚠️ Error syncing surah ${surahId}, continuing...`)
             }
         }

@@ -5,17 +5,21 @@ const config: CapacitorConfig = {
   appName: 'Meek',
   webDir: 'android-web',
   server: {
-    // Start at mobile entry page - it detects auth and redirects appropriately
-    url: 'https://meek-zeta.vercel.app/mobile',
-    cleartext: false
+    // Load the production web app directly
+    // This makes the app behave exactly like the browser version
+    url: 'https://meek-zeta.vercel.app',
+    cleartext: false,
+    // Enable this to allow navigation to external sites (like Google Auth) within the WebView
+    // if we wanted stay-in-app auth, but Google blocks embedded WebViews.
+    // So we will stick to standard redirect flow.
   },
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false, // Disable for production
+    webContentsDebuggingEnabled: false,
     backgroundColor: '#0A1628',
-    // Append user agent for cookie handling
-    appendUserAgent: 'MeekApp/1.0'
+    // Remove custom UserAgent to ensure we look like a standard Android Chrome/WebView
+    // This helps with Google Auth compatibility
   },
   plugins: {
     Keyboard: {
@@ -24,13 +28,6 @@ const config: CapacitorConfig = {
     },
     CapacitorCookies: {
       enabled: true
-    },
-    Browser: {
-      // OAuth will open in Chrome Custom Tabs
-    },
-    App: {
-      // Deep link handling for OAuth callback
-      // This tells Capacitor to listen for app://auth-callback URLs
     }
   }
 };

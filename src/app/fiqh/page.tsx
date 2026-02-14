@@ -2,11 +2,13 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, ChevronLeft, ChevronDown, Loader2, Send, Sparkles } from "lucide-react";
+import { Search, ChevronLeft, ChevronDown, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import AnswerView from "@/components/fiqh/AnswerView";
+import { OfflineError } from "@/components/ui/OfflineError";
+import { PremiumLoader } from "@/components/ui/PremiumLoader";
 
 // Topic data with curated questions
 const TOPICS = [
@@ -98,7 +100,7 @@ function FiqhContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [viewState, setViewState] = useState<"input" | "loading" | "result">("input");
+    const [viewState, setViewState] = useState<"input" | "loading" | "result" | "error">("input");
     const [answer, setAnswer] = useState<FiqhApiResponse | null>(null);
     const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
     const [recentQuestions, setRecentQuestions] = useState<string[]>([]);
@@ -167,7 +169,7 @@ function FiqhContent() {
                 setViewState("result");
             } catch (err) {
                 console.error("Fiqh API failed:", err);
-                setViewState("input");
+                setViewState("error");
             }
         };
 
@@ -194,17 +196,28 @@ function FiqhContent() {
 
     // Loading state
     if (viewState === "loading") {
+        return <PremiumLoader text="Consulting Scholars..." />;
+    }
+
+    // Error state
+    if (viewState === "error") {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
-                <motion.div
-                    className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                >
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                </motion.div>
-                <h2 className="text-lg font-medium text-foreground">Thinking...</h2>
-                <p className="text-sm text-muted mt-1">Consulting scholarly sources</p>
+            <div className="flex flex-col h-screen bg-background">
+                <header className="h-14 flex items-center px-4 border-b border-border shrink-0">
+                    <button onClick={handleClear} className="p-2 -ml-2 text-muted hover:text-foreground">
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="ml-2 text-sm font-medium text-muted">Back</span>
+                </header>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="w-full max-w-md">
+                        <OfflineError
+                            onRetry={() => handleSearch({ preventDefault: () => { } } as React.FormEvent)}
+                            title="Connection Interrupted"
+                            message="We couldn't reach the Fiqh knowledge base. Please check your internet connection."
+                        />
+                    </div>
+                </div>
             </div>
         );
     }

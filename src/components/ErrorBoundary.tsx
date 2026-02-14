@@ -49,45 +49,32 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                 <div className="min-h-screen flex items-center justify-center bg-background p-6">
                     <div className="max-w-md text-center space-y-6">
                         {/* Icon */}
-                        <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">
-                            <svg
-                                className="w-10 h-10 text-red-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                />
-                            </svg>
+                        <div className="w-20 h-20 mx-auto rounded-full bg-primary/5 flex items-center justify-center animate-pulse">
+                            <span className="text-4xl">⚠️</span>
                         </div>
 
                         {/* Message */}
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">
-                                Something went wrong
+                            <h2 className="text-xl font-serif font-medium text-foreground mb-2">
+                                A Momentary Pause
                             </h2>
-                            <p className="text-foreground/60 text-sm leading-relaxed">
-                                We apologize for the inconvenience. Please try refreshing the page.
+                            <p className="text-muted text-sm leading-relaxed max-w-xs mx-auto">
+                                The app encountered an unexpected situation. We&apos;ve noted it and you can try refreshing.
                             </p>
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 pt-2">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full py-3 px-6 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                                className="w-full py-3.5 px-6 bg-primary text-primary-foreground rounded-xl font-medium shadow-lg shadow-primary/10 hover:bg-primary/90 active:scale-[0.98] transition-all"
                                 aria-label="Refresh the page"
                             >
-                                Refresh Page
+                                Reload Application
                             </button>
                             <button
                                 onClick={() => window.history.back()}
-                                className="w-full py-3 px-6 bg-muted/10 text-foreground rounded-xl font-medium hover:bg-muted/20 transition-colors"
+                                className="w-full py-3.5 px-6 bg-muted/5 text-muted-foreground rounded-xl font-medium hover:bg-muted/10 transition-colors"
                                 aria-label="Go back to previous page"
                             >
                                 Go Back
@@ -96,11 +83,11 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
                         {/* Error details (dev only) */}
                         {process.env.NODE_ENV === 'development' && this.state.error && (
-                            <details className="mt-6 text-left p-4 bg-card rounded-xl border border-border">
-                                <summary className="text-xs text-foreground/60 cursor-pointer">
-                                    Error Details (Development Only)
+                            <details className="mt-8 text-left p-4 bg-muted/5 rounded-xl border border-border/50">
+                                <summary className="text-[10px] uppercase tracking-widest text-muted cursor-pointer hover:text-foreground transition-colors">
+                                    Debug Information
                                 </summary>
-                                <pre className="mt-2 text-xs text-red-500 overflow-auto whitespace-pre-wrap">
+                                <pre className="mt-3 text-[10px] text-red-400 overflow-auto whitespace-pre-wrap font-mono">
                                     {this.state.error.message}
                                     {'\n\n'}
                                     {this.state.error.stack}
