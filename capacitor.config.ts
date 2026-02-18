@@ -5,13 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Meek',
   webDir: 'out',
   server: {
-    // Load the production web app directly
-    // This makes the app behave exactly like the browser version
-    url: 'https://meek-zeta.vercel.app',
+    // Start at the login page — the app is a pure browser wrapper.
+    // If the user has an existing session (cookies persist), the signin page
+    // auto-redirects to /dashboard. If not, they see the login form.
+    url: 'https://meek-zeta.vercel.app/auth/signin',
     cleartext: false,
-    // Enable this to allow navigation to external sites (like Google Auth) within the WebView
-    // if we wanted stay-in-app auth, but Google blocks embedded WebViews.
-    // So we will stick to standard redirect flow.
   },
   android: {
     allowMixedContent: false,
