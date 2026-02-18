@@ -2,88 +2,52 @@ package com.meek.app;
 
 import android.os.Bundle;
 import android.webkit.CookieManager;
-import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import android.Manifest;
-import android.content.pm.PackageManager;
 
 import com.getcapacitor.BridgeActivity;
 
+/**
+ * MainActivity — Pure Browser Wrapper
+ *
+ * This app is a WebView shell that loads the production web app.
+ * All logic (auth, navigation, features) lives on the web.
+ * The WebView just needs to:
+ *   1. Load the URL (handled by Capacitor via server.url)
+ *   2. Persist cookies/localStorage (so login sessions survive app restarts)
+ *   3. Stay out of the way
+ */
 public class MainActivity extends BridgeActivity {
-
-    private static final int PERMISSION_REQUEST_CODE = 1001;
-    private PermissionRequest mPermissionRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Request audio permission on app start if not granted
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[] {
-                            Manifest.permission.RECORD_AUDIO,
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.MODIFY_AUDIO_SETTINGS
-                    },
-                    PERMISSION_REQUEST_CODE);
-        }
-
-        // Enable cookie and session persistence
+        // ─── Cookie Persistence ───
+        // Accept cookies so Supabase auth tokens persist between app opens
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(getBridge().getWebView(), true);
 
-        // Configure WebView for session persistence and FRESH content
+        // ─── WebView Configuration ───
         WebView webView = getBridge().getWebView();
         if (webView != null) {
             WebSettings settings = webView.getSettings();
-            settings.setDomStorageEnabled(true); // Enable localStorage
-            settings.setDatabaseEnabled(true); // Enable database storage
-            settings.setCacheMode(WebSettings.LOAD_NO_CACHE); // Force fresh content from server
-
-            // CRITICAL: Clear ALL cached data to ensure fresh Fiqh responses
-            webView.clearCache(true); // Clear browser cache
-            webView.clearFormData(); // Clear form data
-            webView.clearHistory(); // Clear navigation history
-
-            // Clear WebView databases (where old responses might be stored)
-            try {
-                getApplicationContext().deleteDatabase("webview.db");
-                getApplicationContext().deleteDatabase("webviewCache.db");
-            } catch (Exception e) {
-                // Ignore if databases don't exist
-            }
+            settings.setDomStorageEnabled(true);     // localStorage for Supabase session
+            settings.setDatabaseEnabled(true);       // IndexedDB support
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT); // Normal browser caching
+            settings.setJavaScriptEnabled(true);     // Required for the web app
         }
-    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            // Handle permission result - Capacitor handles WebView permissions
-            // automatically
-            if (mPermissionRequest != null) {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mPermissionRequest.grant(mPermissionRequest.getResources());
-                } else {
-                    mPermissionRequest.deny();
-                }
-                mPermissionRequest = null;
-            }
-        }
+        // NOTE: We intentionally do NOT clear cache, cookies, form data, or history.
+        // The whole point is to remember the user's session like a real browser.
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // Flush cookies when app goes to background
+        // Flush cookies to disk when app goes to background
+        // This ensures the session survives even if the OS kills the app
         CookieManager.getInstance().flush();
     }
 }
