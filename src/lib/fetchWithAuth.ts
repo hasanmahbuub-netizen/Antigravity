@@ -1,34 +1,38 @@
 /**
  * Resilient Fetch Wrapper with Auth
  * 
- * Automatically includes Bearer token from Supabase session,
- * retries on auth failures after refreshing the session,
- * and retries on network errors with backoff.
+ * For the browser-wrapper architecture:
+ * - Cookies are the PRIMARY auth mechanism (auto-sent by browser)
+ * - Bearer token is SUPPLEMENTARY (for cases where cookies are stripped)
+ * - Always includes credentials: 'include' so cookies are forwarded
+ * - Retries on network failures and 401s with session refresh
  */
 
 import { supabase } from '@/lib/supabase';
 
-const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meek-zeta.vercel.app';
-
 /**
  * Build absolute API URL
+ * In browser-wrapper mode, we always use the current origin
  */
 export function buildApiUrl(path: string): string {
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        return path; // Local dev uses relative URLs
+    if (typeof window !== 'undefined') {
+        return `${window.location.origin}${path}`;
     }
-    // Prefer the current origin (works in browser), fallback to config
-    const base = typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL;
+    // Server-side fallback (shouldn't happen in browser wrapper, but just in case)
+    const base = process.env.NEXT_PUBLIC_APP_URL || 'https://meek-zeta.vercel.app';
     return `${base}${path}`;
 }
 
 /**
  * Fetch with automatic auth and retry logic
  * 
- * - Includes Authorization: Bearer <token> header
- * - Retries on 401 after refreshing session (once)
- * - Retries on network errors (max 2 attempts, 1s backoff)
- * - Uses absolute URL for WebView compatibility
+ * Auth Strategy (ordered by reliability):
+ * 1. Cookies (auto-sent via credentials: 'include') — handled by middleware
+ * 2. Bearer token (from Supabase session) — supplementary for WebView edge cases
+ * 
+ * Retry Strategy:
+ * - Network errors: retry once after 1s
+ * - 401 Unauthorized: refresh session, retry once
  */
 export async function fetchWithAuth(
     path: string,
@@ -36,7 +40,7 @@ export async function fetchWithAuth(
 ): Promise<Response> {
     const url = buildApiUrl(path);
 
-    // Get current session token
+    // Get Bearer token as supplementary auth
     async function getAuthHeaders(): Promise<Record<string, string>> {
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -46,12 +50,12 @@ export async function fetchWithAuth(
                 };
             }
         } catch {
-            // No session available
+            // Session unavailable — cookies will handle auth
         }
         return {};
     }
 
-    // Merge auth headers with existing headers
+    // Build the request with auth headers + credentials
     async function buildRequest(): Promise<[string, RequestInit]> {
         const authHeaders = await getAuthHeaders();
         const existingHeaders = options.headers instanceof Headers
@@ -60,6 +64,9 @@ export async function fetchWithAuth(
 
         return [url, {
             ...options,
+            // CRITICAL: Always include credentials so cookies are forwarded
+            // This is what makes the browser-wrapper auth work
+            credentials: 'include',
             headers: {
                 ...existingHeaders,
                 ...authHeaders,
