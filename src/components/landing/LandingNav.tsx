@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { LogIn, User } from "lucide-react";
 
 export default function LandingNav() {
-    const { user, loading } = useAuth();
+    const { user, isLoading } = useAuth();
 
     return (
         <motion.nav
@@ -31,7 +31,7 @@ export default function LandingNav() {
 
                 {/* Auth Buttons */}
                 <div className="flex items-center gap-4">
-                    {loading ? (
+                    {isLoading ? (
                         <div className="w-20 h-9 bg-white/10 rounded-lg animate-pulse" />
                     ) : user ? (
                         <Link href="/dashboard">

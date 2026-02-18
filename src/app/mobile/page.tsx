@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react'
 function MobileEntryContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { user, loading } = useAuth()
+    const { user, isLoading } = useAuth()
     const [status, setStatus] = useState('Initializing...')
 
     useEffect(() => {
@@ -34,7 +34,7 @@ function MobileEntryContent() {
             }
 
             // Wait for auth to settle
-            if (loading) {
+            if (isLoading) {
                 setStatus('Checking session...')
                 return
             }
@@ -48,7 +48,7 @@ function MobileEntryContent() {
         }
 
         init()
-    }, [user, loading, router, searchParams])
+    }, [user, isLoading, router, searchParams])
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-background">

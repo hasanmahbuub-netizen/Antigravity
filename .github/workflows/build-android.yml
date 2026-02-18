@@ -33,6 +33,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create web output directory
+        # The app loads from server.url at runtime, but cap sync requires webDir to exist
+        run: mkdir -p out && echo '{}' > out/index.html
+
       - name: Sync Capacitor
         run: npx cap sync android
 

@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.meek.app',
   appName: 'Meek',
-  webDir: 'android-web',
+  webDir: 'out',
   server: {
     // Load the production web app directly
     // This makes the app behave exactly like the browser version

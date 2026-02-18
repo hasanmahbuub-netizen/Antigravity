@@ -15,7 +15,7 @@ function SignInForm() {
     const [error, setError] = useState("")
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { signIn, signInWithGoogle, user, loading } = useAuth()
+    const { signIn, signInWithGoogle, user, isLoading } = useAuth()
 
     // Pre-warm Supabase connection on mount - reduces login latency
     useEffect(() => {
@@ -26,11 +26,11 @@ function SignInForm() {
 
     // Auto-redirect if already logged in
     useEffect(() => {
-        if (!loading && user) {
+        if (!isLoading && user) {
             const redirectTo = searchParams.get('redirect') || '/dashboard'
             router.push(redirectTo)
         }
-    }, [user, loading, router, searchParams])
+    }, [user, isLoading, router, searchParams])
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault()
