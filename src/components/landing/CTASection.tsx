@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Download, Globe } from "lucide-react";
+import { ArrowRight, Sparkles, Globe } from "lucide-react";
 
 export default function CTASection() {
     return (
@@ -45,37 +45,25 @@ export default function CTASection() {
                     Begin with Al-Fatiha — it takes just 5 minutes.
                 </p>
 
-                {/* Dual CTA Buttons - Blue with Golden Hover Glow */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    {/* Primary: Start with Al-Fatiha (Web) */}
-                    <Link href="/auth/signin?redirect=/quran">
+                {/* Single Primary CTA - Web App */}
+                <div className="flex justify-center">
+                    <Link href="/dashboard">
                         <motion.button
                             className="group flex items-center gap-3 bg-[#1E3A5F] text-white font-semibold text-lg px-10 py-5 rounded-full transition-all duration-300 shadow-lg hover:shadow-[0_0_30px_rgba(232,196,154,0.4)] hover:bg-[#E8C49A] hover:text-[#0A1628]"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.98 }}
                         >
                             <Globe className="w-5 h-5" />
-                            Start with Al-Fatiha
+                            Try Meek Now
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </motion.button>
-                    </Link>
-
-                    {/* Secondary: Download APK */}
-                    <Link href="/download">
-                        <motion.button
-                            className="flex items-center gap-3 bg-[#1E3A5F]/60 text-white/90 hover:text-[#0A1628] font-medium px-8 py-4 rounded-full border border-[#1E3A5F] transition-all duration-300 hover:bg-[#E8C49A] hover:border-[#E8C49A] hover:shadow-[0_0_25px_rgba(232,196,154,0.3)]"
-                            whileHover={{ scale: 1.02 }}
-                        >
-                            <Download className="w-5 h-5" />
-                            Download Meek (for Android)
                         </motion.button>
                     </Link>
                 </div>
 
                 {/* Trust Indicators */}
                 <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mt-12 text-white/40 text-sm">
-                    <span>✓ No account needed</span>
-                    <span>✓ Works offline</span>
+                    <span>✓ No sign-up required to explore</span>
+                    <span>✓ Works on any device</span>
                     <span>✓ 100% free</span>
                 </div>
             </motion.div>

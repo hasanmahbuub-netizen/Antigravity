@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, Facebook, Instagram, Youtube } from "lucide-react";
+import { Facebook, Instagram, Youtube, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -19,7 +19,6 @@ const TikTokIcon = () => (
     </svg>
 );
 
-const APK_DOWNLOAD_URL = "https://github.com/hasanmahbuub-netizen/Antigravity/actions/runs/21492494593/artifacts/5309224219";
 
 const socialLinks = [
     { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61586337013377", icon: Facebook },
@@ -61,13 +60,13 @@ export default function LandingFooter() {
                             Making Quranic pronunciation accessible to every Muslim around the world.
                         </p>
 
-                        {/* Download Button - Blue with Golden Hover */}
+                        {/* Web App Button - Blue with Golden Hover */}
                         <Link
-                            href="/download"
+                            href="/dashboard"
                             className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#E8C49A] text-white hover:text-[#0A1628] font-medium rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(232,196,154,0.3)]"
                         >
-                            <Download className="w-4 h-4" />
-                            Download Meek (for Android)
+                            <Globe className="w-4 h-4" />
+                            Open Web App
                         </Link>
                     </div>
 
@@ -80,11 +79,10 @@ export default function LandingFooter() {
                             <li><Link href="/dashboard" className="text-sm text-white/50 hover:text-white transition-colors">Dashboard</Link></li>
                             <li>
                                 <Link
-                                    href={APK_DOWNLOAD_URL}
-                                    target="_blank"
+                                    href="/dashboard"
                                     className="text-sm text-white/50 hover:text-[#E8C49A] transition-colors"
                                 >
-                                    Download APK
+                                    Try It Now
                                 </Link>
                             </li>
                         </ul>

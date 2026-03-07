@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Sparkles, Clock, Crown } from "lucide-react";
+import { Check, Sparkles, Clock } from "lucide-react";
 import Link from "next/link";
 
 const freeTierFeatures = [
@@ -87,9 +87,9 @@ export default function PricingSection() {
                         </ul>
 
                         {/* CTA */}
-                        <Link href="/auth/signin?redirect=/quran">
+                        <Link href="/dashboard">
                             <button className="w-full py-4 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all">
-                                Get Started Free
+                                Try It Now — Free
                             </button>
                         </Link>
                     </motion.div>

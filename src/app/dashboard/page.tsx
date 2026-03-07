@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Clock, User } from "lucide-react";
+import { Bell, Clock, User, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import { getSpiritualNudge, type SpiritualNudge } from "@/lib/agents/dua-agent";
 import { getNextPrayer, getCurrentPrayer, formatTimeUntil, type PrayerReminder, type CurrentPrayerInfo } from "@/lib/agents/namaz-agent";
 import { startNotificationScheduler, stopNotificationScheduler } from "@/lib/notificationScheduler";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Dashboard() {
   const [showNudges, setShowNudges] = useState(false);
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const [currentPrayerInfo, setCurrentPrayerInfo] = useState<CurrentPrayerInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
 
   // Islamic greeting (no time-based variation)
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function Dashboard() {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          // Check onboarding status
+          // Check onboarding status — only for authenticated users
           const { data: profile } = await supabase
             .from('profiles')
             .select('onboarding_completed')
@@ -88,6 +90,26 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] gap-4 overflow-hidden">
+      {/* Guest Sign-Up Banner */}
+      {!authLoading && !user && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
+        >
+          <p className="text-sm text-foreground/80">
+            <span className="font-medium">Sign up</span> to unlock AI features &amp; save your progress
+          </p>
+          <Link
+            href="/auth/signup"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:brightness-110 transition-all shrink-0"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            Sign Up
+          </Link>
+        </motion.div>
+      )}
+
       {/* Dashboard Header */}
       <header className="flex items-center justify-between shrink-0 pt-1">
         <div>
@@ -188,12 +210,21 @@ export default function Dashboard() {
           </div>
 
           {/* Profile */}
-          <Link
-            href="/settings"
-            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
-          >
-            <User className="w-4 h-4 text-primary" />
-          </Link>
+          {user ? (
+            <Link
+              href="/settings"
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+            >
+              <User className="w-4 h-4 text-primary" />
+            </Link>
+          ) : (
+            <Link
+              href="/auth/signin"
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+            >
+              <LogIn className="w-4 h-4 text-primary" />
+            </Link>
+          )}
         </div>
       </header>
 

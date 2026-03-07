@@ -46,7 +46,7 @@ export default function LandingNav() {
                         </Link>
                     ) : (
                         <>
-                            <Link href="#get-started">
+                            <Link href="/auth/signin">
                                 <motion.button
                                     className="px-5 py-2 text-[#F5F1E8]/80 hover:text-[#F5F1E8] font-medium text-sm transition-colors"
                                     whileHover={{ scale: 1.02 }}
@@ -55,14 +55,14 @@ export default function LandingNav() {
                                     Sign In
                                 </motion.button>
                             </Link>
-                            <Link href="#get-started">
+                            <Link href="/dashboard">
                                 <motion.button
                                     className="flex items-center gap-2 px-5 py-2 bg-[#1E3A5F] text-white rounded-lg font-medium text-sm transition-all duration-300 hover:bg-[#E8C49A] hover:text-[#0A1628] hover:shadow-[0_0_15px_rgba(232,196,154,0.3)]"
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
                                     <LogIn className="w-4 h-4" />
-                                    Get Started
+                                    Try Meek Now
                                 </motion.button>
                             </Link>
                         </>

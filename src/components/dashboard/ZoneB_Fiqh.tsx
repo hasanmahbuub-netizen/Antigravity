@@ -22,14 +22,18 @@ export default function ZoneB_Fiqh() {
             setLoading(true);
             try {
                 const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
+                if (!user) {
+                    // Guest — no history to show, that's fine
+                    setRecentQuestions([]);
+                    return;
+                }
 
                 const { data } = await supabase
                     .from('fiqh_questions')
                     .select('question, id')
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
-                    .limit(2); // Reduced to 2 to make space for search bar
+                    .limit(2);
 
                 setRecentQuestions(data || []);
             } catch (err) {

@@ -23,30 +23,51 @@ export default function ZoneA_Quran() {
             setLoading(true);
             try {
                 const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
 
-                // Fetch Latest Progress
-                const { data: progressData } = await supabase
-                    .from('quran_verse_progress')
-                    .select('surah, ayah')
-                    .eq('user_id', user.id)
-                    .order('completed_at', { ascending: false })
-                    .limit(1);
+                if (user) {
+                    // Fetch Latest Progress for authenticated users
+                    const { data: progressData } = await supabase
+                        .from('quran_verse_progress')
+                        .select('surah, ayah')
+                        .eq('user_id', user.id)
+                        .order('completed_at', { ascending: false })
+                        .limit(1);
 
-                const progress = progressData?.[0] as { surah?: number; ayah?: number } | undefined;
-                const nextSurah = progress?.surah || 1;
-                const nextAyah = (progress?.ayah || 0) + 1;
+                    const progress = progressData?.[0] as { surah?: number; ayah?: number } | undefined;
+                    const nextSurah = progress?.surah || 1;
+                    const nextAyah = (progress?.ayah || 0) + 1;
 
-                // Fetch Verse Text with both translations
-                const verseData = await quranApi.getVerseData(nextSurah, nextAyah);
-                setLatestVerse({
-                    surah: nextSurah,
-                    ayah: nextAyah,
-                    arabic: verseData.arabic,
-                    translation: verseData.translation,
-                    translation_english: verseData.translation_english,
-                    translation_bangla: verseData.translation_bangla
-                });
+                    const verseData = await quranApi.getVerseData(nextSurah, nextAyah);
+                    setLatestVerse({
+                        surah: nextSurah,
+                        ayah: nextAyah,
+                        arabic: verseData.arabic,
+                        translation: verseData.translation,
+                        translation_english: verseData.translation_english,
+                        translation_bangla: verseData.translation_bangla
+                    });
+                } else {
+                    // Guest user — start with Al-Fatiha verse 1
+                    try {
+                        const verseData = await quranApi.getVerseData(1, 1);
+                        setLatestVerse({
+                            surah: 1,
+                            ayah: 1,
+                            arabic: verseData.arabic,
+                            translation: verseData.translation,
+                            translation_english: verseData.translation_english,
+                            translation_bangla: verseData.translation_bangla
+                        });
+                    } catch {
+                        // Fallback if API fails — show default
+                        setLatestVerse({
+                            surah: 1,
+                            ayah: 1,
+                            arabic: "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+                            translation: "In the name of Allah, the Most Gracious, the Most Merciful"
+                        });
+                    }
+                }
             } catch (err) {
                 console.error("Dashboard fetch failed:", err);
             } finally {
